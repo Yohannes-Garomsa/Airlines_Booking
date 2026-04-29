@@ -53,6 +53,16 @@ CREATE TABLE payments (
     payment_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Seats Table
+CREATE TABLE seats (
+    id SERIAL PRIMARY KEY,
+    flight_id INTEGER REFERENCES flights(id) ON DELETE CASCADE,
+    seat_number VARCHAR(10) NOT NULL,
+    is_occupied BOOLEAN DEFAULT FALSE,
+    booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
+    UNIQUE(flight_id, seat_number)
+);
+
 -- Sample Data
 INSERT INTO flights (airline, departure_city, arrival_city, departure_time, arrival_time, price, seats_available)
 VALUES 

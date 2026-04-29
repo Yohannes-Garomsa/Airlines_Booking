@@ -1,16 +1,24 @@
 const Flight = require('../models/flightModel');
 const asyncHandler = require('../utils/asyncHandler');
+const cache = require('../utils/cache');
 
 const getAllFlights = asyncHandler(async (req, res) => {
-  const { departure_city, arrival_city, departure_date } = req.query;
+  const { departure_city, arrival_city, departure_date, min_price, max_price, limit, page } = req.query;
+  const cacheKey = JSON.stringify(req.query);
   
+  const cachedData = cache.get(cacheKey);
+  if (cachedData) {
+    return res.status(200).json(cachedData);
+  }
+
   let flights;
-  if (departure_city || arrival_city || departure_date) {
-    flights = await Flight.search({ departure_city, arrival_city, departure_date });
+  if (departure_city || arrival_city || departure_date || min_price || max_price) {
+    flights = await Flight.search({ departure_city, arrival_city, departure_date, min_price, max_price, limit, page });
   } else {
     flights = await Flight.getAll();
   }
-  
+
+  cache.set(cacheKey, flights);
   res.status(200).json(flights);
 });
 

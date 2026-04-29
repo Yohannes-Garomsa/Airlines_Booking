@@ -16,7 +16,7 @@ const Flight = {
   },
 
   search: async (filters) => {
-    const { departure_city, arrival_city, departure_date } = filters;
+    const { departure_city, arrival_city, departure_date, min_price, max_price, limit = 10, page = 1 } = filters;
     let query = 'SELECT * FROM flights WHERE 1=1';
     const params = [];
     let paramIndex = 1;
@@ -33,8 +33,19 @@ const Flight = {
       query += ` AND DATE(departure_time) = $${paramIndex++}`;
       params.push(departure_date);
     }
+    if (min_price) {
+      query += ` AND price >= $${paramIndex++}`;
+      params.push(min_price);
+    }
+    if (max_price) {
+      query += ` AND price <= $${paramIndex++}`;
+      params.push(max_price);
+    }
 
-    query += ' ORDER BY departure_time ASC';
+    const offset = (page - 1) * limit;
+    query += ` ORDER BY departure_time ASC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+    params.push(limit, offset);
+
     const result = await db.query(query, params);
     return result.rows;
   },
