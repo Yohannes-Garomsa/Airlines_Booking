@@ -47,7 +47,8 @@ const BookingPage = () => {
       });
       
       if (response.ok) {
-        navigate('/confirmation');
+        const data = await response.json();
+        navigate(`/payment/${data.id}`, { state: { booking: data, flight } });
       } else {
         alert('Booking failed. Make sure you are logged in.');
       }

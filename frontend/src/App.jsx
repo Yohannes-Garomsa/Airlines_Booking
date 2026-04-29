@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
+import PaymentPage from './pages/PaymentPage';
+import TicketPage from './pages/TicketPage';
 import ConfirmationPage from './pages/ConfirmationPage';
 
 function App() {
@@ -9,6 +11,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/booking/:flightId" element={<BookingPage />} />
+        <Route path="/payment/:bookingId" element={<PaymentPage />} />
+        <Route path="/ticket/:bookingId" element={<TicketPage />} />
         <Route path="/confirmation" element={<ConfirmationPage />} />
       </Routes>
     </Router>

@@ -42,6 +42,27 @@ const Booking = {
       [userId]
     );
     return result.rows;
+  },
+
+  getFullBookingDetails: async (bookingId) => {
+    const bookingResult = await db.query(
+      `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, f.arrival_time 
+       FROM bookings b 
+       JOIN flights f ON b.flight_id = f.id 
+       WHERE b.id = $1`,
+      [bookingId]
+    );
+    
+    if (bookingResult.rows.length === 0) return null;
+    const booking = bookingResult.rows[0];
+
+    const passengerResult = await db.query(
+      'SELECT name, email FROM passengers WHERE booking_id = $1',
+      [bookingId]
+    );
+    booking.passengers = passengerResult.rows;
+
+    return booking;
   }
 };
 
