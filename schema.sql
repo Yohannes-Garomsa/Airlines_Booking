@@ -25,11 +25,20 @@ CREATE TABLE flights (
 -- Bookings Table
 CREATE TABLE bookings (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
     flight_id INTEGER REFERENCES flights(id),
-    passenger_name VARCHAR(100) NOT NULL,
-    passenger_email VARCHAR(100) NOT NULL,
-    booking_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) DEFAULT 'confirmed'
+    total_price DECIMAL(10, 2) NOT NULL,
+    status VARCHAR(20) DEFAULT 'confirmed',
+    booking_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Passengers Table
+CREATE TABLE passengers (
+    id SERIAL PRIMARY KEY,
+    booking_id INTEGER REFERENCES bookings(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Sample Data

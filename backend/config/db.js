@@ -7,7 +7,7 @@ const pool = new Pool({
 });
 
 pool.on('connect', () => {
-  console.log('Successfully connected to the database');
+  console.log('PostgreSQL Connected...');
 });
 
 pool.on('error', (err) => {
@@ -17,4 +17,6 @@ pool.on('error', (err) => {
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
+  getClient: () => pool.connect(), // Useful for transactions
+  pool: pool // Expose the pool directly if needed
 };
