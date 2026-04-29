@@ -63,6 +63,14 @@ const Booking = {
     booking.passengers = passengerResult.rows;
 
     return booking;
+  },
+
+  cancel: async (bookingId, userId) => {
+    const result = await db.query(
+      'UPDATE bookings SET status = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
+      ['cancelled', bookingId, userId]
+    );
+    return result.rows[0];
   }
 };
 

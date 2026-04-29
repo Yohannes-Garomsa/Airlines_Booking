@@ -66,7 +66,9 @@ function HomePage() {
           <nav>
             <ul className="flex gap-8 font-bold text-sm tracking-wide uppercase">
               <li className="hover:text-accent transition-colors cursor-pointer">Deals</li>
-              <li className="hover:text-accent transition-colors cursor-pointer">My Trips</li>
+              <li>
+                <Link to="/dashboard" className="hover:text-accent transition-colors cursor-pointer">My Trips</Link>
+              </li>
               <li className="bg-accent text-primary px-4 py-1.5 rounded-full hover:bg-yellow-400 transition-colors cursor-pointer">Login</li>
             </ul>
           </nav>

@@ -17,18 +17,27 @@ const createBooking = async (req, res) => {
   }
 };
 
-const getUserBookings = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const bookings = await Booking.getByUserId(userId);
-    res.status(200).json(bookings);
-  } catch (error) {
-    console.error('Error fetching bookings:', error);
-    res.status(500).json({ message: 'Server error' });
+const getUserBookings = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const bookings = await Booking.getByUserId(userId);
+  res.status(200).json(bookings);
+});
+
+const cancelBooking = asyncHandler(async (req, res) => {
+  const { bookingId } = req.params;
+  const userId = req.user.id;
+
+  const booking = await Booking.cancel(bookingId, userId);
+  if (!booking) {
+    res.status(404);
+    throw new Error('Booking not found or not authorized');
   }
-};
+
+  res.status(200).json({ message: 'Booking cancelled successfully', booking });
+});
 
 module.exports = {
   createBooking,
-  getUserBookings
+  getUserBookings,
+  cancelBooking
 };

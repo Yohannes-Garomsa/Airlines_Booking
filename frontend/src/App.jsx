@@ -4,12 +4,14 @@ import BookingPage from './pages/BookingPage';
 import PaymentPage from './pages/PaymentPage';
 import TicketPage from './pages/TicketPage';
 import ConfirmationPage from './pages/ConfirmationPage';
+import DashboardPage from './pages/DashboardPage';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/booking/:flightId" element={<BookingPage />} />
         <Route path="/payment/:bookingId" element={<PaymentPage />} />
         <Route path="/ticket/:bookingId" element={<TicketPage />} />
