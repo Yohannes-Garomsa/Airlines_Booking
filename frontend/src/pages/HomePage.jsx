@@ -3,7 +3,7 @@ import { Plane, Calendar, MapPin, Users, Search, AlertCircle, Loader2 } from 'lu
 import { flightService } from './services/api';
 import FlightCard from './components/FlightCard';
 
-function App() {
+function HomePage() {
   const [searchParams, setSearchParams] = useState({
     departure_city: '',
     arrival_city: '',
@@ -214,4 +214,4 @@ function App() {
   );
 }
 
-export default App;
+export default HomePage;

@@ -1,4 +1,4 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import { Plane, Clock, DollarSign } from 'lucide-react';
 
 const FlightCard = ({ flight }) => {
@@ -53,9 +53,9 @@ const FlightCard = ({ flight }) => {
             <Clock className="h-4 w-4" />
             <span className="text-xs font-medium">2h 45m</span>
           </div>
-          <button className="bg-primary hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-lg transition-all transform active:scale-95 shadow-lg shadow-blue-200">
+          <Link to={`/booking/${flight.id}`} className="bg-primary hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-lg transition-all transform active:scale-95 shadow-lg shadow-blue-200">
             Book Now
-          </button>
+          </Link>
         </div>
       </div>
       
