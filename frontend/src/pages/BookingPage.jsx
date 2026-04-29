@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Plane, User, Mail, CreditCard, ChevronLeft, Loader2, CheckCircle } from 'lucide-react';
 import { flightService } from '../services/api';
 
+import SeatSelection from '../components/SeatSelection';
+
 const BookingPage = () => {
   const { flightId } = useParams();
   const navigate = useNavigate();
@@ -10,11 +12,11 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [passenger, setPassenger] = useState({ name: '', email: '' });
+  const [selectedSeat, setSelectedSeat] = useState(null);
 
   useEffect(() => {
     const fetchFlight = async () => {
       try {
-        // Need to implement getFlightById in flightService
         const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/flights/${flightId}`);
         const data = await response.json();
         setFlight(data);
@@ -29,9 +31,12 @@ const BookingPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!selectedSeat) {
+      alert('Please select a seat first.');
+      return;
+    }
     setSubmitting(true);
     try {
-      // Mock booking for now as we might need token handling
       const token = localStorage.getItem('token'); 
       const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/bookings`, {
         method: 'POST',
@@ -48,6 +53,19 @@ const BookingPage = () => {
       
       if (response.ok) {
         const data = await response.json();
+        // Also reserve the seat
+        await fetch(`${import.meta.env.VITE_API_URL || '/api'}/seats/reserve`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            flightId: parseInt(flightId),
+            seatNumber: selectedSeat,
+            bookingId: data.id
+          })
+        });
         navigate(`/payment/${data.id}`, { state: { booking: data, flight } });
       } else {
         alert('Booking failed. Make sure you are logged in.');
@@ -73,11 +91,13 @@ const BookingPage = () => {
         </div>
       </header>
 
-      <main className="container mx-auto mt-12 px-4 max-w-4xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <main className="container mx-auto mt-12 px-4 max-w-5xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Form */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
+          <div className="lg:col-span-8 space-y-8">
+            <SeatSelection flightId={flightId} onSelect={setSelectedSeat} />
+
+            <div className="bg-white rounded-3xl shadow-xl p-8">
               <h2 className="text-2xl font-black text-gray-800 mb-8 flex items-center gap-2">
                 <User className="h-6 w-6 text-primary" /> Passenger Details
               </h2>
@@ -140,7 +160,7 @@ const BookingPage = () => {
           </div>
 
           {/* Flight Summary */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-4">
             <div className="bg-white rounded-3xl shadow-xl p-6 sticky top-24 overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-accent"></div>
               <h3 className="text-lg font-black text-gray-800 mb-6 uppercase tracking-tight">Flight Summary</h3>
