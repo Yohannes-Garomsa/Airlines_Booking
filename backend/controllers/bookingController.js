@@ -1,21 +1,23 @@
 const Booking = require('../models/bookingModel');
+const asyncHandler = require('../utils/asyncHandler');
 
-const createBooking = async (req, res) => {
-  try {
-    const { flightId, totalPrice, passengers } = req.body;
-    const userId = req.user.id;
+const createBooking = asyncHandler(async (req, res) => {
+  const { flightId, totalPrice, passengers } = req.body;
+  const userId = req.user.id;
 
-    if (!flightId || !totalPrice || !passengers || passengers.length === 0) {
-      return res.status(400).json({ message: 'Please provide all required fields' });
-    }
-
-    const booking = await Booking.create(userId, flightId, totalPrice, passengers);
-    res.status(201).json(booking);
-  } catch (error) {
-    console.error('Error creating booking:', error);
-    res.status(500).json({ message: 'Server error' });
+  if (!flightId || !totalPrice || !passengers || passengers.length === 0) {
+    res.status(400);
+    throw new Error('Please provide all required fields');
   }
-};
+
+  const booking = await Booking.create(userId, flightId, totalPrice, passengers);
+  res.status(201).json(booking);
+});
+
+const getAllBookings = asyncHandler(async (req, res) => {
+  const bookings = await Booking.getAll();
+  res.status(200).json(bookings);
+});
 
 const getUserBookings = asyncHandler(async (req, res) => {
   const userId = req.user.id;

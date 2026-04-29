@@ -42,6 +42,23 @@ const Flight = {
   getById: async (id) => {
     const result = await db.query('SELECT * FROM flights WHERE id = $1', [id]);
     return result.rows[0];
+  },
+
+  update: async (id, flightData) => {
+    const { airline, departure_city, arrival_city, departure_time, arrival_time, price, seats_available } = flightData;
+    const result = await db.query(
+      `UPDATE flights SET 
+       airline = $1, departure_city = $2, arrival_city = $3, 
+       departure_time = $4, arrival_time = $5, price = $6, seats_available = $7 
+       WHERE id = $8 RETURNING *`,
+      [airline, departure_city, arrival_city, departure_time, arrival_time, price, seats_available, id]
+    );
+    return result.rows[0];
+  },
+
+  delete: async (id) => {
+    const result = await db.query('DELETE FROM flights WHERE id = $1 RETURNING *', [id]);
+    return result.rows[0];
   }
 };
 
