@@ -97,24 +97,27 @@ function HomePage() {
       </header>
 
       <main className="flex-grow">
-        {/* Hero & Search Section */}
-        <div className="relative min-h-[85vh] flex flex-col justify-end px-4 overflow-hidden pb-16 pt-32">
+        {/* Hero Section */}
+        <div className="relative min-h-[65vh] flex flex-col justify-center px-4 overflow-hidden">
           {/* Background Image & Overlay */}
           <div className="absolute inset-0 z-0">
             <img src="/hero-bg.png" alt="Airplane in the sky at sunset" className="w-full h-full object-cover object-top" />
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/40 via-blue-900/20 to-slate-50"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/60 via-blue-900/20 to-transparent"></div>
           </div>
           
-          <div className="container mx-auto text-center max-w-4xl relative z-10">
+          <div className="container mx-auto text-center max-w-4xl relative z-10 -mt-20">
             <h2 className="text-6xl md:text-7xl font-black mb-4 leading-tight text-white drop-shadow-2xl tracking-tighter">
               Elevate Your Travel.
             </h2>
-            <p className="text-xl md:text-2xl mb-12 text-white font-bold drop-shadow-xl">
+            <p className="text-xl md:text-2xl text-white font-bold drop-shadow-xl">
               Discover exclusive rates on global destinations with our premium fleet.
             </p>
+          </div>
+        </div>
 
-            {/* Search Form */}
-            <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-2xl p-8 flex flex-wrap gap-6 items-end text-gray-800 text-left border border-white/20">
+        {/* Search Section */}
+        <div className="container mx-auto px-4 relative z-20 -mt-28 mb-16 max-w-5xl">
+          <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-2xl p-8 flex flex-wrap gap-6 items-end text-gray-800 text-left border border-white/20">
               <div className="flex-1 min-w-[240px]">
                 <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">
                   From
@@ -206,15 +209,8 @@ function HomePage() {
             </form>
           </div>
 
-          {/* Abstract background shapes */}
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
-            <div className="absolute -top-24 -left-24 w-96 h-96 bg-accent rounded-full blur-3xl"></div>
-            <div className="absolute top-1/2 -right-48 w-80 h-80 bg-blue-400 rounded-full blur-3xl"></div>
-          </div>
-        </div>
-
         {/* Results Section */}
-        <section className="container mx-auto -mt-16 pb-20 px-4 relative z-20">
+        <section className="container mx-auto mt-8 pb-20 px-4 relative z-20">
           {error && (
             <div className="max-w-xl mx-auto mb-8 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl flex items-center gap-3 shadow-lg">
               <AlertCircle className="h-6 w-6 text-red-500" />
