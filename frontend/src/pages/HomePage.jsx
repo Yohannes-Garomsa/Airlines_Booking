@@ -233,7 +233,7 @@ function HomePage() {
                 ))}
               </div>
 
-              /* Pagination Controls
+
               <div className="flex justify-center items-center gap-4 mt-12">
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
