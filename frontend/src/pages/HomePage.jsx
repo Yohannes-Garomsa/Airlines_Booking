@@ -77,7 +77,7 @@ function HomePage() {
           <div className="container mx-auto text-center max-w-4xl relative z-10">
             <h2 className="text-6xl font-black mb-4 leading-tight">Elevate Your Travel.</h2>
             <p className="text-xl mb-12 text-blue-100 font-medium">Discover exclusive rates on global destinations.</p>
-            
+
             {/* Search Form */}
             <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-2xl p-8 flex flex-wrap gap-6 items-end text-gray-800 text-left border border-white/20">
               <div className="flex-1 min-w-[240px]">
@@ -86,30 +86,30 @@ function HomePage() {
                 </label>
                 <div className="relative">
                   <MapPin className="h-5 w-5 text-primary absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     name="departure_city"
                     value={searchParams.departure_city}
                     onChange={handleInputChange}
-                    placeholder="Origin City" 
-                    className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all" 
+                    placeholder="Origin City"
+                    className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all"
                   />
                 </div>
               </div>
-              
+
               <div className="flex-1 min-w-[240px]">
                 <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">
                   To
                 </label>
                 <div className="relative">
                   <MapPin className="h-5 w-5 text-secondary absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     name="arrival_city"
                     value={searchParams.arrival_city}
                     onChange={handleInputChange}
-                    placeholder="Destination City" 
-                    className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all" 
+                    placeholder="Destination City"
+                    className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all"
                   />
                 </div>
               </div>
@@ -120,12 +120,12 @@ function HomePage() {
                 </label>
                 <div className="relative">
                   <Calendar className="h-5 w-5 text-primary absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     name="departure_date"
                     value={searchParams.departure_date}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all" 
+                    className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all"
                   />
                 </div>
               </div>
@@ -136,19 +136,19 @@ function HomePage() {
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     name="max_price"
                     value={searchParams.max_price}
                     onChange={handleInputChange}
                     placeholder="e.g. 500"
-                    className="w-full pl-8 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all" 
+                    className="w-full pl-8 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all"
                   />
                 </div>
               </div>
 
               <div className="w-full flex gap-4 mt-4">
-                <button 
+                <button
                   type="submit"
                   disabled={loading}
                   className="flex-1 bg-primary hover:bg-blue-800 disabled:bg-blue-300 text-white font-black px-10 py-4 rounded-xl transition-all transform hover:scale-[1.01] active:scale-95 shadow-xl flex items-center justify-center gap-2 group"
@@ -156,8 +156,8 @@ function HomePage() {
                   {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5 group-hover:scale-110 transition-transform" />}
                   Find Flights
                 </button>
-                
-                <button 
+
+                <button
                   type="button"
                   onClick={() => {
                     setSearchParams({ departure_city: '', arrival_city: '', departure_date: '', max_price: '' });
@@ -170,7 +170,7 @@ function HomePage() {
               </div>
             </form>
           </div>
-          
+
           {/* Abstract background shapes */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
             <div className="absolute -top-24 -left-24 w-96 h-96 bg-accent rounded-full blur-3xl"></div>
@@ -201,30 +201,32 @@ function HomePage() {
               <p className="font-bold text-gray-400 animate-pulse uppercase tracking-widest text-xs">Curating the best flights for you...</p>
             </div>
           ) : flights.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              {flights.map(flight => (
-                <FlightCard key={flight.id} flight={flight} />
-              ))}
-            </div>
-            
-            {/* Pagination Controls */}
-            <div className="flex justify-center items-center gap-4 mt-12">
-              <button 
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1 || loading}
-                className="px-6 py-2 bg-white text-primary font-bold rounded-xl shadow-md border border-slate-100 disabled:opacity-50 transition-all hover:bg-slate-50"
-              >
-                Previous
-              </button>
-              <span className="font-black text-slate-400">Page {page}</span>
-              <button 
-                onClick={() => setPage(p => p + 1)}
-                disabled={flights.length < 10 || loading}
-                className="px-6 py-2 bg-white text-primary font-bold rounded-xl shadow-md border border-slate-100 disabled:opacity-50 transition-all hover:bg-slate-50"
-              >
-                Next
-              </button>
-            </div>
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                {flights.map(flight => (
+                  <FlightCard key={flight.id} flight={flight} />
+                ))}
+              </div>
+
+              /* Pagination Controls
+              <div className="flex justify-center items-center gap-4 mt-12">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1 || loading}
+                  className="px-6 py-2 bg-white text-primary font-bold rounded-xl shadow-md border border-slate-100 disabled:opacity-50 transition-all hover:bg-slate-50"
+                >
+                  Previous
+                </button>
+                <span className="font-black text-slate-400">Page {page}</span>
+                <button
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={flights.length < 10 || loading}
+                  className="px-6 py-2 bg-white text-primary font-bold rounded-xl shadow-md border border-slate-100 disabled:opacity-50 transition-all hover:bg-slate-50"
+                >
+                  Next
+                </button>
+              </div>
+            </>
           ) : searched ? (
             <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-dashed border-gray-200">
               <div className="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
