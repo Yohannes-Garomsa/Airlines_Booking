@@ -98,18 +98,18 @@ function HomePage() {
 
       <main className="flex-grow">
         {/* Hero & Search Section */}
-        <div className="relative pt-24 pb-32 px-4 overflow-hidden">
+        <div className="relative min-h-[85vh] flex flex-col justify-end px-4 overflow-hidden pb-16 pt-32">
           {/* Background Image & Overlay */}
           <div className="absolute inset-0 z-0">
-            <img src="/hero-bg.png" alt="Airplane in the sky at sunset" className="w-full h-full object-cover object-center" />
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/80 via-blue-900/60 to-slate-50"></div>
+            <img src="/hero-bg.png" alt="Airplane in the sky at sunset" className="w-full h-full object-cover object-top" />
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/40 via-blue-900/20 to-slate-50"></div>
           </div>
           
           <div className="container mx-auto text-center max-w-4xl relative z-10">
-            <h2 className="text-6xl md:text-7xl font-black mb-4 leading-tight text-white drop-shadow-xl tracking-tighter">
+            <h2 className="text-6xl md:text-7xl font-black mb-4 leading-tight text-white drop-shadow-2xl tracking-tighter">
               Elevate Your Travel.
             </h2>
-            <p className="text-xl md:text-2xl mb-12 text-blue-100 font-medium drop-shadow-md">
+            <p className="text-xl md:text-2xl mb-12 text-white font-bold drop-shadow-xl">
               Discover exclusive rates on global destinations with our premium fleet.
             </p>
 
