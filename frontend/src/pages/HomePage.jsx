@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Plane, Calendar, MapPin, Users, Search, AlertCircle, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useContext } from 'react';
+import { Plane, Calendar, MapPin, Users, Search, AlertCircle, Loader2, LogOut, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { flightService } from '../services/api';
 import FlightCard from '../components/FlightCard';
+import { AuthContext } from '../context/AuthContext';
 
 function HomePage() {
   const [searchParams, setSearchParams] = useState({
@@ -16,6 +17,7 @@ function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searched, setSearched] = useState(false);
+  const { user, logout } = useContext(AuthContext);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -53,19 +55,42 @@ function HomePage() {
       {/* Header */}
       <header className="bg-primary text-white p-4 shadow-lg sticky top-0 z-50">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="bg-white/10 p-1.5 rounded-lg">
               <Plane className="h-7 w-7 text-accent" />
             </div>
             <h1 className="text-2xl font-black tracking-tighter uppercase">SkyBound</h1>
-          </div>
+          </Link>
           <nav>
-            <ul className="flex gap-8 font-bold text-sm tracking-wide uppercase">
+            <ul className="flex gap-8 font-bold text-sm tracking-wide uppercase items-center">
               <li className="hover:text-accent transition-colors cursor-pointer">Deals</li>
-              <li>
-                <Link to="/dashboard" className="hover:text-accent transition-colors cursor-pointer">My Trips</Link>
-              </li>
-              <li className="bg-accent text-primary px-4 py-1.5 rounded-full hover:bg-yellow-400 transition-colors cursor-pointer">Login</li>
+              {user ? (
+                <>
+                  <li>
+                    <Link to="/dashboard" className="hover:text-accent transition-colors cursor-pointer">My Trips</Link>
+                  </li>
+                  <li className="flex items-center gap-2 bg-blue-900/50 px-4 py-2 rounded-full border border-blue-700">
+                    <User className="h-4 w-4 text-accent" />
+                    <span>{user.name.split(' ')[0]}</span>
+                  </li>
+                  <li>
+                    <button onClick={logout} className="hover:text-red-400 transition-colors flex items-center gap-1">
+                      <LogOut className="h-4 w-4" /> Logout
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link to="/login" className="hover:text-accent transition-colors cursor-pointer">Login</Link>
+                  </li>
+                  <li>
+                    <Link to="/register" className="bg-accent text-primary px-5 py-2 rounded-full hover:bg-yellow-400 transition-colors cursor-pointer shadow-md transform hover:scale-105 active:scale-95 flex items-center">
+                      Sign Up
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
           </nav>
         </div>

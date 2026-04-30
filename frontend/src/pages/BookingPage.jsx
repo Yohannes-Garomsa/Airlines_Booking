@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plane, User, Mail, CreditCard, ChevronLeft, Loader2, CheckCircle } from 'lucide-react';
 import { flightService } from '../services/api';
+import { AuthContext } from '../context/AuthContext';
+import { useContext } from 'react';
 
 import SeatSelection from '../components/SeatSelection';
 
@@ -13,6 +15,8 @@ const BookingPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [passenger, setPassenger] = useState({ name: '', email: '' });
   const [selectedSeat, setSelectedSeat] = useState(null);
+
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchFlight = async () => {
@@ -31,6 +35,11 @@ const BookingPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) {
+      alert('You must be logged in to confirm a booking.');
+      navigate('/login');
+      return;
+    }
     if (!selectedSeat) {
       alert('Please select a seat first.');
       return;
@@ -69,6 +78,7 @@ const BookingPage = () => {
         navigate(`/payment/${data.id}`, { state: { booking: data, flight } });
       } else {
         alert('Booking failed. Make sure you are logged in.');
+        navigate('/login');
       }
     } catch (error) {
       console.error('Booking error:', error);
