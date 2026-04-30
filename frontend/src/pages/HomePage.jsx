@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Plane, Calendar, MapPin, Users, Search, AlertCircle, Loader2 } from 'lucide-react';
-import { flightService } from './services/api';
-import FlightCard from './components/FlightCard';
+import { Link } from 'react-router-dom';
+import { flightService } from '../services/api';
+import FlightCard from '../components/FlightCard';
 
 function HomePage() {
   const [searchParams, setSearchParams] = useState({
     departure_city: '',
     arrival_city: '',
-    departure_date: ''
+    departure_date: '',
+    max_price: ''
   });
+  const [page, setPage] = useState(1);
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -19,14 +22,11 @@ function HomePage() {
     setSearchParams(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
+  const fetchFlights = async (currentPage = 1) => {
     setLoading(true);
     setError(null);
-    setSearched(true);
-    
     try {
-      const data = await flightService.getFlights(searchParams);
+      const data = await flightService.getFlights({ ...searchParams, page: currentPage, limit: 10 });
       setFlights(data);
     } catch (err) {
       setError('Failed to fetch flights. Please try again later.');
@@ -36,21 +36,17 @@ function HomePage() {
     }
   };
 
-  // Load all flights on initial mount
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    setSearched(true);
+    setPage(1);
+    await fetchFlights(1);
+  };
+
+  // Load flights when page changes
   useEffect(() => {
-    const fetchInitialFlights = async () => {
-      setLoading(true);
-      try {
-        const data = await flightService.getFlights();
-        setFlights(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchInitialFlights();
-  }, []);
+    fetchFlights(page);
+  }, [page]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -134,14 +130,44 @@ function HomePage() {
                 </div>
               </div>
 
-              <button 
-                type="submit"
-                disabled={loading}
-                className="w-full lg:w-auto bg-primary hover:bg-blue-800 disabled:bg-blue-300 text-white font-black px-10 py-4 rounded-xl transition-all transform hover:scale-[1.02] active:scale-95 shadow-xl flex items-center justify-center gap-2 group"
-              >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5 group-hover:scale-110 transition-transform" />}
-                Find Flights
-              </button>
+              <div className="w-full md:w-auto flex-1 min-w-[180px]">
+                <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">
+                  Max Price ($)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                  <input 
+                    type="number" 
+                    name="max_price"
+                    value={searchParams.max_price}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 500"
+                    className="w-full pl-8 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all" 
+                  />
+                </div>
+              </div>
+
+              <div className="w-full flex gap-4 mt-4">
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-primary hover:bg-blue-800 disabled:bg-blue-300 text-white font-black px-10 py-4 rounded-xl transition-all transform hover:scale-[1.01] active:scale-95 shadow-xl flex items-center justify-center gap-2 group"
+                >
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5 group-hover:scale-110 transition-transform" />}
+                  Find Flights
+                </button>
+                
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setSearchParams({ departure_city: '', arrival_city: '', departure_date: '', max_price: '' });
+                    setSearched(false);
+                  }}
+                  className="px-8 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black rounded-xl transition-all"
+                >
+                  Clear
+                </button>
+              </div>
             </form>
           </div>
           
@@ -175,10 +201,29 @@ function HomePage() {
               <p className="font-bold text-gray-400 animate-pulse uppercase tracking-widest text-xs">Curating the best flights for you...</p>
             </div>
           ) : flights.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               {flights.map(flight => (
                 <FlightCard key={flight.id} flight={flight} />
               ))}
+            </div>
+            
+            {/* Pagination Controls */}
+            <div className="flex justify-center items-center gap-4 mt-12">
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1 || loading}
+                className="px-6 py-2 bg-white text-primary font-bold rounded-xl shadow-md border border-slate-100 disabled:opacity-50 transition-all hover:bg-slate-50"
+              >
+                Previous
+              </button>
+              <span className="font-black text-slate-400">Page {page}</span>
+              <button 
+                onClick={() => setPage(p => p + 1)}
+                disabled={flights.length < 10 || loading}
+                className="px-6 py-2 bg-white text-primary font-bold rounded-xl shadow-md border border-slate-100 disabled:opacity-50 transition-all hover:bg-slate-50"
+              >
+                Next
+              </button>
             </div>
           ) : searched ? (
             <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-dashed border-gray-200">

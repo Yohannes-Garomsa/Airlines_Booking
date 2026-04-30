@@ -30,6 +30,12 @@ const reserveSeat = asyncHandler(async (req, res) => {
     throw new Error('Seat is already occupied or does not exist');
   }
   
+  // Emit real-time update
+  const io = req.app.get('io');
+  if (io) {
+    io.emit('seatUpdate', seat);
+  }
+  
   res.status(200).json({ message: 'Seat reserved successfully', seat });
 });
 

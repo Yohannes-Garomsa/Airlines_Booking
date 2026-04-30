@@ -41,5 +41,6 @@ const cancelBooking = asyncHandler(async (req, res) => {
 module.exports = {
   createBooking,
   getUserBookings,
+  getAllBookings,
   cancelBooking
 };

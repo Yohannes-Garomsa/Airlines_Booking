@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plane, User, Loader2 } from 'lucide-react';
+import { io } from 'socket.io-client';
 
 const SeatSelection = ({ flightId, onSelect }) => {
   const [seats, setSeats] = useState([]);
@@ -19,6 +20,22 @@ const SeatSelection = ({ flightId, onSelect }) => {
       }
     };
     fetchSeats();
+
+    const socket = io(import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000');
+    
+    socket.on('seatUpdate', (updatedSeat) => {
+      if (updatedSeat.flight_id === parseInt(flightId)) {
+        setSeats(currentSeats => 
+          currentSeats.map(seat => 
+            seat.id === updatedSeat.id ? updatedSeat : seat
+          )
+        );
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [flightId]);
 
   const handleSeatClick = (seat) => {
