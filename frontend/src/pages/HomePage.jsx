@@ -98,10 +98,20 @@ function HomePage() {
 
       <main className="flex-grow">
         {/* Hero & Search Section */}
-        <div className="bg-gradient-to-b from-primary via-blue-900 to-blue-800 text-white pt-16 pb-32 px-4 relative">
+        <div className="relative pt-24 pb-32 px-4 overflow-hidden">
+          {/* Background Image & Overlay */}
+          <div className="absolute inset-0 z-0">
+            <img src="/hero-bg.png" alt="Airplane in the sky at sunset" className="w-full h-full object-cover object-center" />
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/80 via-blue-900/60 to-slate-50"></div>
+          </div>
+          
           <div className="container mx-auto text-center max-w-4xl relative z-10">
-            <h2 className="text-6xl font-black mb-4 leading-tight">Elevate Your Travel.</h2>
-            <p className="text-xl mb-12 text-blue-100 font-medium">Discover exclusive rates on global destinations.</p>
+            <h2 className="text-6xl md:text-7xl font-black mb-4 leading-tight text-white drop-shadow-xl tracking-tighter">
+              Elevate Your Travel.
+            </h2>
+            <p className="text-xl md:text-2xl mb-12 text-blue-100 font-medium drop-shadow-md">
+              Discover exclusive rates on global destinations with our premium fleet.
+            </p>
 
             {/* Search Form */}
             <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-2xl p-8 flex flex-wrap gap-6 items-end text-gray-800 text-left border border-white/20">
