@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { flightService } from '../services/api';
 import FlightCard from '../components/FlightCard';
 import { AuthContext } from '../context/AuthContext';
+import Footer from '../components/Footer';
 
 function HomePage() {
   const [searchParams, setSearchParams] = useState({
