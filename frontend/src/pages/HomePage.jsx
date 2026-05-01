@@ -271,25 +271,7 @@ function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-16 px-4">
-        <div className="container mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 text-white mb-6">
-            <Plane className="h-8 w-8 text-accent" />
-            <span className="text-3xl font-black tracking-tighter italic uppercase">SkyBound</span>
-          </div>
-          <p className="max-w-md mx-auto mb-8 text-sm leading-relaxed">
-            The world's most trusted airline booking platform. Connecting millions of travelers with the best global routes every day.
-          </p>
-          <div className="flex justify-center gap-8 mb-12">
-            {['Destinations', 'About', 'Support', 'Legal'].map(link => (
-              <a key={link} href="#" className="text-xs font-black uppercase tracking-widest hover:text-white transition-colors">{link}</a>
-            ))}
-          </div>
-          <div className="pt-8 border-t border-slate-800 text-[10px] font-bold uppercase tracking-[0.2em]">
-            © 2026 SkyBound Airlines. Built with excellence.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
