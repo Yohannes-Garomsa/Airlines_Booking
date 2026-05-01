@@ -23,10 +23,24 @@ const AdminDashboard = () => {
       };
       
       const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}${endpoints[activeTab]}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const result = await res.json();
-      setData(prev => ({ ...prev, [activeTab]: result }));
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        // Unauthorized: redirect to login page
+        window.location.href = '/login';
+        return;
+      }
+      const errorText = await res.text();
+      console.error('Fetch error:', res.status, errorText);
+      return;
+    }
+    const result = await res.json();
+    // If the API returns an object with a key matching the activeTab, use that array; otherwise use result directly.
+    const payload = Array.isArray(result)
+      ? result
+      : result[activeTab] ?? result;
+    setData(prev => ({ ...prev, [activeTab]: payload }));
     } catch (err) {
       console.error(err);
     } finally {
