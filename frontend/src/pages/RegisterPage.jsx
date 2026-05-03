@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plane, Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react';
+import { Plane, Mail, Lock, User, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
 const RegisterPage = () => {
@@ -42,6 +42,15 @@ const RegisterPage = () => {
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+        {/* Back to Home Button */}
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 text-gray-600 hover:text-primary transition-colors mb-4 group"
+        >
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-sm font-bold">Back to Home</span>
+        </Link>
+
         <Link to="/" className="flex justify-center items-center gap-2 text-primary hover:text-blue-800 transition-colors mb-6">
           <div className="bg-primary text-white p-2 rounded-xl">
             <Plane className="h-8 w-8" />
