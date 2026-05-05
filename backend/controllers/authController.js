@@ -39,7 +39,7 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const getMe = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.getById(req.user.id);
   res.status(200).json(user);
 });
 

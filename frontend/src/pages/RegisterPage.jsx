@@ -24,8 +24,12 @@ const RegisterPage = () => {
 
     setLoading(true);
     try {
-      await register({ name: userData.name, email: userData.email, password: userData.password });
-      navigate('/');
+      const data = await register({ name: userData.name, email: userData.email, password: userData.password });
+      if (data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to register. Please try again.');
     } finally {

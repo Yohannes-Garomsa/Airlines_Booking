@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Plane, Mail, Lock, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -9,6 +9,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -19,8 +20,12 @@ const LoginPage = () => {
     setError('');
     setLoading(true);
     try {
-      await login(credentials);
-      navigate('/');
+      const data = await login(credentials);
+      // Professional redirection: 
+      // 1. Check if there's a previous location stored in state (from a protected route)
+      // 2. If not, redirect based on role (admin -> /admin, user -> /)
+      const from = location.state?.from?.pathname || (data.user.role === 'admin' ? '/admin' : '/');
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
     } finally {
