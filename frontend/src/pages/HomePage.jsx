@@ -374,8 +374,13 @@ function HomePage() {
           ) : flights.length > 0 ? (
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                {flights.map(flight => (
-                  <FlightCard key={flight.id} flight={flight} selectedClass={cabinClass} />
+                {flights.map((flight, idx) => (
+                  <FlightCard 
+                    key={flight.id} 
+                    flight={flight} 
+                    selectedClass={cabinClass} 
+                    isFeatured={!searched && idx < 2} 
+                  />
                 ))}
               </div>
 
