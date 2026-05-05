@@ -1,9 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { downloadTicket, emailTicket } = require('../controllers/ticketController');
+const { 
+  generateTickets, 
+  getTicket, 
+  downloadTicketPDF 
+} = require('../controllers/ticketController');
 const { protectRoute } = require('../middleware/authMiddleware');
 
-router.get('/:bookingId/download', protectRoute, downloadTicket);
-router.post('/:bookingId/send', protectRoute, emailTicket);
+router.use(protectRoute);
+
+router.post('/generate', generateTickets);
+router.get('/:id', getTicket);
+router.get('/:id/pdf', downloadTicketPDF);
+router.post('/:id/email', emailTicket);
 
 module.exports = router;

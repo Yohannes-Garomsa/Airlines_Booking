@@ -15,10 +15,13 @@ const Booking = {
       const verifiedPrice = cabinClass === 'Business' ? flight.business_price : flight.economy_price;
       const finalPrice = parseFloat(verifiedPrice) * passengers.length;
 
+      // Generate PNR (6 chars uppercase alphanumeric)
+      const pnr = Math.random().toString(36).substring(2, 8).toUpperCase();
+
       // 1. Create Booking
       const bookingResult = await client.query(
-        'INSERT INTO bookings (user_id, flight_id, total_price, cabin_class) VALUES ($1, $2, $3, $4) RETURNING *',
-        [userId, flightId, finalPrice, cabinClass || 'Economy']
+        'INSERT INTO bookings (user_id, flight_id, total_price, cabin_class, pnr) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [userId, flightId, finalPrice, cabinClass || 'Economy', pnr]
       );
       const booking = bookingResult.rows[0];
 
