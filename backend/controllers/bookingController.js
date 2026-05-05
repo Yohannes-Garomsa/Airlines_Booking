@@ -2,7 +2,7 @@ const Booking = require('../models/bookingModel');
 const asyncHandler = require('../utils/asyncHandler');
 
 const createBooking = asyncHandler(async (req, res) => {
-  const { flightId, totalPrice, passengers } = req.body;
+  const { flightId, totalPrice, cabinClass, passengers } = req.body;
   const userId = req.user.id;
 
   if (!flightId || !totalPrice || !passengers || passengers.length === 0) {
@@ -10,7 +10,7 @@ const createBooking = asyncHandler(async (req, res) => {
     throw new Error('Please provide all required fields');
   }
 
-  const booking = await Booking.create(userId, flightId, totalPrice, passengers);
+  const booking = await Booking.create(userId, flightId, totalPrice, cabinClass, passengers);
   res.status(201).json(booking);
 });
 

@@ -1,5 +1,12 @@
 -- Schema for Airline Booking System
 
+DROP TABLE IF EXISTS seats;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS passengers;
+DROP TABLE IF EXISTS bookings;
+DROP TABLE IF EXISTS flights;
+DROP TABLE IF EXISTS users;
+
 -- Users Table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -18,8 +25,10 @@ CREATE TABLE flights (
     arrival_city VARCHAR(100) NOT NULL,
     departure_time TIMESTAMP WITH TIME ZONE NOT NULL,
     arrival_time TIMESTAMP WITH TIME ZONE NOT NULL,
-    price DECIMAL(10, 2) NOT NULL,
-    seats_available INTEGER NOT NULL,
+    economy_price DECIMAL(10, 2) NOT NULL,
+    business_price DECIMAL(10, 2) NOT NULL,
+    economy_seats INTEGER NOT NULL,
+    business_seats INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -29,6 +38,7 @@ CREATE TABLE bookings (
     user_id INTEGER REFERENCES users(id),
     flight_id INTEGER REFERENCES flights(id),
     total_price DECIMAL(10, 2) NOT NULL,
+    cabin_class VARCHAR(20) NOT NULL DEFAULT 'Economy',
     status VARCHAR(20) DEFAULT 'pending',
     booking_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -63,9 +73,4 @@ CREATE TABLE seats (
     UNIQUE(flight_id, seat_number)
 );
 
--- Sample Data
-INSERT INTO flights (airline, departure_city, arrival_city, departure_time, arrival_time, price, seats_available)
-VALUES 
-('SkyBound Airlines', 'New York', 'London', '2026-06-01 10:00:00+00', '2026-06-01 22:00:00+00', 450.00, 150),
-('Global Air', 'Paris', 'Tokyo', '2026-06-02 08:00:00+00', '2026-06-03 04:00:00+00', 850.00, 120),
-('Star Travel', 'Dubai', 'New York', '2026-06-03 14:00:00+00', '2026-06-04 02:00:00+00', 700.00, 200);
+-- Sample Data removed (use seed.js instead)

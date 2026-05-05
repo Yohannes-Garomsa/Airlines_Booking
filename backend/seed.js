@@ -19,8 +19,10 @@ const seedFlights = async () => {
         arrival_city: 'New York (JFK)',
         departure_time: new Date(Date.now() + 86400000 * 2), // 2 days from now
         arrival_time: new Date(Date.now() + 86400000 * 2 + 3600000 * 14), // 14 hours later
-        price: 1250.00,
-        seats_available: 60
+        economy_price: 1250.00,
+        business_price: 4500.00,
+        economy_seats: 150,
+        business_seats: 30
       },
       {
         airline: 'Qatar Airways',
@@ -28,8 +30,10 @@ const seedFlights = async () => {
         arrival_city: 'London (LHR)',
         departure_time: new Date(Date.now() + 86400000 * 5), // 5 days from now
         arrival_time: new Date(Date.now() + 86400000 * 5 + 3600000 * 7), // 7 hours later
-        price: 850.00,
-        seats_available: 60
+        economy_price: 850.00,
+        business_price: 3200.00,
+        economy_seats: 120,
+        business_seats: 20
       },
       {
         airline: 'Singapore Airlines',
@@ -37,15 +41,17 @@ const seedFlights = async () => {
         arrival_city: 'Tokyo (HND)',
         departure_time: new Date(Date.now() + 86400000 * 10), // 10 days from now
         arrival_time: new Date(Date.now() + 86400000 * 10 + 3600000 * 6), // 6 hours later
-        price: 600.00,
-        seats_available: 60
+        economy_price: 600.00,
+        business_price: 2400.00,
+        economy_seats: 100,
+        business_seats: 15
       }
     ];
 
     for (const flight of sampleFlights) {
       await pool.query(
-        'INSERT INTO flights (airline, departure_city, arrival_city, departure_time, arrival_time, price, seats_available) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-        [flight.airline, flight.departure_city, flight.arrival_city, flight.departure_time, flight.arrival_time, flight.price, flight.seats_available]
+        'INSERT INTO flights (airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+        [flight.airline, flight.departure_city, flight.arrival_city, flight.departure_time, flight.arrival_time, flight.economy_price, flight.business_price, flight.economy_seats, flight.business_seats]
       );
     }
 

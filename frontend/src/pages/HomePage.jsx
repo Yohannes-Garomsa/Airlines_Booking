@@ -307,14 +307,14 @@ function HomePage() {
                           <div className="pt-4 border-t border-slate-100">
                             <p className="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest text-center">Cabin Class</p>
                             <div className="grid grid-cols-1 gap-2">
-                              {['Economy', 'Premium Economy', 'Business', 'First'].map(c => (
+                              {['Economy', 'Business'].map(c => (
                                 <button
                                   key={c}
                                   type="button"
                                   onClick={() => setCabinClass(c)}
                                   className={`px-4 py-2 rounded-xl text-sm font-bold transition-all text-center ${cabinClass === c ? 'bg-primary text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                                 >
-                                  {c}
+                                  {c === 'Business' ? 'Business (VIP)' : c}
                                 </button>
                               ))}
                             </div>
@@ -333,13 +333,7 @@ function HomePage() {
                   </div>
 
                   <div className="flex items-center gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer group">
-                      <input type="checkbox" className="w-5 h-5 rounded-md border-2 border-slate-300 text-primary focus:ring-primary transition-all cursor-pointer" />
-                      <span className="text-sm font-bold text-slate-500 group-hover:text-slate-700 transition-all">Book with miles</span>
-                    </label>
-                    <button type="button" className="text-sm font-bold text-primary hover:text-blue-800 transition-all flex items-center gap-1">
-                      <Plus className="h-4 w-4" /> I have promo code
-                    </button>
+                    {/* Simplified: Removed miles and promo code as requested */}
                   </div>
                 </div>
 
@@ -394,7 +388,7 @@ function HomePage() {
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 {flights.map(flight => (
-                  <FlightCard key={flight.id} flight={flight} />
+                  <FlightCard key={flight.id} flight={flight} selectedClass={cabinClass} />
                 ))}
               </div>
 

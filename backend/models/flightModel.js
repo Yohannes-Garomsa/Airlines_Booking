@@ -2,10 +2,10 @@ const db = require('../config/db');
 
 const Flight = {
   create: async (flightData) => {
-    const { airline, departure_city, arrival_city, departure_time, arrival_time, price, seats_available } = flightData;
+    const { airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats } = flightData;
     const result = await db.query(
-      'INSERT INTO flights (airline, departure_city, arrival_city, departure_time, arrival_time, price, seats_available) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [airline, departure_city, arrival_city, departure_time, arrival_time, price, seats_available]
+      'INSERT INTO flights (airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+      [airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats]
     );
     return result.rows[0];
   },
@@ -16,7 +16,7 @@ const Flight = {
   },
 
   search: async (filters) => {
-    const { departure_city, arrival_city, departure_date, min_price, max_price, limit = 10, page = 1 } = filters;
+    const { departure_city, arrival_city, departure_date, max_price, limit = 10, page = 1 } = filters;
     let query = 'SELECT * FROM flights WHERE 1=1';
     const params = [];
     let paramIndex = 1;
@@ -33,12 +33,8 @@ const Flight = {
       query += ` AND DATE(departure_time) = $${paramIndex++}`;
       params.push(departure_date);
     }
-    if (min_price) {
-      query += ` AND price >= $${paramIndex++}`;
-      params.push(min_price);
-    }
     if (max_price) {
-      query += ` AND price <= $${paramIndex++}`;
+      query += ` AND economy_price <= $${paramIndex++}`;
       params.push(max_price);
     }
 
@@ -56,13 +52,14 @@ const Flight = {
   },
 
   update: async (id, flightData) => {
-    const { airline, departure_city, arrival_city, departure_time, arrival_time, price, seats_available } = flightData;
+    const { airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats } = flightData;
     const result = await db.query(
       `UPDATE flights SET 
        airline = $1, departure_city = $2, arrival_city = $3, 
-       departure_time = $4, arrival_time = $5, price = $6, seats_available = $7 
-       WHERE id = $8 RETURNING *`,
-      [airline, departure_city, arrival_city, departure_time, arrival_time, price, seats_available, id]
+       departure_time = $4, arrival_time = $5, economy_price = $6, business_price = $7, 
+       economy_seats = $8, business_seats = $9 
+       WHERE id = $10 RETURNING *`,
+      [airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, id]
     );
     return result.rows[0];
   },

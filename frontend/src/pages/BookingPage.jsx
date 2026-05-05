@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Plane, User, Mail, CreditCard, ChevronLeft, Loader2, CheckCircle } from 'lucide-react';
 import { flightService } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
@@ -10,6 +9,10 @@ import SeatSelection from '../components/SeatSelection';
 const BookingPage = () => {
   const { flightId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const cabinClass = queryParams.get('class') || 'Economy';
+
   const [flight, setFlight] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -33,6 +36,11 @@ const BookingPage = () => {
     fetchFlight();
   }, [flightId]);
 
+  const getPrice = () => {
+    if (!flight) return 0;
+    return cabinClass === 'Business' ? flight.business_price : flight.economy_price;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
@@ -55,7 +63,8 @@ const BookingPage = () => {
         },
         body: JSON.stringify({
           flightId: parseInt(flightId),
-          totalPrice: flight.price,
+          totalPrice: getPrice(),
+          cabinClass: cabinClass,
           passengers: [passenger]
         })
       });
@@ -108,9 +117,14 @@ const BookingPage = () => {
             <SeatSelection flightId={flightId} onSelect={setSelectedSeat} />
 
             <div className="bg-white rounded-3xl shadow-xl p-8">
-              <h2 className="text-2xl font-black text-gray-800 mb-8 flex items-center gap-2">
-                <User className="h-6 w-6 text-primary" /> Passenger Details
-              </h2>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-black text-gray-800 flex items-center gap-2">
+                  <User className="h-6 w-6 text-primary" /> Passenger Details
+                </h2>
+                <div className="bg-blue-50 px-4 py-2 rounded-xl">
+                  <span className="text-xs font-black text-primary uppercase tracking-widest">{cabinClass} Class</span>
+                </div>
+              </div>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">Full Name</label>
@@ -180,7 +194,10 @@ const BookingPage = () => {
                    <div className="bg-blue-50 p-2 rounded-lg">
                     <Plane className="h-5 w-5 text-primary" />
                    </div>
-                   <span className="font-bold text-gray-700">{flight.airline}</span>
+                   <div>
+                    <span className="font-bold text-gray-700">{flight.airline}</span>
+                    <p className="text-[10px] font-black text-primary uppercase">{cabinClass} Class</p>
+                   </div>
                 </div>
 
                 <div className="flex justify-between border-b border-slate-50 pb-4">
@@ -196,7 +213,7 @@ const BookingPage = () => {
 
                 <div className="pt-4 flex justify-between items-center">
                   <span className="text-sm font-bold text-gray-500 italic">Total Price</span>
-                  <span className="text-3xl font-black text-primary">${flight.price}</span>
+                  <span className="text-3xl font-black text-primary">${getPrice()}</span>
                 </div>
               </div>
             </div>

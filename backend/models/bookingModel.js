@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
 const Booking = {
-  create: async (userId, flightId, totalPrice, passengers) => {
+  create: async (userId, flightId, totalPrice, cabinClass, passengers) => {
     const client = await db.getClient();
     
     try {
@@ -9,8 +9,8 @@ const Booking = {
 
       // 1. Create Booking
       const bookingResult = await client.query(
-        'INSERT INTO bookings (user_id, flight_id, total_price) VALUES ($1, $2, $3) RETURNING *',
-        [userId, flightId, totalPrice]
+        'INSERT INTO bookings (user_id, flight_id, total_price, cabin_class) VALUES ($1, $2, $3, $4) RETURNING *',
+        [userId, flightId, totalPrice, cabinClass || 'Economy']
       );
       const booking = bookingResult.rows[0];
 
