@@ -2,7 +2,10 @@ const db = require('../config/db');
 
 const Flight = {
   create: async (flightData) => {
-    const { airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats } = flightData;
+    const { airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, economy_seats, business_seats } = flightData;
+    // Real Business Rule: Business price is 10% greater than economy price
+    const business_price = (parseFloat(economy_price) * 1.1).toFixed(2);
+    
     const result = await db.query(
       'INSERT INTO flights (airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
       [airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats]
@@ -52,7 +55,10 @@ const Flight = {
   },
 
   update: async (id, flightData) => {
-    const { airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats } = flightData;
+    const { airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, economy_seats, business_seats } = flightData;
+    // Real Business Rule: Business price is 10% greater than economy price
+    const business_price = (parseFloat(economy_price) * 1.1).toFixed(2);
+
     const result = await db.query(
       `UPDATE flights SET 
        airline = $1, departure_city = $2, arrival_city = $3, 
@@ -67,6 +73,18 @@ const Flight = {
   delete: async (id) => {
     const result = await db.query('DELETE FROM flights WHERE id = $1 RETURNING *', [id]);
     return result.rows[0];
+  },
+
+  getCities: async () => {
+    const result = await db.query(`
+      SELECT DISTINCT city FROM (
+        SELECT departure_city as city FROM flights
+        UNION
+        SELECT arrival_city as city FROM flights
+      ) AS unique_cities 
+      ORDER BY city ASC
+    `);
+    return result.rows.map(r => r.city);
   }
 };
 

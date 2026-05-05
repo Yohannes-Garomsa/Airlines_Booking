@@ -57,10 +57,16 @@ const getFlightById = asyncHandler(async (req, res) => {
   res.status(200).json(flight);
 });
 
+const getCities = asyncHandler(async (req, res) => {
+  const cities = await Flight.getCities();
+  res.status(200).json(cities);
+});
+
 module.exports = {
   getAllFlights,
   createFlight,
   updateFlight,
   deleteFlight,
-  getFlightById
+  getFlightById,
+  getCities
 };

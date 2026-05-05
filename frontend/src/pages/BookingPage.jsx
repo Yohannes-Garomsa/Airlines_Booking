@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Plane, User, Mail, CreditCard, ChevronLeft, Loader2, CheckCircle } from 'lucide-react';
+import { Plane, User, Mail, CreditCard, ChevronLeft, Loader2, CheckCircle, ShieldCheck } from 'lucide-react';
 import { flightService } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { useContext } from 'react';
@@ -121,8 +121,9 @@ const BookingPage = () => {
                 <h2 className="text-2xl font-black text-gray-800 flex items-center gap-2">
                   <User className="h-6 w-6 text-primary" /> Passenger Details
                 </h2>
-                <div className="bg-blue-50 px-4 py-2 rounded-xl">
-                  <span className="text-xs font-black text-primary uppercase tracking-widest">{cabinClass} Class</span>
+                <div className={`px-4 py-2 rounded-xl flex items-center gap-2 ${cabinClass === 'Business' ? 'bg-yellow-50 text-yellow-700' : 'bg-blue-50 text-primary'}`}>
+                  {cabinClass === 'Business' && <ShieldCheck className="h-4 w-4" />}
+                  <span className="text-xs font-black uppercase tracking-widest">{cabinClass} Class</span>
                 </div>
               </div>
               <form onSubmit={handleSubmit} className="space-y-6">

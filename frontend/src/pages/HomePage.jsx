@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Plane, Calendar, MapPin, Users, Search, AlertCircle, Loader2, LogOut, User, Plus, Trash2 } from 'lucide-react';
+import { Plane, Calendar, MapPin, Users, Search, AlertCircle, Loader2, LogOut, User, Plus, Trash2, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { flightService } from '../services/api';
 import FlightCard from '../components/FlightCard';
 import { AuthContext } from '../context/AuthContext';
 import { Footer } from '../components/Footer';
+import CitySelector from '../components/CitySelector';
 
 function HomePage() {
   const [tripType, setTripType] = useState('round-trip');
@@ -146,32 +147,46 @@ function HomePage() {
         {/* Search Section */}
         <div className="container mx-auto px-4 relative z-20 -mt-24 mb-16 max-w-6xl">
           <div className="bg-white rounded-3xl shadow-2xl p-8 border border-slate-100">
-            {/* Trip Type Selector */}
-            <div className="flex gap-6 mb-8 border-b border-slate-100 pb-4">
-              {[
-                { id: 'round-trip', label: 'Round Trip' },
-                { id: 'one-way', label: 'One-Way' },
-                { id: 'multicity', label: 'Multicity' }
-              ].map(type => (
-                <button
-                  key={type.id}
-                  type="button"
-                  onClick={() => {
-                    setTripType(type.id);
-                    if (type.id !== 'multicity') setSegments([segments[0]]);
-                  }}
-                  className={`flex items-center gap-2 pb-2 transition-all font-bold text-sm uppercase tracking-wider ${
-                    tripType === type.id 
-                    ? 'text-primary border-b-2 border-primary' 
-                    : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
-                  }`}
-                >
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${tripType === type.id ? 'border-primary' : 'border-slate-300'}`}>
-                    {tripType === type.id && <div className="w-2 h-2 bg-primary rounded-full"></div>}
-                  </div>
-                  {type.label}
-                </button>
-              ))}
+            {/* Search Type & Class Selectors */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-slate-100 pb-4">
+              <div className="flex gap-6 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+                {[
+                  { id: 'round-trip', label: 'Round Trip' },
+                  { id: 'one-way', label: 'One-Way' },
+                  { id: 'multicity', label: 'Multicity' }
+                ].map(type => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    onClick={() => {
+                      setTripType(type.id);
+                      if (type.id !== 'multicity') setSegments([{ departure_city: '', arrival_city: '', departure_date: '', return_date: '' }]);
+                      else if (segments.length === 1) setSegments([...segments, { departure_city: '', arrival_city: '', departure_date: '', return_date: '' }]);
+                    }}
+                    className={`whitespace-nowrap text-sm font-black transition-all pb-4 border-b-2 ${tripType === type.id ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex bg-slate-100 p-1 rounded-2xl">
+                {['Economy', 'Business'].map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCabinClass(c)}
+                    className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+                      cabinClass === c 
+                        ? 'bg-white text-primary shadow-sm' 
+                        : 'text-slate-500 hover:bg-white/50'
+                    }`}
+                  >
+                    {c === 'Business' && <ShieldCheck className="h-3.5 w-3.5 text-accent" />}
+                    {c === 'Business' ? 'Business (VIP)' : c}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <form onSubmit={handleSearch} className="space-y-6">
@@ -183,35 +198,21 @@ function HomePage() {
                     </div>
                   )}
                   
-                  <div className="flex-1 min-w-[200px]">
-                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">From</label>
-                    <div className="relative">
-                      <MapPin className="h-5 w-5 text-primary absolute left-4 top-1/2 -translate-y-1/2" />
-                      <input
-                        required
-                        type="text"
-                        placeholder="Origin City"
-                        value={segment.departure_city}
-                        onChange={(e) => handleSegmentChange(index, 'departure_city', e.target.value)}
-                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-slate-700 transition-all"
-                      />
-                    </div>
-                  </div>
+                  <CitySelector
+                    label="From"
+                    placeholder="Origin City"
+                    value={segment.departure_city}
+                    onChange={(val) => handleSegmentChange(index, 'departure_city', val)}
+                    icon={MapPin}
+                  />
 
-                  <div className="flex-1 min-w-[200px]">
-                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">To</label>
-                    <div className="relative">
-                      <MapPin className="h-5 w-5 text-secondary absolute left-4 top-1/2 -translate-y-1/2" />
-                      <input
-                        required
-                        type="text"
-                        placeholder="Destination"
-                        value={segment.arrival_city}
-                        onChange={(e) => handleSegmentChange(index, 'arrival_city', e.target.value)}
-                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-slate-700 transition-all"
-                      />
-                    </div>
-                  </div>
+                  <CitySelector
+                    label="To"
+                    placeholder="Destination"
+                    value={segment.arrival_city}
+                    onChange={(val) => handleSegmentChange(index, 'arrival_city', val)}
+                    icon={MapPin}
+                  />
 
                   <div className="flex-1 min-w-[150px]">
                     <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Departure</label>
@@ -304,21 +305,7 @@ function HomePage() {
                             </div>
                           ))}
 
-                          <div className="pt-4 border-t border-slate-100">
-                            <p className="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest text-center">Cabin Class</p>
-                            <div className="grid grid-cols-1 gap-2">
-                              {['Economy', 'Business'].map(c => (
-                                <button
-                                  key={c}
-                                  type="button"
-                                  onClick={() => setCabinClass(c)}
-                                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all text-center ${cabinClass === c ? 'bg-primary text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
-                                >
-                                  {c === 'Business' ? 'Business (VIP)' : c}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
+                          {/* Cabin Class removed from here and moved to top for better visibility */}
 
                           <button
                             type="button"

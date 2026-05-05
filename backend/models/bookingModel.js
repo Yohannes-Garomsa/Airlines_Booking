@@ -7,10 +7,18 @@ const Booking = {
     try {
       await client.query('BEGIN');
 
+      // Security: Recalculate price from DB to prevent tampering
+      const flightRes = await client.query('SELECT economy_price, business_price FROM flights WHERE id = $1', [flightId]);
+      if (flightRes.rows.length === 0) throw new Error('Flight not found');
+      
+      const flight = flightRes.rows[0];
+      const verifiedPrice = cabinClass === 'Business' ? flight.business_price : flight.economy_price;
+      const finalPrice = parseFloat(verifiedPrice) * passengers.length;
+
       // 1. Create Booking
       const bookingResult = await client.query(
         'INSERT INTO bookings (user_id, flight_id, total_price, cabin_class) VALUES ($1, $2, $3, $4) RETURNING *',
-        [userId, flightId, totalPrice, cabinClass || 'Economy']
+        [userId, flightId, finalPrice, cabinClass || 'Economy']
       );
       const booking = bookingResult.rows[0];
 

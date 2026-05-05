@@ -9,7 +9,8 @@ const AdminDashboard = () => {
   const [currentFlight, setCurrentFlight] = useState(null);
   const [formData, setFormData] = useState({
     airline: '', departure_city: '', arrival_city: '', 
-    departure_time: '', arrival_time: '', price: '', seats_available: ''
+    departure_time: '', arrival_time: '', economy_price: '', 
+    economy_seats: '', business_seats: ''
   });
 
   const fetchData = async () => {
@@ -27,7 +28,6 @@ const AdminDashboard = () => {
     });
     if (!res.ok) {
       if (res.status === 401) {
-        // Unauthorized: redirect to login page
         window.location.href = '/login';
         return;
       }
@@ -36,7 +36,6 @@ const AdminDashboard = () => {
       return;
     }
     const result = await res.json();
-    // If the API returns an object with a key matching the activeTab, use that array; otherwise use result directly.
     const payload = Array.isArray(result)
       ? result
       : result[activeTab] ?? result;
@@ -96,15 +95,21 @@ const AdminDashboard = () => {
     if (flight) {
       setCurrentFlight(flight);
       setFormData({
-        ...flight,
+        airline: flight.airline,
+        departure_city: flight.departure_city,
+        arrival_city: flight.arrival_city,
         departure_time: flight.departure_time.slice(0, 16),
-        arrival_time: flight.arrival_time.slice(0, 16)
+        arrival_time: flight.arrival_time.slice(0, 16),
+        economy_price: flight.economy_price,
+        economy_seats: flight.economy_seats,
+        business_seats: flight.business_seats
       });
     } else {
       setCurrentFlight(null);
       setFormData({
         airline: '', departure_city: '', arrival_city: '', 
-        departure_time: '', arrival_time: '', price: '', seats_available: ''
+        departure_time: '', arrival_time: '', economy_price: '', 
+        economy_seats: '', business_seats: ''
       });
     }
     setIsModalOpen(true);
@@ -171,8 +176,8 @@ const AdminDashboard = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100">
-                  {activeTab === 'flights' && ['Airline', 'Route', 'Price', 'Seats', 'Actions'].map(h => <th key={h} className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>)}
-                  {activeTab === 'bookings' && ['ID', 'User', 'Flight', 'Amount', 'Status'].map(h => <th key={h} className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>)}
+                  {activeTab === 'flights' && ['Airline', 'Route', 'Economy Price', 'Business Price', 'Seats (E/B)', 'Actions'].map(h => <th key={h} className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>)}
+                  {activeTab === 'bookings' && ['ID', 'User', 'Flight', 'Class', 'Amount', 'Status'].map(h => <th key={h} className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>)}
                   {activeTab === 'users' && ['Name', 'Email', 'Role', 'Joined'].map(h => <th key={h} className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>)}
                 </tr>
               </thead>
@@ -187,8 +192,9 @@ const AdminDashboard = () => {
                         <span className="font-bold">{f.arrival_city}</span>
                       </div>
                     </td>
-                    <td className="p-6 font-black text-primary">${f.price}</td>
-                    <td className="p-6 font-bold text-slate-500">{f.seats_available}</td>
+                    <td className="p-6 font-black text-slate-700">${f.economy_price}</td>
+                    <td className="p-6 font-black text-primary">${f.business_price} <span className="text-[8px] uppercase text-accent ml-1">VIP</span></td>
+                    <td className="p-6 font-bold text-slate-500">{f.economy_seats} / {f.business_seats}</td>
                     <td className="p-6">
                       <div className="flex gap-2">
                         <button onClick={() => openModal(f)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit2 className="h-4 w-4" /></button>
@@ -204,6 +210,11 @@ const AdminDashboard = () => {
                     <td className="p-6 text-sm">
                       <span className="font-bold">{b.airline}</span>
                       <p className="text-xs text-slate-400">{b.departure_city} → {b.arrival_city}</p>
+                    </td>
+                    <td className="p-6">
+                      <span className={`text-xs font-black uppercase ${b.cabin_class === 'Business' ? 'text-accent' : 'text-slate-400'}`}>
+                        {b.cabin_class}
+                      </span>
                     </td>
                     <td className="p-6 font-black text-primary">${b.total_price}</td>
                     <td className="p-6">
@@ -281,18 +292,32 @@ const AdminDashboard = () => {
                  />
                </div>
                <div>
-                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Price ($)</label>
+                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Economy Price ($)</label>
                  <input 
                    required
-                   type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})}
+                   type="number" value={formData.economy_price} onChange={e => setFormData({...formData, economy_price: e.target.value})}
                    className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
                  />
                </div>
                <div>
-                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Available Seats</label>
+                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 text-accent">Business Price (VIP - AUTO 10%)</label>
+                 <div className="w-full bg-slate-100 border-0 rounded-2xl p-4 font-black text-primary">
+                   ${(parseFloat(formData.economy_price || 0) * 1.1).toFixed(2)}
+                 </div>
+               </div>
+               <div>
+                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Economy Seats</label>
                  <input 
                    required
-                   type="number" value={formData.seats_available} onChange={e => setFormData({...formData, seats_available: e.target.value})}
+                   type="number" value={formData.economy_seats} onChange={e => setFormData({...formData, economy_seats: e.target.value})}
+                   className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
+                 />
+               </div>
+               <div>
+                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Business Seats (VIP)</label>
+                 <input 
+                   required
+                   type="number" value={formData.business_seats} onChange={e => setFormData({...formData, business_seats: e.target.value})}
                    className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
                  />
                </div>
