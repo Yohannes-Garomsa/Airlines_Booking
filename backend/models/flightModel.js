@@ -13,14 +13,25 @@ const Flight = {
       total_seats 
     } = flightData;
 
+    // Fetch city names from airports table for redundant legacy columns
+    const departureAirport = await db.query('SELECT city FROM airports WHERE id = $1', [departure_airport_id]);
+    const arrivalAirport = await db.query('SELECT city FROM airports WHERE id = $1', [arrival_airport_id]);
+    
+    const departure_city = departureAirport.rows[0]?.city || 'Unknown';
+    const arrival_city = arrivalAirport.rows[0]?.city || 'Unknown';
+
     // Real Business Rule: Business price is 10% greater than economy price
     const business_price = (parseFloat(economy_price) * 1.1).toFixed(2);
     
+    // Split total seats (Default 180 -> 150 Economy, 30 Business)
+    const economy_seats = Math.floor(total_seats * 0.85);
+    const business_seats = total_seats - economy_seats;
+
     const result = await db.query(
       `INSERT INTO flights 
-       (airline, flight_number, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, total_seats, available_seats) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
-      [airline, flight_number, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, total_seats, total_seats]
+       (airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, available_seats) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+      [airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, total_seats]
     );
     return result.rows[0];
   },
@@ -112,16 +123,28 @@ const Flight = {
       total_seats 
     } = flightData;
 
+    // Fetch city names from airports table for redundant legacy columns
+    const departureAirport = await db.query('SELECT city FROM airports WHERE id = $1', [departure_airport_id]);
+    const arrivalAirport = await db.query('SELECT city FROM airports WHERE id = $1', [arrival_airport_id]);
+    
+    const departure_city = departureAirport.rows[0]?.city || 'Unknown';
+    const arrival_city = arrivalAirport.rows[0]?.city || 'Unknown';
+
     // Real Business Rule: Business price is 10% greater than economy price
     const business_price = (parseFloat(economy_price) * 1.1).toFixed(2);
 
+    // Split total seats
+    const economy_seats = Math.floor(total_seats * 0.85);
+    const business_seats = total_seats - economy_seats;
+
     const result = await db.query(
       `UPDATE flights SET 
-       airline = $1, flight_number = $2, departure_airport_id = $3, arrival_airport_id = $4, 
-       departure_time = $5, arrival_time = $6, economy_price = $7, business_price = $8, 
-       total_seats = $9, available_seats = $9
-       WHERE id = $10 RETURNING *`,
-      [airline, flight_number, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, total_seats, id]
+       airline = $1, flight_number = $2, departure_city = $3, arrival_city = $4, 
+       departure_airport_id = $5, arrival_airport_id = $6, 
+       departure_time = $7, arrival_time = $8, economy_price = $9, business_price = $10, 
+       economy_seats = $11, business_seats = $12, total_seats = $13, available_seats = $13
+       WHERE id = $14 RETURNING *`,
+      [airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, id]
     );
     return result.rows[0];
   },
