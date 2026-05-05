@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plane, Plus, Search, Filter, MoreVertical, Trash2, Edit2, X, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
+import { Plane, Plus, Search, Filter, MoreVertical, Trash2, Edit2, X, ChevronRight, ChevronLeft, Loader2, MapPin } from 'lucide-react';
 import AirportSearch from './AirportSearch';
 
 const AdminFlights = () => {

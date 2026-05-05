@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Loader2, Shield, ShieldAlert, Ban, CheckCircle, Trash2, Mail } from 'lucide-react';
+import { Users, Loader2, Shield, ShieldAlert, Ban, CheckCircle, Trash2, Mail, User } from 'lucide-react';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
