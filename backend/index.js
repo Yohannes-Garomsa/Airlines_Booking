@@ -2,12 +2,22 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Security Middleware
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use('/api/', limiter);
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -17,6 +27,8 @@ app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/tickets', require('./routes/ticketRoutes'));
 app.use('/api/seats', require('./routes/seatRoutes'));
+app.use('/api/airports', require('./routes/airportRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Airline Booking API is running' });

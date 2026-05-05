@@ -7,9 +7,11 @@ import PaymentPage from './pages/PaymentPage';
 import TicketPage from './pages/TicketPage';
 import ConfirmationPage from './pages/ConfirmationPage';
 import DashboardPage from './pages/DashboardPage';
-import AdminDashboard from './pages/AdminDashboard';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminFlights from './components/admin/AdminFlights';
+import AdminBookings from './components/admin/AdminBookings';
+import AdminUsers from './components/admin/AdminUsers';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
 
 function App() {
   return (
@@ -19,7 +21,18 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={
+            <AdminProtectedRoute>
+              <AdminLayout />
+            </AdminProtectedRoute>
+          }>
+            <Route index element={<AdminFlights />} />
+            <Route path="flights" element={<AdminFlights />} />
+            <Route path="bookings" element={<AdminBookings />} />
+            <Route path="users" element={<AdminUsers />} />
+          </Route>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/booking/:flightId" element={<BookingPage />} />
           <Route path="/payment/:bookingId" element={<PaymentPage />} />

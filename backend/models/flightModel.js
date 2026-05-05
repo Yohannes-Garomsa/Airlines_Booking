@@ -2,19 +2,39 @@ const db = require('../config/db');
 
 const Flight = {
   create: async (flightData) => {
-    const { airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, economy_seats, business_seats } = flightData;
+    const { 
+      airline, 
+      flight_number,
+      departure_airport_id, 
+      arrival_airport_id, 
+      departure_time, 
+      arrival_time, 
+      economy_price, 
+      total_seats 
+    } = flightData;
+
     // Real Business Rule: Business price is 10% greater than economy price
     const business_price = (parseFloat(economy_price) * 1.1).toFixed(2);
     
     const result = await db.query(
-      'INSERT INTO flights (airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
-      [airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats]
+      `INSERT INTO flights 
+       (airline, flight_number, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, total_seats, available_seats) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      [airline, flight_number, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, total_seats, total_seats]
     );
     return result.rows[0];
   },
 
   getAll: async () => {
-    const result = await db.query('SELECT * FROM flights ORDER BY departure_time ASC');
+    const result = await db.query(`
+      SELECT f.*, 
+             da.name as departure_airport_name, da.city as departure_city, da.iata_code as departure_iata,
+             aa.name as arrival_airport_name, aa.city as arrival_city, aa.iata_code as arrival_iata
+      FROM flights f
+      JOIN airports da ON f.departure_airport_id = da.id
+      JOIN airports aa ON f.arrival_airport_id = aa.id
+      ORDER BY f.departure_time ASC
+    `);
     return result.rows;
   },
 
@@ -23,40 +43,47 @@ const Flight = {
     
     // Calculate duration in hours in the SELECT statement
     let query = `
-      SELECT *, 
-      EXTRACT(EPOCH FROM (arrival_time - departure_time))/3600 as duration 
-      FROM flights WHERE 1=1
+      SELECT f.*, 
+             da.name as departure_airport_name, da.city as departure_city, da.iata_code as departure_iata,
+             aa.name as arrival_airport_name, aa.city as arrival_city, aa.iata_code as arrival_iata,
+             EXTRACT(EPOCH FROM (f.arrival_time - f.departure_time))/3600 as duration 
+      FROM flights f
+      JOIN airports da ON f.departure_airport_id = da.id
+      JOIN airports aa ON f.arrival_airport_id = aa.id
+      WHERE 1=1
     `;
     const params = [];
     let paramIndex = 1;
 
     if (departure_city) {
-      query += ` AND departure_city ILIKE $${paramIndex++}`;
+      query += ` AND (da.city ILIKE $${paramIndex} OR da.name ILIKE $${paramIndex})`;
+      paramIndex++;
       params.push(`%${departure_city}%`);
     }
     if (arrival_city) {
-      query += ` AND arrival_city ILIKE $${paramIndex++}`;
+      query += ` AND (aa.city ILIKE $${paramIndex} OR aa.name ILIKE $${paramIndex})`;
+      paramIndex++;
       params.push(`%${arrival_city}%`);
     }
     if (departure_date) {
-      query += ` AND DATE(departure_time) = $${paramIndex++}`;
+      query += ` AND DATE(f.departure_time) = $${paramIndex++}`;
       params.push(departure_date);
     }
     if (max_price) {
-      query += ` AND economy_price <= $${paramIndex++}`;
+      query += ` AND f.economy_price <= $${paramIndex++}`;
       params.push(max_price);
     }
     if (max_duration) {
-      query += ` AND EXTRACT(EPOCH FROM (arrival_time - departure_time))/3600 <= $${paramIndex++}`;
+      query += ` AND EXTRACT(EPOCH FROM (f.arrival_time - f.departure_time))/3600 <= $${paramIndex++}`;
       params.push(max_duration);
     }
 
     // Sorting logic
-    let orderBy = 'departure_time ASC';
-    if (sort_by === 'price_low') orderBy = 'economy_price ASC';
-    else if (sort_by === 'price_high') orderBy = 'economy_price DESC';
+    let orderBy = 'f.departure_time ASC';
+    if (sort_by === 'price_low') orderBy = 'f.economy_price ASC';
+    else if (sort_by === 'price_high') orderBy = 'f.economy_price DESC';
     else if (sort_by === 'duration_short') orderBy = 'duration ASC';
-    else if (sort_by === 'time_late') orderBy = 'departure_time DESC';
+    else if (sort_by === 'time_late') orderBy = 'f.departure_time DESC';
 
     query += ` ORDER BY ${orderBy}`;
 
@@ -74,17 +101,27 @@ const Flight = {
   },
 
   update: async (id, flightData) => {
-    const { airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, economy_seats, business_seats } = flightData;
+    const { 
+      airline, 
+      flight_number,
+      departure_airport_id, 
+      arrival_airport_id, 
+      departure_time, 
+      arrival_time, 
+      economy_price, 
+      total_seats 
+    } = flightData;
+
     // Real Business Rule: Business price is 10% greater than economy price
     const business_price = (parseFloat(economy_price) * 1.1).toFixed(2);
 
     const result = await db.query(
       `UPDATE flights SET 
-       airline = $1, departure_city = $2, arrival_city = $3, 
-       departure_time = $4, arrival_time = $5, economy_price = $6, business_price = $7, 
-       economy_seats = $8, business_seats = $9 
+       airline = $1, flight_number = $2, departure_airport_id = $3, arrival_airport_id = $4, 
+       departure_time = $5, arrival_time = $6, economy_price = $7, business_price = $8, 
+       total_seats = $9, available_seats = $9
        WHERE id = $10 RETURNING *`,
-      [airline, departure_city, arrival_city, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, id]
+      [airline, flight_number, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, total_seats, id]
     );
     return result.rows[0];
   },

@@ -11,9 +11,4 @@ router.get('/origins', flightController.getOrigins);
 router.get('/destinations', flightController.getDestinations);
 router.get('/:id', flightController.getFlightById);
 
-// Admin routes
-router.post('/', protect, admin, flightController.createFlight);
-router.put('/:id', protect, admin, flightController.updateFlight);
-router.delete('/:id', protect, admin, flightController.deleteFlight);
-
 module.exports = router;
