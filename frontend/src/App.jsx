@@ -12,6 +12,8 @@ import AdminFlights from './components/admin/AdminFlights';
 import AdminBookings from './components/admin/AdminBookings';
 import AdminUsers from './components/admin/AdminUsers';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
 function App() {
   return (
