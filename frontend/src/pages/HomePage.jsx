@@ -16,7 +16,8 @@ function HomePage() {
   const [cabinClass, setCabinClass] = useState('Economy');
   const [showPassengerDropdown, setShowPassengerDropdown] = useState(false);
   const [maxPrice, setMaxPrice] = useState('');
-  
+  const [maxDuration, setMaxDuration] = useState('');
+  const [sortBy, setSortBy] = useState('departure_time_asc');
   const [page, setPage] = useState(1);
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -52,6 +53,8 @@ function HomePage() {
         arrival_city: segments[0].arrival_city,
         departure_date: segments[0].departure_date,
         max_price: maxPrice,
+        max_duration: maxDuration,
+        sort_by: sortBy,
         page: currentPage,
         limit: 10
       };
@@ -72,10 +75,10 @@ function HomePage() {
     await fetchFlights(1);
   };
 
-  // Load flights when page changes
+  // Load flights when page or sort changes
   useEffect(() => {
     fetchFlights(page);
-  }, [page]);
+  }, [page, sortBy]);
 
   const totalPassengers = passengers.adults + passengers.children + passengers.infants;
 
@@ -202,7 +205,11 @@ function HomePage() {
                     label="From"
                     placeholder="Origin City"
                     value={segment.departure_city}
-                    onChange={(val) => handleSegmentChange(index, 'departure_city', val)}
+                    onChange={(val) => {
+                      handleSegmentChange(index, 'departure_city', val);
+                      // Clear destination if origin changes to ensure valid pairing
+                      handleSegmentChange(index, 'arrival_city', '');
+                    }}
                     icon={MapPin}
                     type="origin"
                   />
@@ -214,6 +221,7 @@ function HomePage() {
                     onChange={(val) => handleSegmentChange(index, 'arrival_city', val)}
                     icon={MapPin}
                     type="destination"
+                    dependency={segment.departure_city}
                   />
 
                   <div className="flex-1 min-w-[150px]">
@@ -360,12 +368,67 @@ function HomePage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tight">
-              {searched ? 'Search Results' : 'Featured Deals'}
-              <span className="ml-3 text-sm font-bold text-gray-400">({flights.length} found)</span>
-            </h3>
-            <div className="h-1 flex-grow mx-6 bg-slate-200 rounded-full hidden md:block"></div>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+            <div className="flex items-center gap-4">
+              <h3 className="text-3xl font-black text-slate-800 tracking-tighter">
+                {searched ? 'Search Results' : 'Featured Deals'}
+              </h3>
+              <div className="h-1 w-20 bg-primary rounded-full hidden md:block"></div>
+            </div>
+
+            {/* Advanced Filters */}
+            {searched && (
+              <div className="flex flex-wrap items-center gap-4 bg-white p-2 rounded-3xl shadow-sm border border-slate-100 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="flex items-center gap-2 px-4">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sort:</span>
+                  <select 
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-transparent border-0 font-black text-xs text-primary focus:ring-0 outline-none cursor-pointer p-0"
+                  >
+                    <option value="departure_time_asc">Earliest First</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                    <option value="duration_short">Shortest Duration</option>
+                  </select>
+                </div>
+                
+                <div className="h-4 w-[1px] bg-slate-200 hidden md:block"></div>
+
+                <div className="flex items-center gap-3 px-4 border-r border-slate-100 last:border-0">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Price</span>
+                    <input 
+                      type="number" 
+                      placeholder="Any"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                      className="bg-transparent border-0 p-0 font-black text-xs text-slate-700 w-16 focus:ring-0 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 px-4">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Duration (h)</span>
+                    <input 
+                      type="number" 
+                      placeholder="Any"
+                      value={maxDuration}
+                      onChange={(e) => setMaxDuration(e.target.value)}
+                      className="bg-transparent border-0 p-0 font-black text-xs text-slate-700 w-16 focus:ring-0 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => fetchFlights(1)}
+                  className="bg-primary text-white p-2 rounded-2xl hover:bg-blue-800 transition-all active:scale-95 shadow-lg shadow-blue-100"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
 
           {loading && !flights.length ? (

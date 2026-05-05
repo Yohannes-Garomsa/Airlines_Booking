@@ -3,7 +3,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const cache = require('../utils/cache');
 
 const getAllFlights = asyncHandler(async (req, res) => {
-  const { departure_city, arrival_city, departure_date, min_price, max_price, limit, page } = req.query;
+  const { departure_city, arrival_city, departure_date, min_price, max_price, max_duration, sort_by, limit, page } = req.query;
   const cacheKey = JSON.stringify(req.query);
   
   const cachedData = cache.get(cacheKey);
@@ -12,8 +12,8 @@ const getAllFlights = asyncHandler(async (req, res) => {
   }
 
   let flights;
-  if (departure_city || arrival_city || departure_date || min_price || max_price) {
-    flights = await Flight.search({ departure_city, arrival_city, departure_date, min_price, max_price, limit, page });
+  if (departure_city || arrival_city || departure_date || min_price || max_price || max_duration || sort_by) {
+    flights = await Flight.search({ departure_city, arrival_city, departure_date, min_price, max_price, max_duration, sort_by, limit, page });
   } else {
     flights = await Flight.getAll();
   }
@@ -24,6 +24,7 @@ const getAllFlights = asyncHandler(async (req, res) => {
 
 const createFlight = asyncHandler(async (req, res) => {
   const flight = await Flight.create(req.body);
+  cache.clear(); // Clear cache when data changes
   res.status(201).json(flight);
 });
 
@@ -34,6 +35,7 @@ const updateFlight = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Flight not found');
   }
+  cache.clear(); // Clear cache when data changes
   res.status(200).json(flight);
 });
 
@@ -44,6 +46,7 @@ const deleteFlight = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Flight not found');
   }
+  cache.clear(); // Clear cache when data changes
   res.status(200).json({ message: 'Flight deleted successfully' });
 });
 
@@ -68,7 +71,8 @@ const getOrigins = asyncHandler(async (req, res) => {
 });
 
 const getDestinations = asyncHandler(async (req, res) => {
-  const cities = await Flight.getDestinations();
+  const { origin } = req.query;
+  const cities = await Flight.getDestinations(origin);
   res.status(200).json(cities);
 });
 

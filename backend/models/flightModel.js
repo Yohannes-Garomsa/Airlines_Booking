@@ -19,8 +19,14 @@ const Flight = {
   },
 
   search: async (filters) => {
-    const { departure_city, arrival_city, departure_date, max_price, limit = 10, page = 1 } = filters;
-    let query = 'SELECT * FROM flights WHERE 1=1';
+    const { departure_city, arrival_city, departure_date, max_price, max_duration, sort_by, limit = 10, page = 1 } = filters;
+    
+    // Calculate duration in hours in the SELECT statement
+    let query = `
+      SELECT *, 
+      EXTRACT(EPOCH FROM (arrival_time - departure_time))/3600 as duration 
+      FROM flights WHERE 1=1
+    `;
     const params = [];
     let paramIndex = 1;
 
@@ -40,9 +46,22 @@ const Flight = {
       query += ` AND economy_price <= $${paramIndex++}`;
       params.push(max_price);
     }
+    if (max_duration) {
+      query += ` AND EXTRACT(EPOCH FROM (arrival_time - departure_time))/3600 <= $${paramIndex++}`;
+      params.push(max_duration);
+    }
+
+    // Sorting logic
+    let orderBy = 'departure_time ASC';
+    if (sort_by === 'price_low') orderBy = 'economy_price ASC';
+    else if (sort_by === 'price_high') orderBy = 'economy_price DESC';
+    else if (sort_by === 'duration_short') orderBy = 'duration ASC';
+    else if (sort_by === 'time_late') orderBy = 'departure_time DESC';
+
+    query += ` ORDER BY ${orderBy}`;
 
     const offset = (page - 1) * limit;
-    query += ` ORDER BY departure_time ASC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+    query += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
     params.push(limit, offset);
 
     const result = await db.query(query, params);
@@ -92,8 +111,15 @@ const Flight = {
     return result.rows.map(r => r.city);
   },
 
-  getDestinations: async () => {
-    const result = await db.query('SELECT DISTINCT arrival_city as city FROM flights ORDER BY city ASC');
+  getDestinations: async (origin) => {
+    let query = 'SELECT DISTINCT arrival_city as city FROM flights';
+    const params = [];
+    if (origin) {
+      query += ' WHERE departure_city = $1';
+      params.push(origin);
+    }
+    query += ' ORDER BY city ASC';
+    const result = await db.query(query, params);
     return result.rows.map(r => r.city);
   }
 };

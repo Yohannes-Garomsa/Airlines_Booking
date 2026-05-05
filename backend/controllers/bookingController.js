@@ -1,16 +1,30 @@
 const Booking = require('../models/bookingModel');
+const Flight = require('../models/flightModel');
 const asyncHandler = require('../utils/asyncHandler');
+const notificationService = require('../utils/notificationService');
 
 const createBooking = asyncHandler(async (req, res) => {
   const { flightId, totalPrice, cabinClass, passengers } = req.body;
-  const userId = req.user.id;
+  const user = req.user;
 
   if (!flightId || !totalPrice || !passengers || passengers.length === 0) {
     res.status(400);
     throw new Error('Please provide all required fields');
   }
 
-  const booking = await Booking.create(userId, flightId, totalPrice, cabinClass, passengers);
+  const booking = await Booking.create(user.id, flightId, totalPrice, cabinClass, passengers);
+  
+  // Send Notification
+  try {
+    const flight = await Flight.getById(flightId);
+    if (flight) {
+      await notificationService.sendBookingConfirmation(user, booking, flight);
+    }
+  } catch (notifyError) {
+    console.error('Notification failed:', notifyError);
+    // Don't fail the booking if notification fails
+  }
+
   res.status(201).json(booking);
 });
 

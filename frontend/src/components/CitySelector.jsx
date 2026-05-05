@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Globe, Star, Search as SearchIcon } from 'lucide-react';
 
-const CitySelector = ({ value, onChange, placeholder, icon: Icon, label, type = 'cities' }) => {
+const CitySelector = ({ value, onChange, placeholder, icon: Icon, label, type = 'cities', dependency = null }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [realCities, setRealCities] = useState([]);
@@ -10,8 +10,14 @@ const CitySelector = ({ value, onChange, placeholder, icon: Icon, label, type = 
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const endpoint = type === 'origin' ? 'origins' : type === 'destination' ? 'destinations' : 'cities';
-        const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/flights/${endpoint}`);
+        let endpoint = type === 'origin' ? 'origins' : type === 'destination' ? 'destinations' : 'cities';
+        let url = `${import.meta.env.VITE_API_URL || '/api'}/flights/${endpoint}`;
+        
+        if (type === 'destination' && dependency) {
+          url += `?origin=${encodeURIComponent(dependency)}`;
+        }
+
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           setRealCities(data);
@@ -21,7 +27,7 @@ const CitySelector = ({ value, onChange, placeholder, icon: Icon, label, type = 
       }
     };
     fetchCities();
-  }, [type]);
+  }, [type, dependency]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
