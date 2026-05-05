@@ -85,6 +85,16 @@ const Flight = {
       ORDER BY city ASC
     `);
     return result.rows.map(r => r.city);
+  },
+
+  getOrigins: async () => {
+    const result = await db.query('SELECT DISTINCT departure_city as city FROM flights ORDER BY city ASC');
+    return result.rows.map(r => r.city);
+  },
+
+  getDestinations: async () => {
+    const result = await db.query('SELECT DISTINCT arrival_city as city FROM flights ORDER BY city ASC');
+    return result.rows.map(r => r.city);
   }
 };
 

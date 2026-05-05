@@ -7,6 +7,8 @@ const { admin } = require('../middleware/adminMiddleware');
 // Public routes
 router.get('/', flightController.getAllFlights);
 router.get('/cities', flightController.getCities);
+router.get('/origins', flightController.getOrigins);
+router.get('/destinations', flightController.getDestinations);
 router.get('/:id', flightController.getFlightById);
 
 // Admin routes

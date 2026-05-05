@@ -204,6 +204,7 @@ function HomePage() {
                     value={segment.departure_city}
                     onChange={(val) => handleSegmentChange(index, 'departure_city', val)}
                     icon={MapPin}
+                    type="origin"
                   />
 
                   <CitySelector
@@ -212,6 +213,7 @@ function HomePage() {
                     value={segment.arrival_city}
                     onChange={(val) => handleSegmentChange(index, 'arrival_city', val)}
                     icon={MapPin}
+                    type="destination"
                   />
 
                   <div className="flex-1 min-w-[150px]">

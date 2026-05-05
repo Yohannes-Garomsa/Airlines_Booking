@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Globe, Star, Search as SearchIcon } from 'lucide-react';
 
-const CitySelector = ({ value, onChange, placeholder, icon: Icon, label }) => {
+const CitySelector = ({ value, onChange, placeholder, icon: Icon, label, type = 'cities' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [realCities, setRealCities] = useState([]);
@@ -10,7 +10,8 @@ const CitySelector = ({ value, onChange, placeholder, icon: Icon, label }) => {
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/flights/cities`);
+        const endpoint = type === 'origin' ? 'origins' : type === 'destination' ? 'destinations' : 'cities';
+        const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/flights/${endpoint}`);
         if (res.ok) {
           const data = await res.json();
           setRealCities(data);
@@ -20,7 +21,7 @@ const CitySelector = ({ value, onChange, placeholder, icon: Icon, label }) => {
       }
     };
     fetchCities();
-  }, []);
+  }, [type]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -67,7 +68,7 @@ const CitySelector = ({ value, onChange, placeholder, icon: Icon, label }) => {
               <input 
                 autoFocus
                 type="text"
-                placeholder="Search city or country..."
+                placeholder={`Search ${type === 'origin' ? 'departure' : 'arrival'} city...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-bold text-sm focus:border-primary transition-all"
@@ -79,7 +80,7 @@ const CitySelector = ({ value, onChange, placeholder, icon: Icon, label }) => {
           <div className="max-h-80 overflow-y-auto p-2 scrollbar-thin">
             <div>
               <p className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Globe className="h-3 w-3" /> {searchTerm ? 'Search Results' : 'Available Routes'}
+                <Globe className="h-3 w-3" /> {searchTerm ? 'Search Results' : `Available ${type === 'origin' ? 'Origins' : 'Destinations'}`}
               </p>
               <div className="space-y-1">
                 {filteredReal.map((fullCity, idx) => {
@@ -99,7 +100,7 @@ const CitySelector = ({ value, onChange, placeholder, icon: Icon, label }) => {
                       <div className="flex-grow">
                         <p className="font-bold text-slate-700 text-sm">{cityName}</p>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                          Global Destination • {cityCode}
+                          {type === 'origin' ? 'Departure Hub' : 'Arrival Point'} • {cityCode}
                         </p>
                       </div>
                       <div className="bg-slate-50 px-2 py-1 rounded text-[8px] font-black text-slate-300 group-hover:text-primary group-hover:bg-primary/5 transition-all">
@@ -109,7 +110,7 @@ const CitySelector = ({ value, onChange, placeholder, icon: Icon, label }) => {
                   );
                 })}
                 {filteredReal.length === 0 && (
-                  <p className="text-center py-4 text-xs text-slate-400 font-bold uppercase tracking-widest italic">No routes found</p>
+                  <p className="text-center py-4 text-xs text-slate-400 font-bold uppercase tracking-widest italic">No {type === 'origin' ? 'origins' : 'destinations'} found</p>
                 )}
               </div>
             </div>
