@@ -42,9 +42,14 @@ const Booking = {
 
   getByUserId: async (userId) => {
     const result = await db.query(
-      `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time 
+      `SELECT b.*, f.airline, f.departure_time, s.seat_number,
+              da.city as departure_city, da.iata_code as departure_iata,
+              aa.city as arrival_city, aa.iata_code as arrival_iata
        FROM bookings b 
        JOIN flights f ON b.flight_id = f.id 
+       JOIN airports da ON f.departure_airport_id = da.id
+       JOIN airports aa ON f.arrival_airport_id = aa.id
+       LEFT JOIN seats s ON s.booking_id = b.id
        WHERE b.user_id = $1 
        ORDER BY b.booking_date DESC`,
       [userId]
@@ -65,9 +70,15 @@ const Booking = {
 
   getFullBookingDetails: async (bookingId) => {
     const bookingResult = await db.query(
-      `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, f.arrival_time 
+      `SELECT b.*, f.airline, f.departure_time, f.arrival_time, 
+              da.city as departure_city, da.iata_code as departure_iata,
+              aa.city as arrival_city, aa.iata_code as arrival_iata,
+              s.seat_number 
        FROM bookings b 
        JOIN flights f ON b.flight_id = f.id 
+       JOIN airports da ON f.departure_airport_id = da.id
+       JOIN airports aa ON f.arrival_airport_id = aa.id
+       LEFT JOIN seats s ON s.booking_id = b.id
        WHERE b.id = $1`,
       [bookingId]
     );

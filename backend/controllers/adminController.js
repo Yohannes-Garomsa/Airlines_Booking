@@ -1,6 +1,20 @@
 const Booking = require('../models/bookingModel');
 const User = require('../models/userModel');
+const db = require('../config/db');
 const asyncHandler = require('../utils/asyncHandler');
+
+// --- Dashboard Stats ---
+
+const getDashboardStats = asyncHandler(async (req, res) => {
+  const result = await db.query(`
+    SELECT 
+      (SELECT COUNT(*) FROM flights) as total_flights,
+      (SELECT COUNT(*) FROM bookings) as total_bookings,
+      (SELECT COUNT(*) FROM users) as total_users,
+      (SELECT COALESCE(SUM(total_price), 0) FROM bookings WHERE status != 'cancelled') as total_revenue
+  `);
+  res.status(200).json(result.rows[0]);
+});
 
 // --- Booking Management ---
 
@@ -53,6 +67,7 @@ const changeUserRole = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  getDashboardStats,
   getAllBookings,
   getBookingDetails,
   getAllUsers,

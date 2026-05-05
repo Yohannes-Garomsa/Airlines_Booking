@@ -60,20 +60,20 @@ const TicketPage = () => {
 
              <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12 relative">
                 <div className="text-center md:text-left">
-                   <p className="text-6xl font-black text-primary tracking-tighter">{booking.departure_city.substring(0, 3).toUpperCase()}</p>
-                   <p className="font-bold text-slate-500 uppercase text-xs tracking-widest">{booking.departure_city}</p>
-                </div>
-
-                <div className="flex-grow flex flex-col items-center">
-                   <div className="w-full border-t-4 border-slate-100 relative">
-                     <Plane className="h-8 w-8 text-accent absolute -top-4 left-1/2 -translate-x-1/2 rotate-90" />
-                   </div>
-                   <p className="mt-4 text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Direct Flight</p>
-                </div>
-
-                <div className="text-center md:text-right">
-                   <p className="text-6xl font-black text-primary tracking-tighter">{booking.arrival_city.substring(0, 3).toUpperCase()}</p>
-                   <p className="font-bold text-slate-500 uppercase text-xs tracking-widest">{booking.arrival_city}</p>
+                    <p className="text-6xl font-black text-primary tracking-tighter">{booking.departure_iata}</p>
+                    <p className="font-bold text-slate-500 uppercase text-xs tracking-widest">{booking.departure_city}</p>
+                 </div>
+ 
+                 <div className="flex-grow flex flex-col items-center">
+                    <div className="w-full border-t-4 border-slate-100 relative">
+                      <Plane className="h-8 w-8 text-accent absolute -top-4 left-1/2 -translate-x-1/2 rotate-90" />
+                    </div>
+                    <p className="mt-4 text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Direct Flight</p>
+                 </div>
+ 
+                 <div className="text-center md:text-right">
+                    <p className="text-6xl font-black text-primary tracking-tighter">{booking.arrival_iata}</p>
+                    <p className="font-bold text-slate-500 uppercase text-xs tracking-widest">{booking.arrival_city}</p>
                 </div>
              </div>
 
@@ -92,7 +92,7 @@ const TicketPage = () => {
                </div>
                <div>
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Seat</p>
-                 <p className="font-bold text-slate-800">14A</p>
+                 <p className="font-bold text-slate-800">{booking.seat_number || 'TBA'}</p>
                </div>
              </div>
           </div>
@@ -116,10 +116,13 @@ const TicketPage = () => {
              </div>
 
              <div className="w-full space-y-3">
-               <button className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-3 px-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-center gap-2 transition-all">
-                 <Download className="h-4 w-4" /> Save
-               </button>
-               <button className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-3 px-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-center gap-2 transition-all">
+                <button 
+                  onClick={() => window.print()}
+                  className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-3 px-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-center gap-2 transition-all print:hidden"
+                >
+                  <Download className="h-4 w-4" /> Print Ticket
+                </button>
+               <button className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-3 px-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-center gap-2 transition-all print:hidden">
                  <Share2 className="h-4 w-4" /> Share
                </button>
              </div>

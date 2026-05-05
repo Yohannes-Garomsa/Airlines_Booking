@@ -7,11 +7,27 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentFlight, setCurrentFlight] = useState(null);
+  const [stats, setStats] = useState({ total_flights: 0, total_bookings: 0, total_users: 0, total_revenue: 0 });
   const [formData, setFormData] = useState({
     airline: '', departure_city: '', arrival_city: '', 
     departure_time: '', arrival_time: '', economy_price: '', 
     economy_seats: '', business_seats: ''
   });
+
+  const fetchStats = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setStats(result);
+      }
+    } catch (err) {
+      console.error('Stats fetch error:', err);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -48,6 +64,7 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
+    fetchStats();
     fetchData();
   }, [activeTab]);
 
@@ -166,6 +183,26 @@ const AdminDashboard = () => {
             </button>
           )}
         </header>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+          {[
+            { label: 'Total Revenue', value: `$${parseFloat(stats.total_revenue).toLocaleString()}`, icon: ShoppingBag, color: 'text-green-600', bg: 'bg-green-50' },
+            { label: 'Total Bookings', value: stats.total_bookings, icon: ShoppingBag, color: 'text-blue-600', bg: 'bg-blue-50' },
+            { label: 'Active Users', value: stats.total_users, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
+            { label: 'Total Flights', value: stats.total_flights, icon: Plane, color: 'text-orange-600', bg: 'bg-orange-50' },
+          ].map((stat, i) => (
+            <div key={i} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-4">
+              <div className={`${stat.bg} p-4 rounded-2xl`}>
+                <stat.icon className={`h-6 w-6 ${stat.color}`} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                <p className="text-2xl font-black text-slate-800 tracking-tighter">{stat.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">

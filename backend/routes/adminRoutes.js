@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { 
+  getDashboardStats,
   getAllBookings, 
   getBookingDetails, 
   getAllUsers, 
@@ -18,6 +19,8 @@ const { validateFlight } = require('../middleware/validationMiddleware');
 // All routes here are protected and admin-only
 router.use(protectRoute);
 router.use(adminOnly);
+
+router.get('/stats', getDashboardStats);
 
 // Flight Management
 router.post('/flights', validateFlight, createFlight);

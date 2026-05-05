@@ -96,18 +96,18 @@ const DashboardPage = () => {
                   </div>
                   
                   <div className="flex items-center gap-8">
-                     <div>
-                       <p className="text-3xl font-black text-gray-800 tracking-tighter">{booking.departure_city.substring(0, 3).toUpperCase()}</p>
-                       <p className="text-xs font-bold text-slate-400 uppercase">{booking.departure_city}</p>
-                     </div>
-                     <div className="flex flex-col items-center">
-                        <Plane className="h-5 w-5 text-accent rotate-90" />
-                        <div className="w-16 h-0.5 bg-slate-100 mt-2"></div>
-                     </div>
-                     <div>
-                       <p className="text-3xl font-black text-gray-800 tracking-tighter">{booking.arrival_city.substring(0, 3).toUpperCase()}</p>
-                       <p className="text-xs font-bold text-slate-400 uppercase">{booking.arrival_city}</p>
-                     </div>
+                      <div>
+                        <p className="text-3xl font-black text-gray-800 tracking-tighter">{booking.departure_iata}</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase">{booking.departure_city}</p>
+                      </div>
+                      <div className="flex flex-col items-center">
+                         <Plane className="h-5 w-5 text-accent rotate-90" />
+                         <div className="w-16 h-0.5 bg-slate-100 mt-2"></div>
+                      </div>
+                      <div>
+                        <p className="text-3xl font-black text-gray-800 tracking-tighter">{booking.arrival_iata}</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase">{booking.arrival_city}</p>
+                      </div>
                   </div>
                 </div>
 

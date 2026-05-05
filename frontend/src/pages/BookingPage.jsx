@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Plane, User, Mail, CreditCard, ChevronLeft, Loader2, CheckCircle, ShieldCheck } from 'lucide-react';
+import { Plane, User, Mail, CreditCard, ChevronLeft, Loader2, CheckCircle, ShieldCheck, Briefcase, Clock } from 'lucide-react';
 import { flightService } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import React, { useState, useEffect, useContext } from 'react';
@@ -206,9 +206,26 @@ const BookingPage = () => {
                     <p className="text-[10px] font-black text-gray-400 uppercase">From</p>
                     <p className="font-bold text-gray-800">{flight.departure_city}</p>
                   </div>
+                  <div className="flex flex-col items-center justify-center">
+                    <Clock className="h-3 w-3 text-slate-300" />
+                    <p className="text-[8px] font-black text-slate-400">
+                      {Math.floor((new Date(flight.arrival_time) - new Date(flight.departure_time)) / (1000 * 60 * 60))}h {Math.floor(((new Date(flight.arrival_time) - new Date(flight.departure_time)) / (1000 * 60)) % 60)}m
+                    </p>
+                  </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black text-gray-400 uppercase">To</p>
                     <p className="font-bold text-gray-800">{flight.arrival_city}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <Briefcase className="h-4 w-4 text-green-500" />
+                    <span>7kg Carry-on Included</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <Briefcase className="h-4 w-4 text-green-500" />
+                    <span>23kg Checked Bag Included</span>
                   </div>
                 </div>
 
