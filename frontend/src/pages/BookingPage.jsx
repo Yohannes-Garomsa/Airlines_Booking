@@ -2,7 +2,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Plane, User, Mail, CreditCard, ChevronLeft, Loader2, CheckCircle, ShieldCheck } from 'lucide-react';
 import { flightService } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
-import { useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 
 import SeatSelection from '../components/SeatSelection';
 
