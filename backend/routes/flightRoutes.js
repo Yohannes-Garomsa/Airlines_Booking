@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const flightController = require('../controllers/flightController');
-const { protect } = require('../middleware/authMiddleware');
-const { admin } = require('../middleware/adminMiddleware');
+const { protectRoute, adminOnly } = require('../middleware/authMiddleware');
 
 // Public routes
 router.get('/', flightController.getAllFlights);

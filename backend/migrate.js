@@ -9,8 +9,9 @@ const pool = new Pool({
 
 const migrate = async () => {
   try {
-    console.log('Running schema migration...');
-    const schemaPath = path.join(__dirname, '../schema.sql');
+    const filename = process.argv[2] || 'schema.sql';
+    console.log(`Running schema migration: ${filename}...`);
+    const schemaPath = path.join(__dirname, filename);
     const schema = fs.readFileSync(schemaPath, 'utf8');
     
     await pool.query(schema);

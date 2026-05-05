@@ -12,6 +12,7 @@ const {
   updateFlight, 
   deleteFlight 
 } = require('../controllers/flightController');
+const { protectRoute, adminOnly } = require('../middleware/authMiddleware');
 const { validateFlight } = require('../middleware/validationMiddleware');
 
 // All routes here are protected and admin-only

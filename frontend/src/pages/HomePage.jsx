@@ -1,3 +1,4 @@
+// SkyBound Booking Interface v3.1 - Advanced Features Fixed
 import React, { useState, useEffect, useContext } from 'react';
 import { Plane, Calendar, MapPin, Users, Search, AlertCircle, Loader2, LogOut, User, Plus, Trash2, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';

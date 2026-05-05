@@ -132,30 +132,33 @@ const Flight = {
   },
 
   getCities: async () => {
-    const result = await db.query(`
-      SELECT DISTINCT city FROM (
-        SELECT departure_city as city FROM flights
-        UNION
-        SELECT arrival_city as city FROM flights
-      ) AS unique_cities 
-      ORDER BY city ASC
-    `);
+    const result = await db.query('SELECT DISTINCT city FROM airports ORDER BY city ASC');
     return result.rows.map(r => r.city);
   },
 
   getOrigins: async () => {
-    const result = await db.query('SELECT DISTINCT departure_city as city FROM flights ORDER BY city ASC');
+    const result = await db.query(`
+      SELECT DISTINCT a.city 
+      FROM airports a
+      JOIN flights f ON f.departure_airport_id = a.id
+      ORDER BY a.city ASC
+    `);
     return result.rows.map(r => r.city);
   },
 
-  getDestinations: async (origin) => {
-    let query = 'SELECT DISTINCT arrival_city as city FROM flights';
+  getDestinations: async (originCity) => {
+    let query = `
+      SELECT DISTINCT aa.city 
+      FROM flights f
+      JOIN airports da ON f.departure_airport_id = da.id
+      JOIN airports aa ON f.arrival_airport_id = aa.id
+    `;
     const params = [];
-    if (origin) {
-      query += ' WHERE departure_city = $1';
-      params.push(origin);
+    if (originCity) {
+      query += ' WHERE da.city = $1';
+      params.push(originCity);
     }
-    query += ' ORDER BY city ASC';
+    query += ' ORDER BY aa.city ASC';
     const result = await db.query(query, params);
     return result.rows.map(r => r.city);
   }
