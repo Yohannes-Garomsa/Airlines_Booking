@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Plane, Calendar, MapPin, Users, Search, AlertCircle, Loader2, LogOut, User } from 'lucide-react';
+import { Plane, Calendar, MapPin, Users, Search, AlertCircle, Loader2, LogOut, User, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { flightService } from '../services/api';
 import FlightCard from '../components/FlightCard';
@@ -7,12 +7,15 @@ import { AuthContext } from '../context/AuthContext';
 import { Footer } from '../components/Footer';
 
 function HomePage() {
-  const [searchParams, setSearchParams] = useState({
-    departure_city: '',
-    arrival_city: '',
-    departure_date: '',
-    max_price: ''
-  });
+  const [tripType, setTripType] = useState('round-trip');
+  const [segments, setSegments] = useState([
+    { departure_city: '', arrival_city: '', departure_date: '', return_date: '' }
+  ]);
+  const [passengers, setPassengers] = useState({ adults: 1, children: 0, infants: 0 });
+  const [cabinClass, setCabinClass] = useState('Economy');
+  const [showPassengerDropdown, setShowPassengerDropdown] = useState(false);
+  const [maxPrice, setMaxPrice] = useState('');
+  
   const [page, setPage] = useState(1);
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,16 +23,38 @@ function HomePage() {
   const [searched, setSearched] = useState(false);
   const { user, logout } = useContext(AuthContext);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setSearchParams(prev => ({ ...prev, [name]: value }));
+  const handleSegmentChange = (index, field, value) => {
+    const newSegments = [...segments];
+    newSegments[index][field] = value;
+    setSegments(newSegments);
+  };
+
+  const addSegment = () => {
+    if (segments.length < 4) {
+      setSegments([...segments, { departure_city: '', arrival_city: '', departure_date: '' }]);
+    }
+  };
+
+  const removeSegment = (index) => {
+    if (segments.length > 1) {
+      setSegments(segments.filter((_, i) => i !== index));
+    }
   };
 
   const fetchFlights = async (currentPage = 1) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await flightService.getFlights({ ...searchParams, page: currentPage, limit: 10 });
+      // For now, search using the first segment's data
+      const searchParams = {
+        departure_city: segments[0].departure_city,
+        arrival_city: segments[0].arrival_city,
+        departure_date: segments[0].departure_date,
+        max_price: maxPrice,
+        page: currentPage,
+        limit: 10
+      };
+      const data = await flightService.getFlights(searchParams);
       setFlights(data);
     } catch (err) {
       setError('Failed to fetch flights. Please try again later.');
@@ -50,6 +75,8 @@ function HomePage() {
   useEffect(() => {
     fetchFlights(page);
   }, [page]);
+
+  const totalPassengers = passengers.adults + passengers.children + passengers.infants;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -99,10 +126,10 @@ function HomePage() {
 
       <main className="flex-grow">
         {/* Hero Section */}
-        <div className="relative min-h-[65vh] flex flex-col justify-center px-4 overflow-hidden">
+        <div className="relative min-h-[60vh] flex flex-col justify-center px-4 overflow-hidden">
           {/* Background Image & Overlay */}
           <div className="absolute inset-0 z-0">
-            <img src="/hero-bg.png" alt="Airplane in the sky at sunset" className="w-full h-full object-cover object-top" />
+            <img src="/hero-bg.png" alt="Airplane" className="w-full h-full object-cover object-top" />
             <div className="absolute inset-0 bg-gradient-to-b from-blue-900/60 via-blue-900/20 to-transparent"></div>
           </div>
           
@@ -117,98 +144,229 @@ function HomePage() {
         </div>
 
         {/* Search Section */}
-        <div className="container mx-auto px-4 relative z-20 -mt-28 mb-16 max-w-5xl">
-          <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-2xl p-8 flex flex-wrap gap-6 items-end text-gray-800 text-left border border-white/20">
-              <div className="flex-1 min-w-[240px]">
-                <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">
-                  From
-                </label>
-                <div className="relative">
-                  <MapPin className="h-5 w-5 text-primary absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    name="departure_city"
-                    value={searchParams.departure_city}
-                    onChange={handleInputChange}
-                    placeholder="Origin City"
-                    className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="flex-1 min-w-[240px]">
-                <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">
-                  To
-                </label>
-                <div className="relative">
-                  <MapPin className="h-5 w-5 text-secondary absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    name="arrival_city"
-                    value={searchParams.arrival_city}
-                    onChange={handleInputChange}
-                    placeholder="Destination City"
-                    className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="w-full md:w-auto flex-1 min-w-[180px]">
-                <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">
-                  Departure Date
-                </label>
-                <div className="relative">
-                  <Calendar className="h-5 w-5 text-primary absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="date"
-                    name="departure_date"
-                    value={searchParams.departure_date}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="w-full md:w-auto flex-1 min-w-[180px]">
-                <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">
-                  Max Price ($)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                  <input
-                    type="number"
-                    name="max_price"
-                    value={searchParams.max_price}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 500"
-                    className="w-full pl-8 pr-4 py-3.5 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-700 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="w-full flex gap-4 mt-4">
+        <div className="container mx-auto px-4 relative z-20 -mt-24 mb-16 max-w-6xl">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 border border-slate-100">
+            {/* Trip Type Selector */}
+            <div className="flex gap-6 mb-8 border-b border-slate-100 pb-4">
+              {[
+                { id: 'round-trip', label: 'Round Trip' },
+                { id: 'one-way', label: 'One-Way' },
+                { id: 'multicity', label: 'Multicity' }
+              ].map(type => (
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-primary hover:bg-blue-800 disabled:bg-blue-300 text-white font-black px-10 py-4 rounded-xl transition-all transform hover:scale-[1.01] active:scale-95 shadow-xl flex items-center justify-center gap-2 group"
-                >
-                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5 group-hover:scale-110 transition-transform" />}
-                  Find Flights
-                </button>
-
-                <button
+                  key={type.id}
                   type="button"
                   onClick={() => {
-                    setSearchParams({ departure_city: '', arrival_city: '', departure_date: '', max_price: '' });
-                    setSearched(false);
+                    setTripType(type.id);
+                    if (type.id !== 'multicity') setSegments([segments[0]]);
                   }}
-                  className="px-8 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black rounded-xl transition-all"
+                  className={`flex items-center gap-2 pb-2 transition-all font-bold text-sm uppercase tracking-wider ${
+                    tripType === type.id 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
+                  }`}
                 >
-                  Clear
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${tripType === type.id ? 'border-primary' : 'border-slate-300'}`}>
+                    {tripType === type.id && <div className="w-2 h-2 bg-primary rounded-full"></div>}
+                  </div>
+                  {type.label}
                 </button>
+              ))}
+            </div>
+
+            <form onSubmit={handleSearch} className="space-y-6">
+              {segments.map((segment, index) => (
+                <div key={index} className="flex flex-wrap lg:flex-nowrap gap-4 items-end relative group">
+                  {tripType === 'multicity' && index > 0 && (
+                    <div className="absolute -left-10 top-1/2 -translate-y-1/2 hidden lg:flex items-center justify-center w-8 h-8 bg-slate-100 rounded-full text-slate-400 font-bold text-xs">
+                      {index + 1}
+                    </div>
+                  )}
+                  
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">From</label>
+                    <div className="relative">
+                      <MapPin className="h-5 w-5 text-primary absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        required
+                        type="text"
+                        placeholder="Origin City"
+                        value={segment.departure_city}
+                        onChange={(e) => handleSegmentChange(index, 'departure_city', e.target.value)}
+                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-slate-700 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">To</label>
+                    <div className="relative">
+                      <MapPin className="h-5 w-5 text-secondary absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        required
+                        type="text"
+                        placeholder="Destination"
+                        value={segment.arrival_city}
+                        onChange={(e) => handleSegmentChange(index, 'arrival_city', e.target.value)}
+                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-slate-700 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Departure</label>
+                    <div className="relative">
+                      <Calendar className="h-5 w-5 text-primary absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        required
+                        type="date"
+                        value={segment.departure_date}
+                        onChange={(e) => handleSegmentChange(index, 'departure_date', e.target.value)}
+                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-slate-700 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {tripType === 'round-trip' && index === 0 && (
+                    <div className="flex-1 min-w-[150px]">
+                      <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Return</label>
+                      <div className="relative">
+                        <Calendar className="h-5 w-5 text-secondary absolute left-4 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="date"
+                          value={segment.return_date}
+                          onChange={(e) => handleSegmentChange(index, 'return_date', e.target.value)}
+                          className="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-slate-700 transition-all"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {tripType === 'multicity' && index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => removeSegment(index)}
+                      className="p-4 text-red-400 hover:bg-red-50 rounded-2xl transition-all"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              <div className="flex flex-wrap items-center justify-between gap-6 pt-4">
+                <div className="flex flex-wrap items-center gap-6">
+                  {tripType === 'multicity' && segments.length < 4 && (
+                    <button
+                      type="button"
+                      onClick={addSegment}
+                      className="flex items-center gap-2 text-primary font-black text-sm uppercase tracking-widest hover:text-blue-800 transition-all"
+                    >
+                      <Plus className="h-5 w-5" /> Add Flight
+                    </button>
+                  )}
+
+                  {/* Passenger & Cabin Dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassengerDropdown(!showPassengerDropdown)}
+                      className="flex items-center gap-3 px-6 py-4 bg-slate-50 rounded-2xl font-bold text-slate-700 hover:bg-slate-100 transition-all"
+                    >
+                      <Users className="h-5 w-5 text-primary" />
+                      <span>{totalPassengers} Passengers, {cabinClass}</span>
+                    </button>
+
+                    {showPassengerDropdown && (
+                      <div className="absolute top-full left-0 mt-4 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-50 animate-in fade-in zoom-in duration-200">
+                        <div className="space-y-6">
+                          {['adults', 'children', 'infants'].map(type => (
+                            <div key={type} className="flex items-center justify-between">
+                              <div>
+                                <p className="font-bold text-slate-700 capitalize">{type}</p>
+                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                  {type === 'adults' ? '12+ Years' : type === 'children' ? '2-12 Years' : 'Under 2'}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <button
+                                  type="button"
+                                  onClick={() => setPassengers(p => ({ ...p, [type]: Math.max(type === 'adults' ? 1 : 0, p[type] - 1) }))}
+                                  className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center font-bold hover:bg-slate-50"
+                                >-</button>
+                                <span className="font-bold w-4 text-center">{passengers[type]}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setPassengers(p => ({ ...p, [type]: p[type] + 1 }))}
+                                  className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center font-bold hover:bg-slate-50"
+                                >+</button>
+                              </div>
+                            </div>
+                          ))}
+
+                          <div className="pt-4 border-t border-slate-100">
+                            <p className="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest text-center">Cabin Class</p>
+                            <div className="grid grid-cols-1 gap-2">
+                              {['Economy', 'Premium Economy', 'Business', 'First'].map(c => (
+                                <button
+                                  key={c}
+                                  type="button"
+                                  onClick={() => setCabinClass(c)}
+                                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all text-center ${cabinClass === c ? 'bg-primary text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                                >
+                                  {c}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowPassengerDropdown(false)}
+                            className="w-full bg-primary text-white font-black py-3 rounded-2xl shadow-xl mt-4"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" className="w-5 h-5 rounded-md border-2 border-slate-300 text-primary focus:ring-primary transition-all cursor-pointer" />
+                      <span className="text-sm font-bold text-slate-500 group-hover:text-slate-700 transition-all">Book with miles</span>
+                    </label>
+                    <button type="button" className="text-sm font-bold text-primary hover:text-blue-800 transition-all flex items-center gap-1">
+                      <Plus className="h-4 w-4" /> I have promo code
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      placeholder="Max Price"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                      className="pl-8 pr-4 py-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-slate-700 transition-all w-32"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-accent hover:bg-yellow-500 disabled:bg-slate-200 text-primary font-black px-12 py-5 rounded-2xl shadow-xl transition-all transform hover:scale-[1.02] active:scale-95 flex items-center gap-3 uppercase tracking-widest text-sm"
+                  >
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+                    Search flights
+                  </button>
+                </div>
               </div>
             </form>
           </div>
+        </div>
 
         {/* Results Section */}
         <section className="container mx-auto mt-8 pb-20 px-4 relative z-20">
