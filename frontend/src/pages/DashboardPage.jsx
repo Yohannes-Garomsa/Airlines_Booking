@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plane, Calendar, MapPin, XCircle, Download, LayoutDashboard, ChevronRight, Loader2, AlertCircle } from 'lucide-react';
+import { Plane, Calendar, MapPin, XCircle, Download, LayoutDashboard, ChevronRight, Loader2, AlertCircle, Clock, AlertTriangle } from 'lucide-react';
 
 const DashboardPage = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(null);
+  const [timeLeft, setTimeLeft] = useState({});
 
   const fetchBookings = async () => {
     try {
@@ -25,6 +26,35 @@ const DashboardPage = () => {
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  // Countdown timer for pending bookings
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const newTimeLeft = {};
+
+      bookings.forEach(booking => {
+        if (booking.status === 'pending') {
+          const bookingTime = new Date(booking.booking_date);
+          const expiryTime = new Date(bookingTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours
+          const remaining = expiryTime - now;
+
+          if (remaining > 0) {
+            const hours = Math.floor(remaining / (1000 * 60 * 60));
+            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+            newTimeLeft[booking.id] = { hours, minutes, seconds, expired: false };
+          } else {
+            newTimeLeft[booking.id] = { hours: 0, minutes: 0, seconds: 0, expired: true };
+          }
+        }
+      });
+
+      setTimeLeft(newTimeLeft);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [bookings]);
 
   const handleCancel = async (bookingId) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
@@ -49,13 +79,46 @@ const DashboardPage = () => {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status, bookingId) => {
+    if (status === 'pending') {
+      const timer = timeLeft[bookingId];
+      if (timer?.expired) {
+        return 'bg-red-100 text-red-700 border-red-200';
+      } else if (timer && timer.hours === 0 && timer.minutes < 30) {
+        return 'bg-orange-100 text-orange-700 border-orange-200';
+      }
+    }
+    
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-700 border-green-200';
       case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
       case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       default: return 'bg-gray-100 text-gray-700';
     }
+  };
+
+  const getStatusText = (status, bookingId) => {
+    if (status === 'pending') {
+      const timer = timeLeft[bookingId];
+      if (timer?.expired) {
+        return 'Expired';
+      } else if (timer && timer.hours === 0 && timer.minutes < 30) {
+        return 'Expiring Soon';
+      }
+    }
+    return status;
+  };
+
+  const getStatusIcon = (status, bookingId) => {
+    if (status === 'pending') {
+      const timer = timeLeft[bookingId];
+      if (timer?.expired) {
+        return <AlertTriangle className="h-3 w-3" />;
+      } else if (timer && timer.hours === 0 && timer.minutes < 30) {
+        return <AlertCircle className="h-3 w-3" />;
+      }
+    }
+    return null;
   };
 
   return (
@@ -89,10 +152,36 @@ const DashboardPage = () => {
               <div key={booking.id} className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 hover:shadow-xl transition-all group">
                 <div className="flex-grow">
                   <div className="flex items-center gap-3 mb-4">
-                    <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(booking.status)}`}>
-                      {booking.status}
+                    <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5 ${getStatusColor(booking.status, booking.id)}`}>
+                      {getStatusIcon(booking.status, booking.id)}
+                      {getStatusText(booking.status, booking.id)}
                     </span>
                     <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Ref: #SB-{booking.id}00{booking.id}</span>
+                    
+                    {/* Countdown Timer for Pending Bookings */}
+                    {booking.status === 'pending' && timeLeft[booking.id] && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3 w-3 text-slate-400" />
+                        <div className="flex items-center gap-1 text-xs font-bold">
+                          {!timeLeft[booking.id].expired ? (
+                            <>
+                              <span className={`px-2 py-1 rounded text-[10px] font-black ${
+                                timeLeft[booking.id].hours === 0 && timeLeft[booking.id].minutes < 30 
+                                  ? 'bg-red-100 text-red-700' 
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {String(timeLeft[booking.id].hours).padStart(2, '0')}:{String(timeLeft[booking.id].minutes).padStart(2, '0')}:{String(timeLeft[booking.id].seconds).padStart(2, '0')}
+                              </span>
+                              <span className="text-slate-400 font-bold">left</span>
+                            </>
+                          ) : (
+                            <span className="px-2 py-1 rounded text-[10px] font-black bg-red-100 text-red-700">
+                              EXPIRED
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex items-center gap-8">
@@ -123,13 +212,13 @@ const DashboardPage = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                   {booking.status !== 'cancelled' && (
+                   {booking.status === 'pending' && !timeLeft[booking.id]?.expired && (
                      <>
                         <Link 
-                          to={`/ticket/${booking.id}`}
-                          className="bg-primary hover:bg-blue-800 text-white font-black px-6 py-3 rounded-xl transition-all shadow-lg flex items-center gap-2 text-sm"
+                          to={`/payment/${booking.id}`}
+                          className="bg-green-500 hover:bg-green-600 text-white font-black px-6 py-3 rounded-xl transition-all shadow-lg flex items-center gap-2 text-sm"
                         >
-                          <Download className="h-4 w-4" /> View Ticket
+                          <Download className="h-4 w-4" /> Pay Now
                         </Link>
                         <button 
                           onClick={() => handleCancel(booking.id)}
@@ -141,8 +230,28 @@ const DashboardPage = () => {
                         </button>
                      </>
                    )}
+                   {booking.status === 'confirmed' && (
+                     <Link 
+                       to={`/ticket/${booking.id}`}
+                       className="bg-primary hover:bg-blue-800 text-white font-black px-6 py-3 rounded-xl transition-all shadow-lg flex items-center gap-2 text-sm"
+                     >
+                       <Download className="h-4 w-4" /> View Ticket
+                     </Link>
+                   )}
                    {booking.status === 'cancelled' && (
                      <p className="text-xs font-bold text-red-400 italic">This booking has been cancelled and refunded.</p>
+                   )}
+                   {booking.status === 'pending' && timeLeft[booking.id]?.expired && (
+                     <div className="flex flex-col gap-2">
+                       <p className="text-xs font-bold text-red-500 italic">Payment window expired. Booking cancelled.</p>
+                       <button 
+                         onClick={() => handleCancel(booking.id)}
+                         disabled={cancelling === booking.id}
+                         className="bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold px-4 py-2 rounded-xl transition-all border border-gray-100 flex items-center gap-2 text-xs"
+                       >
+                         Remove
+                       </button>
+                     </div>
                    )}
                 </div>
               </div>
