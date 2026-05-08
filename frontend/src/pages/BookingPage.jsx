@@ -18,7 +18,7 @@ const BookingPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [passenger, setPassenger] = useState({ name: '', email: '' });
   const [passengerCounts, setPassengerCounts] = useState({ adults: 1, children: 0, infants: 0 });
-  const [selectedSeat, setSelectedSeat] = useState(null);
+  const [selectedSeats, setSelectedSeats] = useState([]);
 
   const { user } = useContext(AuthContext);
 
@@ -43,6 +43,11 @@ const BookingPage = () => {
     }
   }, [location.state]);
 
+  useEffect(() => {
+    const seatsNeeded = passengerCounts.adults + passengerCounts.children;
+    setSelectedSeats(prev => prev.slice(0, seatsNeeded));
+  }, [passengerCounts]);
+
   const handlePassengerCountChange = (type, delta) => {
     setPassengerCounts(prev => ({
       ...prev,
@@ -64,6 +69,8 @@ const BookingPage = () => {
     return parseFloat((adultsTotal + childrenTotal).toFixed(2));
   };
 
+  const seatsNeeded = passengerCounts.adults + passengerCounts.children;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
@@ -71,8 +78,8 @@ const BookingPage = () => {
       navigate('/login');
       return;
     }
-    if (!selectedSeat) {
-      alert('Please select a seat first.');
+    if (selectedSeats.length !== seatsNeeded) {
+      alert(`Please select ${seatsNeeded} seat${seatsNeeded === 1 ? '' : 's'} before continuing. Infants do not require a seat.`);
       return;
     }
     setSubmitting(true);
@@ -89,25 +96,28 @@ const BookingPage = () => {
           totalPrice: getPrice(),
           cabinClass: cabinClass,
           passengerCounts,
-          passengers: [passenger]
+          passengers: [passenger],
+          seatNumbers: selectedSeats
         })
       });
       
       if (response.ok) {
         const data = await response.json();
-        // Also reserve the seat
-        await fetch(`${import.meta.env.VITE_API_URL || '/api'}/seats/reserve`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            flightId: parseInt(flightId),
-            seatNumber: selectedSeat,
-            bookingId: data.id
+        // Reserve all selected seats
+        await Promise.all(selectedSeats.map((seatNumber) =>
+          fetch(`${import.meta.env.VITE_API_URL || '/api'}/seats/reserve`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              flightId: parseInt(flightId),
+              seatNumber,
+              bookingId: data.id
+            })
           })
-        });
+        ));
         navigate(`/payment/${data.id}`, { state: { booking: data, flight } });
       } else {
         alert('Booking failed. Make sure you are logged in.');
@@ -138,7 +148,7 @@ const BookingPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Form */}
           <div className="lg:col-span-8 space-y-8">
-            <SeatSelection flightId={flightId} onSelect={setSelectedSeat} />
+            <SeatSelection flightId={flightId} requiredSeats={seatsNeeded} onSelect={setSelectedSeats} />
 
             <div className="bg-white rounded-3xl shadow-xl p-8">
               <div className="flex items-center justify-between mb-8">
@@ -183,7 +193,7 @@ const BookingPage = () => {
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-500 mt-4">Adults pay full fare, children receive a 10% discount, infants travel free.</p>
+                  <p className="text-xs text-slate-500 mt-4">Adults pay full fare, children receive a 10% discount, infants travel free. Seats are required for adults and children only.</p>
                 </div>
                 <div>
                   <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">Full Name</label>

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plane, User, Loader2 } from 'lucide-react';
 import { io } from 'socket.io-client';
 
-const SeatSelection = ({ flightId, onSelect }) => {
+const SeatSelection = ({ flightId, requiredSeats = 1, onSelect }) => {
   const [seats, setSeats] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSeat, setSelectedSeat] = useState(null);
+  const [selectedSeats, setSelectedSeats] = useState([]);
 
   useEffect(() => {
     const fetchSeats = async () => {
@@ -40,9 +40,27 @@ const SeatSelection = ({ flightId, onSelect }) => {
 
   const handleSeatClick = (seat) => {
     if (seat.is_occupied) return;
-    setSelectedSeat(seat.seat_number);
-    onSelect(seat.seat_number);
+
+    const seatNumber = seat.seat_number;
+    const isSelected = selectedSeats.includes(seatNumber);
+
+    let nextSelected = [];
+    if (isSelected) {
+      nextSelected = selectedSeats.filter((item) => item !== seatNumber);
+    } else {
+      if (selectedSeats.length >= requiredSeats) {
+        return;
+      }
+      nextSelected = [...selectedSeats, seatNumber];
+    }
+
+    setSelectedSeats(nextSelected);
+    onSelect(nextSelected);
   };
+
+  useEffect(() => {
+    setSelectedSeats((prev) => prev.slice(0, requiredSeats));
+  }, [requiredSeats]);
 
   if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
 
@@ -81,7 +99,7 @@ const SeatSelection = ({ flightId, onSelect }) => {
                     className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center font-bold text-xs ${
                       seat.is_occupied 
                         ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                        : selectedSeat === seat.seat_number
+                        : selectedSeats.includes(seat.seat_number)
                           ? 'bg-primary text-white shadow-lg shadow-blue-200 scale-110'
                           : 'bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-primary'
                     }`}
@@ -100,7 +118,7 @@ const SeatSelection = ({ flightId, onSelect }) => {
                     className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center font-bold text-xs ${
                       seat.is_occupied 
                         ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                        : selectedSeat === seat.seat_number
+                        : selectedSeats.includes(seat.seat_number)
                           ? 'bg-primary text-white shadow-lg shadow-blue-200 scale-110'
                           : 'bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-primary'
                     }`}
@@ -114,17 +132,31 @@ const SeatSelection = ({ flightId, onSelect }) => {
         </div>
       </div>
 
-      {selectedSeat && (
-        <div className="mt-8 pt-6 border-t border-slate-50 flex justify-between items-center">
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Seat</p>
-            <p className="text-2xl font-black text-primary">{selectedSeat}</p>
+      <div className="mt-8 pt-6 border-t border-slate-50">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Seats</p>
+              <p className="text-2xl font-black text-primary">{selectedSeats.length} / {requiredSeats}</p>
+            </div>
+            <div className="bg-blue-50 px-4 py-2 rounded-xl text-primary font-bold text-sm">
+              No Extra Charge
+            </div>
           </div>
-          <div className="bg-blue-50 px-4 py-2 rounded-xl text-primary font-bold text-sm">
-            No Extra Charge
-          </div>
+          {selectedSeats.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {selectedSeats.map((seat) => (
+                <span key={seat} className="px-3 py-2 rounded-full bg-slate-100 text-slate-700 text-xs font-black">
+                  {seat}
+                </span>
+              ))}
+            </div>
+          )}
+          {selectedSeats.length < requiredSeats && (
+            <p className="text-sm text-slate-500">Select {requiredSeats - selectedSeats.length} more seat{requiredSeats - selectedSeats.length === 1 ? '' : 's'}.</p>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
