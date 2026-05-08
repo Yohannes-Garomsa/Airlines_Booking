@@ -29,7 +29,15 @@ const createBooking = asyncHandler(async (req, res) => {
 });
 
 const getAllBookings = asyncHandler(async (req, res) => {
-  const bookings = await Booking.getAll();
+  const { status } = req.query;
+  
+  let bookings;
+  if (status && status !== 'all') {
+    bookings = await Booking.getByStatus(status);
+  } else {
+    bookings = await Booking.getAll();
+  }
+  
   res.status(200).json(bookings);
 });
 

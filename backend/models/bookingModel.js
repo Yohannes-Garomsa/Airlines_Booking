@@ -104,6 +104,19 @@ const Booking = {
       ['cancelled', bookingId, userId]
     );
     return result.rows[0];
+  },
+
+  getByStatus: async (status) => {
+    const result = await db.query(
+      `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name 
+       FROM bookings b 
+       JOIN flights f ON b.flight_id = f.id 
+       JOIN users u ON b.user_id = u.id 
+       WHERE b.status = $1
+       ORDER BY b.booking_date DESC`,
+      [status]
+    );
+    return result.rows;
   }
 };
 
