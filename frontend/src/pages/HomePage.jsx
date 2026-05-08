@@ -158,7 +158,7 @@ function HomePage() {
 
         {/* Search Section */}
         <div className="container mx-auto px-4 relative z-20 -mt-24 mb-16 max-w-6xl">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 border border-slate-100">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 border border-slate-100 overflow-visible">
             {/* Search Type & Class Selectors */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-slate-100 pb-4">
               <div className="flex gap-6 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
@@ -201,7 +201,7 @@ function HomePage() {
               </div>
             </div>
 
-            <form onSubmit={handleSearch} className="space-y-6">
+            <form onSubmit={handleSearch} className="space-y-6 relative z-10">
               {segments.map((segment, index) => (
                 <div key={index} className="flex flex-wrap lg:flex-nowrap gap-4 items-end relative group">
                   {tripType === 'multicity' && index > 0 && (
@@ -287,7 +287,7 @@ function HomePage() {
                   )}
 
                   {/* Passenger & Cabin Dropdown */}
-                  <div className="relative">
+                  <div className="relative z-[9999]">
                     <button
                       type="button"
                       onClick={() => setShowPassengerDropdown(!showPassengerDropdown)}
@@ -298,7 +298,7 @@ function HomePage() {
                     </button>
 
                     {showPassengerDropdown && (
-                      <div className="absolute top-full left-0 mt-4 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-50 animate-in fade-in zoom-in duration-200">
+                      <div className="absolute top-full left-0 mt-4 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-[9999] animate-in fade-in zoom-in duration-200">
                         <div className="space-y-6">
                           {['adults', 'children', 'infants'].map(type => (
                             <div key={type} className="flex items-center justify-between">
@@ -369,7 +369,7 @@ function HomePage() {
         </div>
 
         {/* Results Section */}
-        <section className="container mx-auto mt-8 pb-20 px-4 relative z-20">
+        <section className="container mx-auto mt-8 pb-20 px-4 relative z-0">
           {error && (
             <div className="max-w-xl mx-auto mb-8 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl flex items-center gap-3 shadow-lg">
               <AlertCircle className="h-6 w-6 text-red-500" />
@@ -447,12 +447,13 @@ function HomePage() {
             </div>
           ) : flights.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {flights.map((flight, idx) => (
                   <FlightCard 
                     key={flight.id} 
                     flight={flight} 
                     selectedClass={cabinClass} 
+                    passengerCounts={passengers}
                     isFeatured={!searched && idx < 2} 
                   />
                 ))}

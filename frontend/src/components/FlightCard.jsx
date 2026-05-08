@@ -10,7 +10,7 @@ const CITY_IMAGES = {
   'Singapore': 'https://images.unsplash.com/photo-1525625232747-0ef45f85a271?auto=format&fit=crop&w=600&q=80',
 };
 
-const FlightCard = ({ flight, selectedClass = 'Economy' }) => {
+const FlightCard = ({ flight, selectedClass = 'Economy', passengerCounts = { adults: 1, children: 0, infants: 0 } }) => {
   const formatTime = (dateString) => {
     return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -25,20 +25,20 @@ const FlightCard = ({ flight, selectedClass = 'Economy' }) => {
   const bgImage = CITY_IMAGES[cityName] || 'https://images.unsplash.com/photo-1436491865332-7a61a109c055?auto=format&fit=crop&w=800&q=80';
 
   return (
-    <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-500 border border-slate-100 group flex flex-col h-full">
+    <div className="bg-white rounded-[1.75rem] shadow-lg overflow-hidden hover:shadow-xl transition-all duration-500 border border-slate-100 group flex flex-col h-full">
       {/* Visual Header */}
-      <div className="h-52 relative overflow-hidden">
+      <div className="h-36 relative overflow-hidden">
         <img src={bgImage} alt={cityName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
         <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/20"></div>
         
         <div className="absolute top-4 left-4 flex gap-2">
-          <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5">
+          <div className="bg-white/90 backdrop-blur-md px-2 py-1 rounded-full shadow-md flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full ${seats > 10 ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}></div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-700">{seats} Seats</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-700">{seats} Seats</span>
           </div>
           {selectedClass === 'Business' && (
-            <div className="bg-primary/90 backdrop-blur-md px-3 py-1 rounded-full shadow-lg flex items-center gap-1 text-white border border-white/20">
-              <span className="text-[10px] font-black uppercase tracking-widest">VIP Business</span>
+            <div className="bg-primary/90 backdrop-blur-md px-2 py-1 rounded-full shadow-md flex items-center gap-1 text-white border border-white/20">
+              <span className="text-[9px] font-black uppercase tracking-widest">VIP Business</span>
             </div>
           )}
         </div>
@@ -50,30 +50,30 @@ const FlightCard = ({ flight, selectedClass = 'Economy' }) => {
       </div>
 
       {/* Flight Details */}
-      <div className="p-8 flex-grow flex flex-col">
-        <div className="flex justify-between items-center mb-8">
+      <div className="p-5 flex-grow flex flex-col">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100">
                <img src={`https://ui-avatars.com/api/?name=${flight.airline}&background=random&color=fff&bold=true`} className="w-6 h-6 rounded" alt={flight.airline} />
             </div>
             <div>
-              <h3 className="font-black text-slate-800 leading-none mb-1">{flight.airline}</h3>
+              <h3 className="font-black text-slate-800 leading-none mb-1 text-lg">{flight.airline}</h3>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formatDate(flight.departure_time)}</p>
             </div>
           </div>
           <div className="text-right">
              <div className="flex items-baseline justify-end gap-0.5">
                 <span className="text-xs font-black text-primary">$</span>
-                <span className="text-3xl font-black text-primary tracking-tighter">{Math.floor(price)}</span>
+                <span className="text-2xl font-black text-primary tracking-tighter">{Math.floor(price)}</span>
                 <span className="text-xs font-black text-primary">.{(price % 1).toFixed(2).split('.')[1]}</span>
              </div>
              <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Per Traveler</p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-4 mb-8 bg-slate-50/50 p-6 rounded-3xl border border-slate-50">
-          <div className="text-center">
-            <p className="text-xl font-black text-slate-800 leading-none mb-1">{formatTime(flight.departure_time)}</p>
+        <div className="flex items-center justify-between gap-4 mb-6 bg-slate-50/80 p-4 rounded-3xl border border-slate-100">
+          <div className="text-center min-w-[90px]">
+            <p className="text-lg font-black text-slate-800 leading-none mb-1">{formatTime(flight.departure_time)}</p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{flight.departure_city.split('(')[1]?.replace(')', '') || 'ORG'}</p>
           </div>
 
@@ -88,22 +88,23 @@ const FlightCard = ({ flight, selectedClass = 'Economy' }) => {
              <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Non-stop</span>
           </div>
 
-          <div className="text-center">
-            <p className="text-xl font-black text-slate-800 leading-none mb-1">{formatTime(flight.arrival_time)}</p>
+          <div className="text-center min-w-[90px]">
+            <p className="text-lg font-black text-slate-800 leading-none mb-1">{formatTime(flight.arrival_time)}</p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{flight.arrival_city.split('(')[1]?.replace(')', '') || 'DST'}</p>
           </div>
         </div>
 
-        <div className="mt-auto flex items-center justify-between gap-4 pt-6 border-t border-slate-100">
-          <div className="flex items-center gap-2 text-slate-400">
+        <div className="mt-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-100">
+          <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-[0.25em]">
              <Clock className="h-4 w-4" />
-             <span className="text-[10px] font-bold uppercase tracking-widest">Est. 4h 30m</span>
+             <span>4h 30m</span>
           </div>
           <Link 
             to={`/booking/${flight.id}?class=${selectedClass}`} 
-            className="bg-primary hover:bg-blue-800 text-white text-xs font-black uppercase tracking-widest py-4 px-8 rounded-2xl transition-all transform active:scale-95 shadow-xl shadow-blue-100"
+            state={{ passengerCounts }}
+            className="bg-primary hover:bg-blue-800 text-white text-[11px] font-black uppercase tracking-widest py-2.5 px-5 rounded-2xl transition-all transform active:scale-95 shadow-lg shadow-blue-100"
           >
-            Select Flight
+            Book Now
           </Link>
         </div>
       </div>

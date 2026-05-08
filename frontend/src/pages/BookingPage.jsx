@@ -17,7 +17,8 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [passenger, setPassenger] = useState({ name: '', email: '' });
-  const [selectedSeat, setSelectedSeat] = useState(null);
+  const [passengerCounts, setPassengerCounts] = useState({ adults: 1, children: 0, infants: 0 });
+  const [selectedSeats, setSelectedSeats] = useState([]);
 
   const { user } = useContext(AuthContext);
 
@@ -36,10 +37,39 @@ const BookingPage = () => {
     fetchFlight();
   }, [flightId]);
 
+  useEffect(() => {
+    if (location.state?.passengerCounts) {
+      setPassengerCounts(location.state.passengerCounts);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    const seatsNeeded = passengerCounts.adults + passengerCounts.children;
+    setSelectedSeats(prev => prev.slice(0, seatsNeeded));
+  }, [passengerCounts]);
+
+  const handlePassengerCountChange = (type, delta) => {
+    setPassengerCounts(prev => ({
+      ...prev,
+      [type]: Math.max(type === 'adults' ? 1 : 0, prev[type] + delta)
+    }));
+  };
+
+  const getBasePrice = () => {
+    if (!flight) return 0;
+    const price = cabinClass === 'Business' ? flight.business_price : flight.economy_price;
+    return Number(price) || 0;
+  };
+
   const getPrice = () => {
     if (!flight) return 0;
-    return cabinClass === 'Business' ? flight.business_price : flight.economy_price;
+    const basePrice = getBasePrice();
+    const adultsTotal = passengerCounts.adults * basePrice;
+    const childrenTotal = passengerCounts.children * basePrice * 0.9;
+    return parseFloat((adultsTotal + childrenTotal).toFixed(2));
   };
+
+  const seatsNeeded = passengerCounts.adults + passengerCounts.children;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,8 +78,8 @@ const BookingPage = () => {
       navigate('/login');
       return;
     }
-    if (!selectedSeat) {
-      alert('Please select a seat first.');
+    if (selectedSeats.length !== seatsNeeded) {
+      alert(`Please select ${seatsNeeded} seat${seatsNeeded === 1 ? '' : 's'} before continuing. Infants do not require a seat.`);
       return;
     }
     setSubmitting(true);
@@ -65,25 +95,29 @@ const BookingPage = () => {
           flightId: parseInt(flightId),
           totalPrice: getPrice(),
           cabinClass: cabinClass,
-          passengers: [passenger]
+          passengerCounts,
+          passengers: [passenger],
+          seatNumbers: selectedSeats
         })
       });
       
       if (response.ok) {
         const data = await response.json();
-        // Also reserve the seat
-        await fetch(`${import.meta.env.VITE_API_URL || '/api'}/seats/reserve`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            flightId: parseInt(flightId),
-            seatNumber: selectedSeat,
-            bookingId: data.id
+        // Reserve all selected seats
+        await Promise.all(selectedSeats.map((seatNumber) =>
+          fetch(`${import.meta.env.VITE_API_URL || '/api'}/seats/reserve`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              flightId: parseInt(flightId),
+              seatNumber,
+              bookingId: data.id
+            })
           })
-        });
+        ));
         navigate(`/payment/${data.id}`, { state: { booking: data, flight } });
       } else {
         alert('Booking failed. Make sure you are logged in.');
@@ -114,7 +148,7 @@ const BookingPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Form */}
           <div className="lg:col-span-8 space-y-8">
-            <SeatSelection flightId={flightId} onSelect={setSelectedSeat} />
+            <SeatSelection flightId={flightId} requiredSeats={seatsNeeded} onSelect={setSelectedSeats} />
 
             <div className="bg-white rounded-3xl shadow-xl p-8">
               <div className="flex items-center justify-between mb-8">
@@ -127,6 +161,40 @@ const BookingPage = () => {
                 </div>
               </div>
               <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="bg-slate-100 p-6 rounded-3xl border border-slate-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-gray-500">Passenger Count</h3>
+                    <span className="text-xs text-slate-400">Infants travel free</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {['adults', 'children', 'infants'].map((type) => (
+                      <div key={type} className="bg-white rounded-3xl p-4 border border-slate-200">
+                        <p className="text-sm font-black text-gray-700 capitalize">{type}</p>
+                        <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">
+                          {type === 'adults' ? 'Full fare' : type === 'children' ? '10% off' : 'Free'}
+                        </p>
+                        <div className="mt-4 flex items-center justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handlePassengerCountChange(type, -1)}
+                            className="h-9 w-9 rounded-full border border-slate-200 text-slate-600 font-black hover:bg-slate-50"
+                          >
+                            -
+                          </button>
+                          <span className="font-black text-lg text-slate-800">{passengerCounts[type]}</span>
+                          <button
+                            type="button"
+                            onClick={() => handlePassengerCountChange(type, 1)}
+                            className="h-9 w-9 rounded-full border border-slate-200 text-slate-600 font-black hover:bg-slate-50"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-4">Adults pay full fare, children receive a 10% discount, infants travel free. Seats are required for adults and children only.</p>
+                </div>
                 <div>
                   <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">Full Name</label>
                   <div className="relative">
@@ -229,9 +297,23 @@ const BookingPage = () => {
                   </div>
                 </div>
 
-                <div className="pt-4 flex justify-between items-center">
-                  <span className="text-sm font-bold text-gray-500 italic">Total Price</span>
-                  <span className="text-3xl font-black text-primary">${getPrice()}</span>
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <div className="flex justify-between text-sm text-slate-500">
+                    <span>Adults ({passengerCounts.adults} × ${getBasePrice().toFixed(2)})</span>
+                    <span>${(passengerCounts.adults * getBasePrice()).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-slate-500">
+                    <span>Children ({passengerCounts.children} × ${getBasePrice().toFixed(2)} - 10%)</span>
+                    <span>${(passengerCounts.children * getBasePrice() * 0.9).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-slate-500">
+                    <span>Infants</span>
+                    <span>$0.00</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                    <span className="text-sm font-bold text-gray-500 uppercase tracking-[0.2em]">Total Price</span>
+                    <span className="text-3xl font-black text-primary">${getPrice()}</span>
+                  </div>
                 </div>
               </div>
             </div>

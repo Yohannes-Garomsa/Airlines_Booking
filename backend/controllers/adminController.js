@@ -20,6 +20,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
 const getAllBookings = asyncHandler(async (req, res) => {
   const { status } = req.query;
+  await Booking.expireOldPending();
   const bookings = await Booking.getAll(status);
   res.status(200).json(bookings);
 });

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Plane, Plus, Search, Filter, MoreVertical, Trash2, Edit2, X, ChevronRight, ChevronLeft, Loader2, MapPin } from 'lucide-react';
+import { Plane, Plus, Search, Filter, MoreVertical, Trash2, Edit2, X, ChevronRight, ChevronLeft, Loader2, MapPin, Check } from 'lucide-react';
 import AirportSearch from './AirportSearch';
 
 const AdminFlights = () => {
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [editingFlight, setEditingFlight] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const [formData, setFormData] = useState({
     airline: '',
     flight_number: '',
@@ -78,6 +81,83 @@ const AdminFlights = () => {
     setSelectedDeparture(null);
     setSelectedArrival(null);
     setCurrentStep(1);
+  };
+
+  const openEditModal = (flight) => {
+    setEditingFlight(flight);
+    setFormData({
+      airline: flight.airline,
+      flight_number: flight.flight_number || '',
+      departure_airport_id: flight.departure_airport_id,
+      arrival_airport_id: flight.arrival_airport_id,
+      departure_time: flight.departure_time?.slice(0, 16) || '',
+      arrival_time: flight.arrival_time?.slice(0, 16) || '',
+      economy_price: flight.economy_price,
+      total_seats: flight.total_seats
+    });
+    setCurrentStep(3);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateFlight = async () => {
+    if (!editingFlight) return;
+    
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/flights/${editingFlight.id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (res.ok) {
+        setShowEditModal(false);
+        resetForm();
+        setEditingFlight(null);
+        fetchFlights();
+      } else {
+        const errorData = await res.json();
+        alert(`Error: ${errorData.message || 'Failed to update flight'}`);
+      }
+    } catch (err) {
+      console.error('Failed to update flight:', err);
+      alert('Error updating flight');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteFlight = async (flightId) => {
+    if (!window.confirm('Are you sure you want to delete this flight? This action cannot be undone.')) {
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/flights/${flightId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        fetchFlights();
+      } else {
+        const errorData = await res.json();
+        alert(`Error: ${errorData.message || 'Failed to delete flight'}`);
+      }
+    } catch (err) {
+      console.error('Failed to delete flight:', err);
+      alert('Error deleting flight');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -158,8 +238,20 @@ const AdminFlights = () => {
                   <td className="px-8 py-6 font-black text-primary">${flight.economy_price}</td>
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 hover:bg-white hover:shadow-md rounded-lg text-slate-400 hover:text-primary transition-all"><Edit2 className="h-4 w-4" /></button>
-                      <button className="p-2 hover:bg-white hover:shadow-md rounded-lg text-slate-400 hover:text-red-500 transition-all"><Trash2 className="h-4 w-4" /></button>
+                      <button 
+                        onClick={() => openEditModal(flight)}
+                        disabled={actionLoading}
+                        className="p-2 hover:bg-white hover:shadow-md rounded-lg text-slate-400 hover:text-primary transition-all disabled:opacity-50"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteFlight(flight.id)}
+                        disabled={actionLoading}
+                        className="p-2 hover:bg-white hover:shadow-md rounded-lg text-slate-400 hover:text-red-500 transition-all disabled:opacity-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -301,6 +393,110 @@ const AdminFlights = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowEditModal(false)}></div>
+          <div className="bg-white rounded-[2.5rem] w-full max-w-xl relative z-10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+              <div>
+                <h3 className="text-xl font-black text-slate-800 tracking-tighter uppercase">Edit Flight Details</h3>
+                <p className="text-xs text-slate-400 font-bold">{editingFlight?.flight_number || 'Flight'}</p>
+              </div>
+              <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-white rounded-xl text-slate-400 transition-all"><X className="h-5 w-5" /></button>
+            </div>
+
+            <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Airline Name</label>
+                  <input 
+                    type="text" 
+                    value={formData.airline}
+                    onChange={(e) => setFormData({...formData, airline: e.target.value})}
+                    className="w-full px-4 py-4 bg-slate-50 border-0 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all text-sm" 
+                    placeholder="e.g. SkyBound Emirates"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Flight #</label>
+                  <input 
+                    type="text" 
+                    value={formData.flight_number}
+                    onChange={(e) => setFormData({...formData, flight_number: e.target.value})}
+                    className="w-full px-4 py-4 bg-slate-50 border-0 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all text-sm" 
+                    placeholder="SK-450"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Price (USD)</label>
+                  <input 
+                    type="number" 
+                    value={formData.economy_price}
+                    onChange={(e) => setFormData({...formData, economy_price: e.target.value})}
+                    className="w-full px-4 py-4 bg-slate-50 border-0 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all text-sm" 
+                    placeholder="299.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Total Seats</label>
+                  <input 
+                    type="number" 
+                    value={formData.total_seats}
+                    onChange={(e) => setFormData({...formData, total_seats: parseInt(e.target.value)})}
+                    className="w-full px-4 py-4 bg-slate-50 border-0 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all text-sm" 
+                    placeholder="180"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Departure Time</label>
+                  <input 
+                    type="datetime-local" 
+                    value={formData.departure_time}
+                    onChange={(e) => setFormData({...formData, departure_time: e.target.value})}
+                    className="w-full px-4 py-4 bg-slate-50 border-0 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all text-sm" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Arrival Time</label>
+                  <input 
+                    type="datetime-local" 
+                    value={formData.arrival_time}
+                    onChange={(e) => setFormData({...formData, arrival_time: e.target.value})}
+                    className="w-full px-4 py-4 bg-slate-50 border-0 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all text-sm" 
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex gap-3">
+                <button 
+                  onClick={() => setShowEditModal(false)}
+                  disabled={actionLoading}
+                  className="flex-1 px-6 py-4 text-slate-600 font-black text-xs uppercase tracking-widest rounded-2xl border-2 border-slate-200 hover:border-slate-300 transition-all disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleUpdateFlight}
+                  disabled={actionLoading}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest py-4 rounded-2xl shadow-xl shadow-blue-100 flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                >
+                  {actionLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" /> Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

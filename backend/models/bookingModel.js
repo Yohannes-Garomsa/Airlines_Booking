@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
 const Booking = {
-  create: async (userId, flightId, totalPrice, cabinClass, passengers) => {
+  create: async (userId, flightId, totalPrice, cabinClass, passengers, passengerCounts = null) => {
     const client = await db.getClient();
     
     try {
@@ -13,7 +13,10 @@ const Booking = {
       
       const flight = flightRes.rows[0];
       const verifiedPrice = cabinClass === 'Business' ? flight.business_price : flight.economy_price;
-      const finalPrice = parseFloat(verifiedPrice) * passengers.length;
+      const counts = passengerCounts || { adults: passengers.length, children: 0, infants: 0 };
+      const adultTotal = verifiedPrice * (counts.adults || 0);
+      const childTotal = verifiedPrice * 0.9 * (counts.children || 0);
+      const finalPrice = parseFloat((adultTotal + childTotal).toFixed(2));
 
       // Generate PNR (6 chars uppercase alphanumeric)
       const pnr = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -60,14 +63,31 @@ const Booking = {
     return result.rows;
   },
 
-  getAll: async () => {
-    const result = await db.query(
-      `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name 
+  expireOldPending: async () => {
+    await db.query(
+      `UPDATE bookings
+       SET status = 'cancelled'
+       WHERE status = 'pending'
+         AND booking_date < NOW() - INTERVAL '3 hours'`
+    );
+  },
+
+  getAll: async (status = null) => {
+    const baseQuery = `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name 
        FROM bookings b 
        JOIN flights f ON b.flight_id = f.id 
-       JOIN users u ON b.user_id = u.id 
-       ORDER BY b.booking_date DESC`
-    );
+       JOIN users u ON b.user_id = u.id`;
+
+    const query = status && status !== 'all'
+      ? status === 'pending'
+        ? `${baseQuery} WHERE b.status = $1 AND b.booking_date >= NOW() - INTERVAL '3 hours' ORDER BY b.booking_date DESC`
+        : `${baseQuery} WHERE b.status = $1 ORDER BY b.booking_date DESC`
+      : `${baseQuery} ORDER BY b.booking_date DESC`;
+
+    const result = status && status !== 'all'
+      ? await db.query(query, [status])
+      : await db.query(query);
+
     return result.rows;
   },
 
@@ -104,6 +124,25 @@ const Booking = {
       ['cancelled', bookingId, userId]
     );
     return result.rows[0];
+  },
+
+  getByStatus: async (status) => {
+    const query = status === 'pending'
+      ? `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name 
+         FROM bookings b 
+         JOIN flights f ON b.flight_id = f.id 
+         JOIN users u ON b.user_id = u.id 
+         WHERE b.status = $1 AND b.booking_date >= NOW() - INTERVAL '3 hours' 
+         ORDER BY b.booking_date DESC`
+      : `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name 
+         FROM bookings b 
+         JOIN flights f ON b.flight_id = f.id 
+         JOIN users u ON b.user_id = u.id 
+         WHERE b.status = $1
+         ORDER BY b.booking_date DESC`;
+
+    const result = await db.query(query, [status]);
+    return result.rows;
   }
 };
 
