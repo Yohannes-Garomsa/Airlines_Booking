@@ -6,6 +6,7 @@ const DashboardPage = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(null);
+  const [now, setNow] = useState(new Date());
 
   const fetchBookings = async () => {
     try {
@@ -25,6 +26,24 @@ const DashboardPage = () => {
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getTimeRemaining = (bookingDate) => {
+    const expiresAt = new Date(new Date(bookingDate).getTime() + 3 * 60 * 60 * 1000);
+    const diff = expiresAt - now;
+    if (diff <= 0) return null;
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   const handleCancel = async (bookingId) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
@@ -88,10 +107,15 @@ const DashboardPage = () => {
             {bookings.map(booking => (
               <div key={booking.id} className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 hover:shadow-xl transition-all group">
                 <div className="flex-grow">
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
                     <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(booking.status)}`}>
                       {booking.status}
                     </span>
+                    {booking.status === 'pending' && (
+                      <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-yellow-200 bg-yellow-50 text-yellow-700">
+                        Expires in {getTimeRemaining(booking.booking_date) || '00:00:00'}
+                      </span>
+                    )}
                     <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Ref: #SB-{booking.id}00{booking.id}</span>
                   </div>
                   
