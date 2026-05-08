@@ -25,20 +25,20 @@ const FlightCard = ({ flight, selectedClass = 'Economy' }) => {
   const bgImage = CITY_IMAGES[cityName] || 'https://images.unsplash.com/photo-1436491865332-7a61a109c055?auto=format&fit=crop&w=800&q=80';
 
   return (
-    <div className="bg-white rounded-[2rem] shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-500 border border-slate-100 group flex flex-col h-full">
+    <div className="bg-white rounded-[1.75rem] shadow-lg overflow-hidden hover:shadow-xl transition-all duration-500 border border-slate-100 group flex flex-col h-full">
       {/* Visual Header */}
-      <div className="h-44 relative overflow-hidden">
+      <div className="h-36 relative overflow-hidden">
         <img src={bgImage} alt={cityName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
         <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/20"></div>
         
         <div className="absolute top-4 left-4 flex gap-2">
-          <div className="bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1.5">
+          <div className="bg-white/90 backdrop-blur-md px-2 py-1 rounded-full shadow-md flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full ${seats > 10 ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}></div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-700">{seats} Seats</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-700">{seats} Seats</span>
           </div>
           {selectedClass === 'Business' && (
-            <div className="bg-primary/90 backdrop-blur-md px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1 text-white border border-white/20">
-              <span className="text-[10px] font-black uppercase tracking-widest">VIP Business</span>
+            <div className="bg-primary/90 backdrop-blur-md px-2 py-1 rounded-full shadow-md flex items-center gap-1 text-white border border-white/20">
+              <span className="text-[9px] font-black uppercase tracking-widest">VIP Business</span>
             </div>
           )}
         </div>
@@ -50,8 +50,8 @@ const FlightCard = ({ flight, selectedClass = 'Economy' }) => {
       </div>
 
       {/* Flight Details */}
-      <div className="p-6 flex-grow flex flex-col">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="p-5 flex-grow flex flex-col">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100">
                <img src={`https://ui-avatars.com/api/?name=${flight.airline}&background=random&color=fff&bold=true`} className="w-6 h-6 rounded" alt={flight.airline} />
@@ -94,14 +94,14 @@ const FlightCard = ({ flight, selectedClass = 'Economy' }) => {
           </div>
         </div>
 
-        <div className="mt-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-100">
-          <div className="flex items-center gap-2 text-slate-500 text-[11px] font-bold uppercase tracking-[0.2em]">
+        <div className="mt-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-slate-100">
+          <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-[0.25em]">
              <Clock className="h-4 w-4" />
-             <span>Est. 4h 30m</span>
+             <span>4h 30m</span>
           </div>
           <Link 
             to={`/booking/${flight.id}?class=${selectedClass}`} 
-            className="bg-primary hover:bg-blue-800 text-white text-xs font-black uppercase tracking-widest py-3 px-6 rounded-2xl transition-all transform active:scale-95 shadow-lg shadow-blue-100"
+            className="bg-primary hover:bg-blue-800 text-white text-[11px] font-black uppercase tracking-widest py-2.5 px-5 rounded-2xl transition-all transform active:scale-95 shadow-lg shadow-blue-100"
           >
             Select Flight
           </Link>

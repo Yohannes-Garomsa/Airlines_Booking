@@ -439,7 +439,7 @@ function HomePage() {
             </div>
           ) : flights.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {flights.map((flight, idx) => (
                   <FlightCard 
                     key={flight.id} 
