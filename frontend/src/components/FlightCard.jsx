@@ -104,7 +104,7 @@ const FlightCard = ({ flight, selectedClass = 'Economy', passengerCounts = { adu
             state={{ passengerCounts }}
             className="bg-primary hover:bg-blue-800 text-white text-[11px] font-black uppercase tracking-widest py-2.5 px-5 rounded-2xl transition-all transform active:scale-95 shadow-lg shadow-blue-100"
           >
-            Select Flight
+            Book Now
           </Link>
         </div>
       </div>
