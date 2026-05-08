@@ -13,7 +13,13 @@ const AdminDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentFlight, setCurrentFlight] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [now, setNow] = useState(new Date());
   const [stats, setStats] = useState({ total_flights: 0, total_bookings: 0, total_users: 0, total_revenue: 0 });
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
   const [formData, setFormData] = useState({
     airline: '', departure_city: '', arrival_city: '', 
     departure_time: '', arrival_time: '', economy_price: '', 
@@ -83,6 +89,18 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const getTimeRemaining = (expiresAt) => {
+    if (!expiresAt) return null;
+    const diff = new Date(expiresAt) - now;
+    if (diff <= 0) return 'EXPIRED';
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const secs = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    return `${hours > 0 ? hours + 'h ' : ''}${mins}m ${secs}s left`;
   };
 
   const updateUserRole = async (userId, newRole) => {
@@ -434,11 +452,18 @@ const AdminDashboard = () => {
                           </td>
                           <td className="p-6 font-black text-primary">${item.total_price}</td>
                           <td className="p-6">
-                             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
-                               item.status === 'confirmed' ? 'bg-green-50 text-green-600 border-green-100' : 
-                               item.status === 'cancelled' ? 'bg-red-50 text-red-600 border-red-100' : 
-                               item.status === 'completed' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-orange-50 text-orange-600 border-orange-100'
-                             }`}>{item.status}</span>
+                             <div className="flex flex-col gap-1">
+                               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border w-fit ${
+                                 item.status === 'confirmed' ? 'bg-green-50 text-green-600 border-green-100' : 
+                                 item.status === 'cancelled' ? 'bg-red-50 text-red-600 border-red-100' : 
+                                 item.status === 'completed' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-orange-50 text-orange-600 border-orange-100'
+                               }`}>{item.status}</span>
+                               {item.status === 'pending' && (
+                                 <span className="text-[9px] font-black text-red-500 uppercase tracking-tighter ml-1 italic">
+                                   {getTimeRemaining(item.expires_at)}
+                                 </span>
+                               )}
+                             </div>
                           </td>
                           <td className="p-6">
                             <button onClick={() => navigate(`/ticket/${item.id}`)} className="p-2 text-slate-400 hover:text-primary transition-colors">
