@@ -60,14 +60,20 @@ const Booking = {
     return result.rows;
   },
 
-  getAll: async () => {
-    const result = await db.query(
-      `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name 
+  getAll: async (status = null) => {
+    const baseQuery = `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name 
        FROM bookings b 
        JOIN flights f ON b.flight_id = f.id 
-       JOIN users u ON b.user_id = u.id 
-       ORDER BY b.booking_date DESC`
-    );
+       JOIN users u ON b.user_id = u.id`;
+
+    const query = status && status !== 'all'
+      ? `${baseQuery} WHERE b.status = $1 ORDER BY b.booking_date DESC`
+      : `${baseQuery} ORDER BY b.booking_date DESC`;
+
+    const result = status && status !== 'all'
+      ? await db.query(query, [status])
+      : await db.query(query);
+
     return result.rows;
   },
 
