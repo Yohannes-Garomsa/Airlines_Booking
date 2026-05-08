@@ -150,7 +150,7 @@ function HomePage() {
 
         {/* Search Section */}
         <div className="container mx-auto px-4 relative z-20 -mt-24 mb-16 max-w-6xl">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 border border-slate-100">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 border border-slate-100 overflow-visible">
             {/* Search Type & Class Selectors */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-slate-100 pb-4">
               <div className="flex gap-6 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
@@ -193,7 +193,7 @@ function HomePage() {
               </div>
             </div>
 
-            <form onSubmit={handleSearch} className="space-y-6">
+            <form onSubmit={handleSearch} className="space-y-6 relative z-10">
               {segments.map((segment, index) => (
                 <div key={index} className="flex flex-wrap lg:flex-nowrap gap-4 items-end relative group">
                   {tripType === 'multicity' && index > 0 && (
@@ -279,7 +279,7 @@ function HomePage() {
                   )}
 
                   {/* Passenger & Cabin Dropdown */}
-                  <div className="relative">
+                  <div className="relative z-[9999]">
                     <button
                       type="button"
                       onClick={() => setShowPassengerDropdown(!showPassengerDropdown)}
