@@ -290,7 +290,7 @@ function HomePage() {
                     </button>
 
                     {showPassengerDropdown && (
-                      <div className="absolute bottom-full left-0 mb-4 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-[9999] animate-in fade-in zoom-in duration-200 origin-bottom">
+                      <div className="absolute top-full left-0 mt-4 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-[9999] animate-in fade-in zoom-in duration-200">
                         <div className="space-y-6">
                           {['adults', 'children', 'infants'].map(type => (
                             <div key={type} className="flex items-center justify-between">
