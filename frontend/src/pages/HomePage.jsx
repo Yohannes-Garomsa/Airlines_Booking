@@ -290,7 +290,7 @@ function HomePage() {
                     </button>
 
                     {showPassengerDropdown && (
-                      <div className="absolute top-full left-0 mt-4 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-[9999] animate-in fade-in zoom-in duration-200">
+                      <div className="absolute bottom-full left-0 mb-4 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-[9999] animate-in fade-in zoom-in duration-200 origin-bottom">
                         <div className="space-y-6">
                           {['adults', 'children', 'infants'].map(type => (
                             <div key={type} className="flex items-center justify-between">
@@ -361,7 +361,7 @@ function HomePage() {
         </div>
 
         {/* Results Section */}
-        <section className="container mx-auto mt-8 pb-20 px-4 relative z-20">
+        <section className="container mx-auto mt-8 pb-20 px-4 relative z-0">
           {error && (
             <div className="max-w-xl mx-auto mb-8 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl flex items-center gap-3 shadow-lg">
               <AlertCircle className="h-6 w-6 text-red-500" />
