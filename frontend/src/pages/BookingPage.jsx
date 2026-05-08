@@ -52,7 +52,8 @@ const BookingPage = () => {
 
   const getBasePrice = () => {
     if (!flight) return 0;
-    return cabinClass === 'Business' ? flight.business_price : flight.economy_price;
+    const price = cabinClass === 'Business' ? flight.business_price : flight.economy_price;
+    return Number(price) || 0;
   };
 
   const getPrice = () => {
