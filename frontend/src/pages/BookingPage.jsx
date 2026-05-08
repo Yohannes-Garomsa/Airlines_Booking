@@ -17,6 +17,7 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [passenger, setPassenger] = useState({ name: '', email: '' });
+  const [passengerCounts, setPassengerCounts] = useState({ adults: 1, children: 0, infants: 0 });
   const [selectedSeat, setSelectedSeat] = useState(null);
 
   const { user } = useContext(AuthContext);
@@ -36,9 +37,30 @@ const BookingPage = () => {
     fetchFlight();
   }, [flightId]);
 
-  const getPrice = () => {
+  useEffect(() => {
+    if (location.state?.passengerCounts) {
+      setPassengerCounts(location.state.passengerCounts);
+    }
+  }, [location.state]);
+
+  const handlePassengerCountChange = (type, delta) => {
+    setPassengerCounts(prev => ({
+      ...prev,
+      [type]: Math.max(type === 'adults' ? 1 : 0, prev[type] + delta)
+    }));
+  };
+
+  const getBasePrice = () => {
     if (!flight) return 0;
     return cabinClass === 'Business' ? flight.business_price : flight.economy_price;
+  };
+
+  const getPrice = () => {
+    if (!flight) return 0;
+    const basePrice = getBasePrice();
+    const adultsTotal = passengerCounts.adults * basePrice;
+    const childrenTotal = passengerCounts.children * basePrice * 0.9;
+    return parseFloat((adultsTotal + childrenTotal).toFixed(2));
   };
 
   const handleSubmit = async (e) => {
@@ -65,6 +87,7 @@ const BookingPage = () => {
           flightId: parseInt(flightId),
           totalPrice: getPrice(),
           cabinClass: cabinClass,
+          passengerCounts,
           passengers: [passenger]
         })
       });
@@ -127,6 +150,40 @@ const BookingPage = () => {
                 </div>
               </div>
               <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="bg-slate-100 p-6 rounded-3xl border border-slate-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-gray-500">Passenger Count</h3>
+                    <span className="text-xs text-slate-400">Infants travel free</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {['adults', 'children', 'infants'].map((type) => (
+                      <div key={type} className="bg-white rounded-3xl p-4 border border-slate-200">
+                        <p className="text-sm font-black text-gray-700 capitalize">{type}</p>
+                        <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">
+                          {type === 'adults' ? 'Full fare' : type === 'children' ? '10% off' : 'Free'}
+                        </p>
+                        <div className="mt-4 flex items-center justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handlePassengerCountChange(type, -1)}
+                            className="h-9 w-9 rounded-full border border-slate-200 text-slate-600 font-black hover:bg-slate-50"
+                          >
+                            -
+                          </button>
+                          <span className="font-black text-lg text-slate-800">{passengerCounts[type]}</span>
+                          <button
+                            type="button"
+                            onClick={() => handlePassengerCountChange(type, 1)}
+                            className="h-9 w-9 rounded-full border border-slate-200 text-slate-600 font-black hover:bg-slate-50"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-4">Adults pay full fare, children receive a 10% discount, infants travel free.</p>
+                </div>
                 <div>
                   <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">Full Name</label>
                   <div className="relative">
@@ -229,9 +286,23 @@ const BookingPage = () => {
                   </div>
                 </div>
 
-                <div className="pt-4 flex justify-between items-center">
-                  <span className="text-sm font-bold text-gray-500 italic">Total Price</span>
-                  <span className="text-3xl font-black text-primary">${getPrice()}</span>
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <div className="flex justify-between text-sm text-slate-500">
+                    <span>Adults ({passengerCounts.adults} × ${getBasePrice().toFixed(2)})</span>
+                    <span>${(passengerCounts.adults * getBasePrice()).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-slate-500">
+                    <span>Children ({passengerCounts.children} × ${getBasePrice().toFixed(2)} - 10%)</span>
+                    <span>${(passengerCounts.children * getBasePrice() * 0.9).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-slate-500">
+                    <span>Infants</span>
+                    <span>$0.00</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                    <span className="text-sm font-bold text-gray-500 uppercase tracking-[0.2em]">Total Price</span>
+                    <span className="text-3xl font-black text-primary">${getPrice()}</span>
+                  </div>
                 </div>
               </div>
             </div>

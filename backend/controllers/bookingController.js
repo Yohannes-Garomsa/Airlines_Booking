@@ -4,17 +4,17 @@ const asyncHandler = require('../utils/asyncHandler');
 const notificationService = require('../utils/notificationService');
 
 const createBooking = asyncHandler(async (req, res) => {
-  const { flightId, totalPrice, cabinClass, passengers } = req.body;
+  const { flightId, totalPrice, cabinClass, passengers, passengerCounts } = req.body;
   const user = req.user;
 
   await Booking.expireOldPending();
 
-  if (!flightId || !totalPrice || !passengers || passengers.length === 0) {
+  if (!flightId || !totalPrice || !passengers || passengers.length === 0 || !passengerCounts || passengerCounts.adults < 1) {
     res.status(400);
-    throw new Error('Please provide all required fields');
+    throw new Error('Please provide all required fields and passenger counts');
   }
 
-  const booking = await Booking.create(user.id, flightId, totalPrice, cabinClass, passengers);
+  const booking = await Booking.create(user.id, flightId, totalPrice, cabinClass, passengers, passengerCounts);
   
   // Send Notification
   try {

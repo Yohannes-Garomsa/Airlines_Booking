@@ -445,6 +445,7 @@ function HomePage() {
                     key={flight.id} 
                     flight={flight} 
                     selectedClass={cabinClass} 
+                    passengerCounts={passengers}
                     isFeatured={!searched && idx < 2} 
                   />
                 ))}

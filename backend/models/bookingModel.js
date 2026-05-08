@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
 const Booking = {
-  create: async (userId, flightId, totalPrice, cabinClass, passengers) => {
+  create: async (userId, flightId, totalPrice, cabinClass, passengers, passengerCounts = null) => {
     const client = await db.getClient();
     
     try {
@@ -13,7 +13,10 @@ const Booking = {
       
       const flight = flightRes.rows[0];
       const verifiedPrice = cabinClass === 'Business' ? flight.business_price : flight.economy_price;
-      const finalPrice = parseFloat(verifiedPrice) * passengers.length;
+      const counts = passengerCounts || { adults: passengers.length, children: 0, infants: 0 };
+      const adultTotal = verifiedPrice * (counts.adults || 0);
+      const childTotal = verifiedPrice * 0.9 * (counts.children || 0);
+      const finalPrice = parseFloat((adultTotal + childTotal).toFixed(2));
 
       // Generate PNR (6 chars uppercase alphanumeric)
       const pnr = Math.random().toString(36).substring(2, 8).toUpperCase();

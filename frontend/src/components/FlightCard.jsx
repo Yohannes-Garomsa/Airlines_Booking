@@ -10,7 +10,7 @@ const CITY_IMAGES = {
   'Singapore': 'https://images.unsplash.com/photo-1525625232747-0ef45f85a271?auto=format&fit=crop&w=600&q=80',
 };
 
-const FlightCard = ({ flight, selectedClass = 'Economy' }) => {
+const FlightCard = ({ flight, selectedClass = 'Economy', passengerCounts = { adults: 1, children: 0, infants: 0 } }) => {
   const formatTime = (dateString) => {
     return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -101,6 +101,7 @@ const FlightCard = ({ flight, selectedClass = 'Economy' }) => {
           </div>
           <Link 
             to={`/booking/${flight.id}?class=${selectedClass}`} 
+            state={{ passengerCounts }}
             className="bg-primary hover:bg-blue-800 text-white text-[11px] font-black uppercase tracking-widest py-2.5 px-5 rounded-2xl transition-all transform active:scale-95 shadow-lg shadow-blue-100"
           >
             Select Flight
