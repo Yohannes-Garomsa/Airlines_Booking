@@ -6,14 +6,15 @@ const {
   getBookingDetails, 
   getAllUsers, 
   toggleUserStatus, 
-  changeUserRole 
+  changeUserRole,
+  createAdmin
 } = require('../controllers/adminController');
 const { 
   createFlight, 
   updateFlight, 
   deleteFlight 
 } = require('../controllers/flightController');
-const { protectRoute, adminOnly } = require('../middleware/authMiddleware');
+const { protectRoute, adminOnly, superAdminOnly } = require('../middleware/authMiddleware');
 const { validateFlight } = require('../middleware/validationMiddleware');
 
 // All routes here are protected and admin-only
@@ -34,6 +35,7 @@ router.get('/bookings/:id', getBookingDetails);
 // User Management
 router.get('/users', getAllUsers);
 router.patch('/users/:id/status', toggleUserStatus);
-router.patch('/users/:id/role', changeUserRole);
+router.post('/create', superAdminOnly, createAdmin);
+router.patch('/users/:id/role', superAdminOnly, changeUserRole);
 
 module.exports = router;

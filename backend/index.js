@@ -35,12 +35,9 @@ app.get('/api/health', (req, res) => {
 });
 
 // Error Handling
-const { errorHandler } = require('./middleware/errorMiddleware');
-app.use((req, res, next) => {
-  const error = new Error(`Not Found - ${req.originalUrl}`);
-  res.status(404);
-  next(error);
-});
+const { errorHandler, notFound } = require('./middleware/errorMiddleware');
+const { startCleanupTask } = require('./utils/cleanupService');
+app.use(notFound);
 app.use(errorHandler);
 
 // Start Server
@@ -63,6 +60,9 @@ io.on('connection', (socket) => {
     console.log('Client disconnected:', socket.id);
   });
 });
+
+// Start Cleanup Service
+startCleanupTask();
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

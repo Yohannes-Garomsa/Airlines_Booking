@@ -23,8 +23,9 @@ const LoginPage = () => {
       const data = await login(credentials);
       // Professional redirection: 
       // 1. Check if there's a previous location stored in state (from a protected route)
-      // 2. If not, redirect based on role (admin -> /admin, user -> /)
-      const from = location.state?.from?.pathname || (data.user.role === 'admin' ? '/admin' : '/');
+      // 2. If not, redirect based on role (admin/superadmin -> /admin, user -> /)
+      const from = location.state?.from?.pathname || 
+                   (['admin', 'superadmin'].includes(data.user.role) ? '/admin' : '/');
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');

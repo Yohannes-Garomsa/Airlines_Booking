@@ -28,7 +28,7 @@ const generateTicketPDF = (ticket, stream) => {
   doc.fillColor('white')
      .fontSize(14)
      .font('Helvetica-Bold')
-     .text(ticket.cabin_class || 'ECONOMY', 450, 45, { align: 'right' });
+     .text(ticket.cabin_class || 'ECONOMY', 350, 45, { width: 205, align: 'right' });
 
   // --- Main Ticket Section ---
   doc.rect(0, 120, 595, 280).fill(secondaryColor);
@@ -37,12 +37,12 @@ const generateTicketPDF = (ticket, stream) => {
   doc.fillColor(primaryColor)
      .fontSize(50)
      .font('Helvetica-Bold')
-     .text(ticket.departure_iata, 40, 160);
+     .text(ticket.departure_iata || 'TBA', 40, 160);
   
   doc.fontSize(10)
      .font('Helvetica')
      .fillColor('gray')
-     .text(ticket.departure_city.toUpperCase(), 45, 215);
+     .text((ticket.departure_city || 'Departure').toUpperCase(), 45, 215);
 
   // Plane Icon Mock
   doc.fillColor(accentColor)
@@ -54,12 +54,12 @@ const generateTicketPDF = (ticket, stream) => {
   doc.fillColor(primaryColor)
      .fontSize(50)
      .font('Helvetica-Bold')
-     .text(ticket.arrival_iata, 450, 160, { align: 'right' });
+     .text(ticket.arrival_iata || 'TBA', 350, 160, { width: 205, align: 'right' });
 
   doc.fontSize(10)
      .font('Helvetica')
      .fillColor('gray')
-     .text(ticket.arrival_city.toUpperCase(), 450, 215, { align: 'right' });
+     .text((ticket.arrival_city || 'Arrival').toUpperCase(), 350, 215, { width: 205, align: 'right' });
 
   // Details Grid
   const gridY = 260;
@@ -74,7 +74,8 @@ const generateTicketPDF = (ticket, stream) => {
 
   // Date
   doc.fillColor('gray').fontSize(8).text('DATE', 450, gridY);
-  doc.fillColor('black').fontSize(12).font('Helvetica-Bold').text(new Date(ticket.departure_time).toLocaleDateString(), 450, gridY + 12);
+  const flightDate = ticket.departure_time ? new Date(ticket.departure_time).toLocaleDateString() : 'TBA';
+  doc.fillColor('black').fontSize(12).font('Helvetica-Bold').text(flightDate, 450, gridY + 12);
 
   // Row 2
   const gridY2 = 320;
@@ -90,20 +91,26 @@ const generateTicketPDF = (ticket, stream) => {
   // Boarding Time
   doc.rect(240, gridY2 - 10, 150, 50).fill('#eff6ff');
   doc.fillColor(accentColor).fontSize(8).text('BOARDING TIME', 250, gridY2);
-  doc.fillColor(primaryColor).fontSize(16).font('Helvetica-Bold').text(new Date(ticket.boarding_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 250, gridY2 + 12);
+  const bTime = ticket.boarding_time ? new Date(ticket.boarding_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBA';
+  doc.fillColor(primaryColor).fontSize(16).font('Helvetica-Bold').text(bTime, 250, gridY2 + 12);
 
   // PNR
-  doc.fillColor('gray').fontSize(8).text('BOOKING REF (PNR)', 450, gridY2);
-  doc.fillColor('black').fontSize(12).font('Helvetica-Bold').text(ticket.pnr || 'XJ82K1', 450, gridY2 + 12);
+  doc.fillColor('gray').fontSize(8).text('BOOKING REF (PNR)', 350, gridY2, { width: 205, align: 'right' });
+  doc.fillColor('black').fontSize(12).font('Helvetica-Bold').text(ticket.pnr || 'XJ82K1', 350, gridY2 + 12, { width: 205, align: 'right' });
 
   // --- QR Section ---
   if (ticket.qr_code_data) {
-    const qrImage = ticket.qr_code_data.split(',')[1];
-    const qrBuffer = Buffer.from(qrImage, 'base64');
-    doc.image(qrBuffer, 440, 450, { width: 120 });
+    try {
+      const qrImage = ticket.qr_code_data.split(',')[1];
+      const qrBuffer = Buffer.from(qrImage, 'base64');
+      doc.image(qrBuffer, 440, 450, { width: 120 });
+    } catch (qrErr) {
+      console.error('Failed to add QR image to PDF:', qrErr.message);
+      doc.text('QR Code Unavailable', 435, 450);
+    }
   }
 
-  doc.fillColor('gray').fontSize(8).text('SCAN AT GATE', 475, 575);
+  doc.fillColor('gray').fontSize(8).text('SCAN AT GATE', 435, 575, { width: 120, align: 'center' });
   
   // Ticket Number
   doc.fillColor('lightgray')

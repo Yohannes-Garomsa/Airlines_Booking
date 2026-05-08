@@ -16,21 +16,31 @@ const register = asyncHandler(async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, salt);
 
   const user = await User.create(name, email, hashedPassword);
-  const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
   res.status(201).json({ user, token });
 });
 
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  console.log(`Login attempt for: ${email}`);
 
   const user = await User.findByEmail(email);
-  if (!user || !(await bcrypt.compare(password, user.password))) {
+  if (!user) {
+    console.log('Login failed: User not found');
     res.status(401);
     throw new Error('Invalid email or password');
   }
 
-  const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  const isMatch = await bcrypt.compare(password, user.password);
+  console.log(`Password match: ${isMatch}`);
+
+  if (!isMatch) {
+    res.status(401);
+    throw new Error('Invalid email or password');
+  }
+
+  const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
   res.status(200).json({
     user: { id: user.id, name: user.name, email: user.email, role: user.role },
