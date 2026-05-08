@@ -20,11 +20,21 @@ const protectRoute = async (req, res, next) => {
 };
 
 const adminOnly = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+  if (req.user && (req.user.role === 'admin' || req.user.role === 'superadmin')) {
     next();
   } else {
-    res.status(403).json({ message: 'Access denied: Admin only' });
+    res.status(403);
+    throw new Error('Not authorized as an admin');
   }
 };
 
-module.exports = { protectRoute, adminOnly };
+const superAdminOnly = (req, res, next) => {
+  if (req.user && req.user.role === 'superadmin') {
+    next();
+  } else {
+    res.status(403);
+    throw new Error('Not authorized as a Super Admin');
+  }
+};
+
+module.exports = { protectRoute, adminOnly, superAdminOnly };

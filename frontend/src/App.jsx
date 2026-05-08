@@ -7,10 +7,8 @@ import PaymentPage from './pages/PaymentPage';
 import TicketPage from './pages/TicketPage';
 import ConfirmationPage from './pages/ConfirmationPage';
 import DashboardPage from './pages/DashboardPage';
-import AdminLayout from './components/admin/AdminLayout';
-import AdminFlights from './components/admin/AdminFlights';
-import AdminBookings from './components/admin/AdminBookings';
-import AdminUsers from './components/admin/AdminUsers';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminVerifyTicket from './pages/AdminVerifyTicket';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -24,21 +22,23 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           
-          {/* Admin Routes */}
+          {/* New Upgraded Admin Routes */}
           <Route path="/admin" element={
             <AdminProtectedRoute>
-              <AdminLayout />
+              <AdminDashboard />
             </AdminProtectedRoute>
-          }>
-            <Route index element={<AdminFlights />} />
-            <Route path="flights" element={<AdminFlights />} />
-            <Route path="bookings" element={<AdminBookings />} />
-            <Route path="users" element={<AdminUsers />} />
-          </Route>
+          } />
+          <Route path="/admin/verify" element={
+            <AdminProtectedRoute>
+              <AdminVerifyTicket />
+            </AdminProtectedRoute>
+          } />
+          
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/booking/:flightId" element={<BookingPage />} />
           <Route path="/payment/:bookingId" element={<PaymentPage />} />
           <Route path="/ticket/:bookingId" element={<TicketPage />} />
+          <Route path="/ticket/public/:bookingId" element={<TicketPage isPublic={true} />} />
           <Route path="/confirmation" element={<ConfirmationPage />} />
         </Routes>
       </Router>

@@ -7,7 +7,9 @@ const AdminProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
   const location = useLocation();
   
-  if (loading) {
+  const hasToken = !!localStorage.getItem('token');
+
+  if (loading || (hasToken && !user)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -15,7 +17,7 @@ const AdminProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!user || !['admin', 'superadmin'].includes(user.role)) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

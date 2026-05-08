@@ -73,7 +73,7 @@ const Booking = {
 
   getFullBookingDetails: async (bookingId) => {
     const bookingResult = await db.query(
-      `SELECT b.*, f.airline, f.departure_time, f.arrival_time, 
+      `SELECT b.*, f.airline, f.flight_number, f.gate, f.terminal, f.departure_time, f.arrival_time, 
               da.city as departure_city, da.iata_code as departure_iata,
               aa.city as arrival_city, aa.iata_code as arrival_iata,
               s.seat_number 

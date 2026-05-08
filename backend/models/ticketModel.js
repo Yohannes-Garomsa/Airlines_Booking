@@ -26,13 +26,15 @@ const Ticket = {
   getByBookingId: async (bookingId) => {
     const result = await db.query(
       `SELECT t.*, b.pnr, b.cabin_class, f.airline, f.flight_number, f.departure_time, f.arrival_time,
-              da.city as departure_city, da.iata_code as departure_iata,
-              aa.city as arrival_city, aa.iata_code as arrival_iata
+              COALESCE(da.city, f.departure_city) as departure_city, 
+              COALESCE(da.iata_code, 'TBA') as departure_iata,
+              COALESCE(aa.city, f.arrival_city) as arrival_city, 
+              COALESCE(aa.iata_code, 'TBA') as arrival_iata
        FROM tickets t
        JOIN bookings b ON t.booking_id = b.id
        JOIN flights f ON b.flight_id = f.id
-       JOIN airports da ON f.departure_airport_id = da.id
-       JOIN airports aa ON f.arrival_airport_id = aa.id
+       LEFT JOIN airports da ON f.departure_airport_id = da.id
+       LEFT JOIN airports aa ON f.arrival_airport_id = aa.id
        WHERE t.booking_id = $1`,
       [bookingId]
     );
@@ -42,13 +44,15 @@ const Ticket = {
   getById: async (id) => {
     const result = await db.query(
       `SELECT t.*, b.pnr, b.cabin_class, f.airline, f.flight_number, f.departure_time, f.arrival_time,
-              da.city as departure_city, da.iata_code as departure_iata,
-              aa.city as arrival_city, aa.iata_code as arrival_iata
+              COALESCE(da.city, f.departure_city) as departure_city, 
+              COALESCE(da.iata_code, 'TBA') as departure_iata,
+              COALESCE(aa.city, f.arrival_city) as arrival_city, 
+              COALESCE(aa.iata_code, 'TBA') as arrival_iata
        FROM tickets t
        JOIN bookings b ON t.booking_id = b.id
        JOIN flights f ON b.flight_id = f.id
-       JOIN airports da ON f.departure_airport_id = da.id
-       JOIN airports aa ON f.arrival_airport_id = aa.id
+       LEFT JOIN airports da ON f.departure_airport_id = da.id
+       LEFT JOIN airports aa ON f.arrival_airport_id = aa.id
        WHERE t.id = $1`,
       [id]
     );

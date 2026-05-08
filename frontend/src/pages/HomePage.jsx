@@ -99,10 +99,18 @@ function HomePage() {
               <li className="hover:text-accent transition-colors cursor-pointer">Deals</li>
               {user ? (
                 <>
-                  <li>
-                    <Link to="/dashboard" className="hover:text-accent transition-colors cursor-pointer">My Trips</Link>
-                  </li>
-                  <li className="flex items-center gap-2 bg-blue-900/50 px-4 py-2 rounded-full border border-blue-700">
+                  {['admin', 'superadmin'].includes(user.role) ? (
+                    <li>
+                      <Link to="/admin" className="bg-blue-900/40 border border-blue-400 px-5 py-2 rounded-full hover:bg-accent hover:text-primary transition-all flex items-center gap-2 font-black shadow-lg">
+                        <ShieldCheck className="h-4 w-4" /> Admin Dashboard
+                      </Link>
+                    </li>
+                  ) : (
+                    <li>
+                      <Link to="/dashboard" className="hover:text-accent transition-colors cursor-pointer">My Trips</Link>
+                    </li>
+                  )}
+                  <li className="flex items-center gap-2 bg-blue-900/50 px-4 py-2 rounded-full border border-blue-700 ml-2">
                     <User className="h-4 w-4 text-accent" />
                     <span>{user.name.split(' ')[0]}</span>
                   </li>

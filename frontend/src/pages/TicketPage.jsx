@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Home, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import BoardingPass from '../components/BoardingPass';
 
-const TicketPage = () => {
+const TicketPage = ({ isPublic = false }) => {
   const { bookingId } = useParams();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,23 +13,32 @@ const TicketPage = () => {
     const generateAndFetchTickets = async () => {
       try {
         const token = localStorage.getItem('token');
-        // 1. First ensure tickets are generated
-        const genResponse = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/tickets/generate`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
-          },
-          body: JSON.stringify({ bookingId: parseInt(bookingId) })
-        });
         
-        if (!genResponse.ok) {
-          const errData = await genResponse.json();
-          throw new Error(errData.message || 'Failed to generate tickets. Make sure payment is confirmed.');
-        }
+        if (isPublic) {
+          // Public view: Fetch directly without generation or token
+          const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/tickets/public/booking/${bookingId}`);
+          if (!response.ok) throw new Error('Failed to load tickets.');
+          const data = await response.json();
+          setTickets(data);
+        } else {
+          // Private view: Ensure tickets are generated first
+          const genResponse = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/tickets/generate`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ bookingId: parseInt(bookingId) })
+          });
+          
+          if (!genResponse.ok) {
+            const errData = await genResponse.json();
+            throw new Error(errData.message || 'Failed to generate tickets.');
+          }
 
-        const data = await genResponse.json();
-        setTickets(data);
+          const data = await genResponse.json();
+          setTickets(data);
+        }
       } catch (error) {
         console.error('Error fetching tickets:', error);
         setError(error.message);
@@ -38,7 +47,7 @@ const TicketPage = () => {
       }
     };
     generateAndFetchTickets();
-  }, [bookingId]);
+  }, [bookingId, isPublic]);
 
   if (loading) {
     return (

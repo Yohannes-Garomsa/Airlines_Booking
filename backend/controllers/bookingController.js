@@ -2,6 +2,7 @@ const Booking = require('../models/bookingModel');
 const Flight = require('../models/flightModel');
 const asyncHandler = require('../utils/asyncHandler');
 const notificationService = require('../utils/notificationService');
+const db = require('../config/db');
 
 const createBooking = asyncHandler(async (req, res) => {
   const { flightId, totalPrice, cabinClass, passengers } = req.body;
@@ -39,6 +40,23 @@ const getUserBookings = asyncHandler(async (req, res) => {
   res.status(200).json(bookings);
 });
 
+const updateBookingStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const result = await db.query(
+    'UPDATE bookings SET status = $1 WHERE id = $2 RETURNING *',
+    [status, id]
+  );
+
+  if (result.rows.length === 0) {
+    res.status(404);
+    throw new Error('Booking not found');
+  }
+
+  res.status(200).json(result.rows[0]);
+});
+
 const cancelBooking = asyncHandler(async (req, res) => {
   const { bookingId } = req.params;
   const userId = req.user.id;
@@ -56,5 +74,6 @@ module.exports = {
   createBooking,
   getUserBookings,
   getAllBookings,
-  cancelBooking
+  cancelBooking,
+  updateBookingStatus
 };
