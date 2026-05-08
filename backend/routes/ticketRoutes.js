@@ -3,7 +3,8 @@ const router = express.Router();
 const { 
   generateTickets, 
   getTicket, 
-  downloadTicketPDF 
+  downloadTicketPDF,
+  emailTicket
 } = require('../controllers/ticketController');
 const { protectRoute } = require('../middleware/authMiddleware');
 
