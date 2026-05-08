@@ -7,6 +7,29 @@ const Payment = {
     try {
       await client.query('BEGIN');
 
+      const bookingRes = await client.query(
+        'SELECT status, booking_date FROM bookings WHERE id = $1 FOR UPDATE',
+        [bookingId]
+      );
+      if (bookingRes.rows.length === 0) {
+        throw new Error('Booking not found');
+      }
+
+      const booking = bookingRes.rows[0];
+      const expired = booking.status === 'pending' && new Date(booking.booking_date) < new Date(Date.now() - 3 * 60 * 60 * 1000);
+
+      if (expired) {
+        await client.query(
+          'UPDATE bookings SET status = $1 WHERE id = $2',
+          ['cancelled', bookingId]
+        );
+        throw new Error('Booking payment window has expired');
+      }
+
+      if (booking.status !== 'pending') {
+        throw new Error('Booking is not pending payment');
+      }
+
       // 1. Create Payment record
       const transactionId = `txn_${Math.random().toString(36).substr(2, 9)}`;
       const paymentResult = await client.query(

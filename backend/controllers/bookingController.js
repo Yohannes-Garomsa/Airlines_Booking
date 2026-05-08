@@ -7,6 +7,8 @@ const createBooking = asyncHandler(async (req, res) => {
   const { flightId, totalPrice, cabinClass, passengers } = req.body;
   const user = req.user;
 
+  await Booking.expireOldPending();
+
   if (!flightId || !totalPrice || !passengers || passengers.length === 0) {
     res.status(400);
     throw new Error('Please provide all required fields');
@@ -30,7 +32,8 @@ const createBooking = asyncHandler(async (req, res) => {
 
 const getAllBookings = asyncHandler(async (req, res) => {
   const { status } = req.query;
-  
+  await Booking.expireOldPending();
+
   let bookings;
   if (status && status !== 'all') {
     bookings = await Booking.getByStatus(status);
@@ -43,6 +46,7 @@ const getAllBookings = asyncHandler(async (req, res) => {
 
 const getUserBookings = asyncHandler(async (req, res) => {
   const userId = req.user.id;
+  await Booking.expireOldPending();
   const bookings = await Booking.getByUserId(userId);
   res.status(200).json(bookings);
 });

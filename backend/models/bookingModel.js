@@ -60,6 +60,15 @@ const Booking = {
     return result.rows;
   },
 
+  expireOldPending: async () => {
+    await db.query(
+      `UPDATE bookings
+       SET status = 'cancelled'
+       WHERE status = 'pending'
+         AND booking_date < NOW() - INTERVAL '3 hours'`
+    );
+  },
+
   getAll: async (status = null) => {
     const baseQuery = `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name 
        FROM bookings b 
@@ -67,7 +76,9 @@ const Booking = {
        JOIN users u ON b.user_id = u.id`;
 
     const query = status && status !== 'all'
-      ? `${baseQuery} WHERE b.status = $1 ORDER BY b.booking_date DESC`
+      ? status === 'pending'
+        ? `${baseQuery} WHERE b.status = $1 AND b.booking_date >= NOW() - INTERVAL '3 hours' ORDER BY b.booking_date DESC`
+        : `${baseQuery} WHERE b.status = $1 ORDER BY b.booking_date DESC`
       : `${baseQuery} ORDER BY b.booking_date DESC`;
 
     const result = status && status !== 'all'
@@ -113,15 +124,21 @@ const Booking = {
   },
 
   getByStatus: async (status) => {
-    const result = await db.query(
-      `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name 
-       FROM bookings b 
-       JOIN flights f ON b.flight_id = f.id 
-       JOIN users u ON b.user_id = u.id 
-       WHERE b.status = $1
-       ORDER BY b.booking_date DESC`,
-      [status]
-    );
+    const query = status === 'pending'
+      ? `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name 
+         FROM bookings b 
+         JOIN flights f ON b.flight_id = f.id 
+         JOIN users u ON b.user_id = u.id 
+         WHERE b.status = $1 AND b.booking_date >= NOW() - INTERVAL '3 hours' 
+         ORDER BY b.booking_date DESC`
+      : `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name 
+         FROM bookings b 
+         JOIN flights f ON b.flight_id = f.id 
+         JOIN users u ON b.user_id = u.id 
+         WHERE b.status = $1
+         ORDER BY b.booking_date DESC`;
+
+    const result = await db.query(query, [status]);
     return result.rows;
   }
 };
