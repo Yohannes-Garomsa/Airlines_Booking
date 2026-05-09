@@ -3,7 +3,7 @@ import {
   Plane, Users, ShoppingBag, Plus, Edit2, Trash2, X, Check, Loader2, 
   ShieldCheck, Search, Ticket, QrCode, Mail, ExternalLink, Filter, 
   LayoutDashboard, Grid, CheckCircle2, CreditCard, Wrench, Map, 
-  BarChart3, Bell, ChevronRight, LogOut, Settings, Info, TrendingUp, AlertCircle
+  BarChart3, Bell, ChevronRight, LogOut, Settings, Info, TrendingUp, AlertCircle, Clock, MapPin, DollarSign
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -15,16 +15,25 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [data, setData] = useState({ 
     flights: [], bookings: [], users: [], tickets: [], 
-    fleet: [], seats: [],
+    fleet: [], seats: [], airports: [],
     payments: [], analytics: { popularRoutes: [], revenueTrend: [] }, notifications: []
   });
   const [loading, setLoading] = useState(true);
   const { user: currentUser, logout } = useContext(AuthContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState(null); // 'flight'
+  const [selectedItem, setSelectedItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [now, setNow] = useState(new Date());
   const [stats, setStats] = useState({});
   const [selectedFlightForSeats, setSelectedFlightForSeats] = useState(null);
+
+  // Flight Form State
+  const [flightForm, setFlightForm] = useState({
+    airline: '', flight_number: '', departure_airport_id: '', arrival_airport_id: '',
+    departure_time: '', arrival_time: '', economy_price: '',
+    total_seats: '180', status: 'Scheduled', gate: '', terminal: ''
+  });
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -58,10 +67,11 @@ const AdminDashboard = () => {
         fleet: '/admin/fleet',
         payments: '/admin/payments',
         analytics: '/admin/analytics',
-        notifications: '/admin/notifications'
+        notifications: '/admin/notifications',
+        airports: '/airports'
       };
       
-      const endpoint = endpoints[activeTab];
+      const endpoint = endpoints[activeTab === 'flights' ? 'flights' : activeTab];
       
       if (activeTab === 'seats') {
         if (!selectedFlightForSeats && data.flights.length > 0) {
@@ -78,6 +88,17 @@ const AdminDashboard = () => {
         }
         setLoading(false);
         return;
+      }
+
+      // Pre-fetch airports for flight form
+      if (activeTab === 'flights' && data.airports.length === 0) {
+        const airRes = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/airports`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (airRes.ok) {
+          const airResult = await airRes.json();
+          setData(prev => ({ ...prev, airports: airResult }));
+        }
       }
 
       if (!endpoint) {
@@ -144,6 +165,80 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleFlightSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    const method = selectedItem ? 'PUT' : 'POST';
+    const url = selectedItem 
+      ? `${import.meta.env.VITE_API_URL || '/api'}/admin/flights/${selectedItem.id}`
+      : `${import.meta.env.VITE_API_URL || '/api'}/admin/flights`;
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(flightForm)
+      });
+      if (res.ok) {
+        setIsModalOpen(false);
+        fetchData();
+        setFlightForm({
+          airline: '', flight_number: '', departure_airport_id: '', arrival_airport_id: '',
+          departure_time: '', arrival_time: '', economy_price: '',
+          total_seats: '180', status: 'Scheduled', gate: '', terminal: ''
+        });
+        setSelectedItem(null);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const deleteFlight = async (flightId) => {
+    if (!window.confirm('Terminate this flight record from the active grid?')) return;
+    const token = localStorage.getItem('token');
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/flights/${flightId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const openFlightModal = (flight = null) => {
+    if (flight) {
+      setFlightForm({
+        airline: flight.airline,
+        flight_number: flight.flight_number,
+        departure_airport_id: flight.departure_airport_id,
+        arrival_airport_id: flight.arrival_airport_id,
+        departure_time: flight.departure_time.slice(0, 16),
+        arrival_time: flight.arrival_time.slice(0, 16),
+        economy_price: flight.economy_price,
+        total_seats: flight.total_seats,
+        status: flight.status,
+        gate: flight.gate || '',
+        terminal: flight.terminal || ''
+      });
+      setSelectedItem(flight);
+    } else {
+      setFlightForm({
+        airline: '', flight_number: '', departure_airport_id: '', arrival_airport_id: '',
+        departure_time: '', arrival_time: '', economy_price: '',
+        total_seats: '180', status: 'Scheduled', gate: '', terminal: ''
+      });
+      setSelectedItem(null);
+    }
+    setModalType('flight');
+    setIsModalOpen(true);
+  };
+
   const menuItems = [
     { id: 'overview', label: 'Control Room', icon: LayoutDashboard },
     { id: 'flights', label: 'Flight Ops', icon: Plane },
@@ -159,7 +254,7 @@ const AdminDashboard = () => {
 
   const filteredData = (Array.isArray(data[activeTab]) ? data[activeTab] : []).filter(item => {
     const searchLower = searchTerm.toLowerCase();
-    if (activeTab === 'flights') return item.airline?.toLowerCase().includes(searchLower) || item.departure_city?.toLowerCase().includes(searchLower);
+    if (activeTab === 'flights') return item.airline?.toLowerCase().includes(searchLower) || item.departure_city?.toLowerCase().includes(searchLower) || item.flight_number?.toLowerCase().includes(searchLower);
     if (activeTab === 'bookings') return item.user_name?.toLowerCase().includes(searchLower) || item.pnr?.toLowerCase().includes(searchLower);
     if (activeTab === 'users') return item.name?.toLowerCase().includes(searchLower) || item.email?.toLowerCase().includes(searchLower);
     if (activeTab === 'tickets') return item.passenger_name?.toLowerCase().includes(searchLower) || item.ticket_number?.includes(searchTerm);
@@ -224,6 +319,14 @@ const AdminDashboard = () => {
                 className="pl-12 pr-6 py-4 w-80 bg-white border border-slate-200 rounded-2xl shadow-sm outline-none font-bold text-sm focus:border-primary transition-all"
               />
             </div>
+            {activeTab === 'flights' && (
+              <button 
+                onClick={() => openFlightModal()}
+                className="bg-primary hover:bg-blue-800 text-white font-black px-8 py-4 rounded-2xl shadow-xl shadow-primary/20 flex items-center gap-2 transition-all transform hover:-translate-y-1 active:scale-95"
+              >
+                <Plus className="h-5 w-5" /> Add Flight
+              </button>
+            )}
             {activeTab === 'seats' && (
               <select 
                 value={selectedFlightForSeats || ''} 
@@ -393,7 +496,7 @@ const AdminDashboard = () => {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-slate-50/50 border-b border-slate-100 font-black text-[10px] uppercase text-slate-400">
-                      {activeTab === 'flights' && ['Airline', 'Route', 'Economy', 'Business', 'Seats', 'Actions'].map(h => <th key={h} className="p-8">{h}</th>)}
+                      {activeTab === 'flights' && ['No.', 'Airline', 'Route', 'Economy', 'Business', 'Seats', 'Actions'].map(h => <th key={h} className="p-8">{h}</th>)}
                       {activeTab === 'bookings' && ['ID / PNR', 'Passenger', 'Flight Info', 'Class', 'Total', 'Status', 'Actions'].map(h => <th key={h} className="p-8">{h}</th>)}
                       {activeTab === 'tickets' && ['Ticket No.', 'Passenger', 'PNR', 'Departure', 'Actions'].map(h => <th key={h} className="p-8">{h}</th>)}
                       {activeTab === 'users' && ['Passenger Details', 'Role', 'Status', 'Joined', 'Management'].map(h => <th key={h} className="p-8">{h}</th>)}
@@ -415,12 +518,13 @@ const AdminDashboard = () => {
                         )}
                         {activeTab === 'flights' && (
                           <>
+                            <td className="p-8 font-black text-slate-800 tracking-tighter text-xs">{item.flight_number}</td>
                             <td className="p-8"><div className="flex items-center gap-3"><div className="w-2 h-8 bg-primary rounded-full"></div><span className="font-black text-slate-800 uppercase tracking-tight">{item.airline}</span></div></td>
                             <td className="p-8"><div className="flex items-center gap-4"><span className="font-black text-slate-700">{item.departure_city}</span> <div className="w-8 h-px bg-slate-200"></div> <span className="font-black text-slate-700">{item.arrival_city}</span></div><p className="text-[10px] text-slate-400 font-bold uppercase mt-1 italic">{new Date(item.departure_time).toLocaleString()}</p></td>
                             <td className="p-8 font-black text-slate-800">${item.economy_price}</td>
-                            <td className="p-8 font-black text-primary">${(parseFloat(item.economy_price) * 1.1).toFixed(2)}</td>
+                            <td className="p-8 font-black text-primary">${item.business_price || (parseFloat(item.economy_price) * 1.5).toFixed(2)}</td>
                             <td className="p-8"><div className="flex items-center gap-2"><div className="flex-grow h-1.5 w-16 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-primary" style={{ width: `${(item.available_seats / item.total_seats) * 100}%` }}></div></div><span className="text-[10px] font-bold text-slate-500">{item.available_seats}/{item.total_seats}</span></div></td>
-                            <td className="p-8"><div className="flex gap-2"><button className="p-3 text-blue-500 hover:bg-blue-50 rounded-xl"><Edit2 className="h-4 w-4" /></button><button className="p-3 text-red-500 hover:bg-red-50 rounded-xl"><Trash2 className="h-4 w-4" /></button></div></td>
+                            <td className="p-8"><div className="flex gap-2"><button onClick={() => openFlightModal(item)} className="p-3 text-blue-500 hover:bg-blue-50 rounded-xl"><Edit2 className="h-4 w-4" /></button><button onClick={() => deleteFlight(item.id)} className="p-3 text-red-500 hover:bg-red-50 rounded-xl"><Trash2 className="h-4 w-4" /></button></div></td>
                           </>
                         )}
                         {activeTab === 'bookings' && (
@@ -480,6 +584,184 @@ const AdminDashboard = () => {
           </div>
         )}
       </main>
+
+      {/* Flight Modal */}
+      {isModalOpen && modalType === 'flight' && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[100] p-6">
+           <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="bg-slate-50 p-8 border-b border-slate-200 flex justify-between items-center">
+                 <div>
+                    <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">{selectedItem ? 'Update Flight' : 'Add Flight'}</h3>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Operational Manifest Grid</p>
+                 </div>
+                 <button onClick={() => setIsModalOpen(false)} className="p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-2xl border border-slate-200 transition-all">
+                    <X className="h-6 w-6" />
+                 </button>
+              </div>
+              
+              <form onSubmit={handleFlightSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Airliner / Carrier</label>
+                       <div className="relative">
+                          <Plane className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                          <input 
+                            required
+                            type="text" 
+                            placeholder="e.g. SkyBound Prime"
+                            value={flightForm.airline}
+                            onChange={e => setFlightForm({...flightForm, airline: e.target.value})}
+                            className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold transition-all text-sm"
+                          />
+                       </div>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Flight Number</label>
+                       <div className="relative">
+                          <QrCode className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                          <input 
+                            required
+                            type="text" 
+                            placeholder="e.g. SB-402"
+                            value={flightForm.flight_number}
+                            onChange={e => setFlightForm({...flightForm, flight_number: e.target.value})}
+                            className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold transition-all text-sm uppercase"
+                          />
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Departure Node</label>
+                       <select 
+                         required
+                         value={flightForm.departure_airport_id}
+                         onChange={e => setFlightForm({...flightForm, departure_airport_id: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold text-sm appearance-none"
+                       >
+                          <option value="">Select Origin</option>
+                          {data.airports.map(a => <option key={a.id} value={a.id}>{a.city} ({a.iata_code})</option>)}
+                       </select>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Arrival Target</label>
+                       <select 
+                         required
+                         value={flightForm.arrival_airport_id}
+                         onChange={e => setFlightForm({...flightForm, arrival_airport_id: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold text-sm appearance-none"
+                       >
+                          <option value="">Select Destination</option>
+                          {data.airports.map(a => <option key={a.id} value={a.id}>{a.city} ({a.iata_code})</option>)}
+                       </select>
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Takeoff Schedule</label>
+                       <div className="relative">
+                          <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                          <input 
+                            required
+                            type="datetime-local" 
+                            value={flightForm.departure_time}
+                            onChange={e => setFlightForm({...flightForm, departure_time: e.target.value})}
+                            className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold text-sm"
+                          />
+                       </div>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">ETA Projection</label>
+                       <div className="relative">
+                          <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                          <input 
+                            required
+                            type="datetime-local" 
+                            value={flightForm.arrival_time}
+                            onChange={e => setFlightForm({...flightForm, arrival_time: e.target.value})}
+                            className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold text-sm"
+                          />
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Economy Tariff ($)</label>
+                       <div className="relative">
+                          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                          <input 
+                            required
+                            type="number" 
+                            placeholder="450.00"
+                            value={flightForm.economy_price}
+                            onChange={e => setFlightForm({...flightForm, economy_price: e.target.value})}
+                            className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold text-sm"
+                          />
+                       </div>
+                       <p className="text-[9px] font-bold text-slate-400 ml-4 italic">* Business price auto-calculated (+10%)</p>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Total Payload (Seats)</label>
+                       <input 
+                         required
+                         type="number" 
+                         value={flightForm.total_seats}
+                         onChange={e => setFlightForm({...flightForm, total_seats: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold text-sm"
+                       />
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Terminal</label>
+                       <input 
+                         type="text" 
+                         placeholder="T1"
+                         value={flightForm.terminal}
+                         onChange={e => setFlightForm({...flightForm, terminal: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold text-sm uppercase"
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Gate</label>
+                       <input 
+                         type="text" 
+                         placeholder="B2"
+                         value={flightForm.gate}
+                         onChange={e => setFlightForm({...flightForm, gate: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold text-sm uppercase"
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Status</label>
+                       <select 
+                         required
+                         value={flightForm.status}
+                         onChange={e => setFlightForm({...flightForm, status: e.target.value})}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold text-sm appearance-none"
+                       >
+                          <option value="Scheduled">Scheduled</option>
+                          <option value="In-Air">In-Air</option>
+                          <option value="Delayed">Delayed</option>
+                          <option value="Landed">Landed</option>
+                          <option value="Cancelled">Cancelled</option>
+                       </select>
+                    </div>
+                 </div>
+
+                 <div className="pt-6">
+                    <button type="submit" className="w-full py-5 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                       {selectedItem ? 'Update Flight' : 'Add Flight'}
+                    </button>
+                 </div>
+              </form>
+           </div>
+        </div>
+      )}
 
       {/* Footer Branding */}
       <footer className="fixed bottom-0 left-80 right-0 h-16 bg-white/50 backdrop-blur-md border-t border-slate-200 flex items-center justify-between px-12 z-10">
