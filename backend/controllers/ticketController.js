@@ -84,18 +84,31 @@ const getTicket = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Ticket not found');
   }
+
+  // Restrict access for cancelled or pending bookings
+  if (ticket.booking_status === 'cancelled') {
+    res.status(403);
+    throw new Error('Ticket is no longer available for this cancelled booking');
+  }
+  
+  if (ticket.booking_status === 'pending') {
+    res.status(403);
+    throw new Error('Payment required to view ticket');
+  }
+
   res.status(200).json(ticket);
 });
 
 const getAllTickets = asyncHandler(async (req, res) => {
   const query = `
-    SELECT t.*, b.pnr, f.flight_number, f.airline, f.departure_city, f.arrival_city,
+    SELECT t.*, b.pnr, b.status as booking_status, f.flight_number, f.airline, f.departure_city, f.arrival_city,
            da.iata_code as departure_iata, aa.iata_code as arrival_iata
     FROM tickets t
     JOIN bookings b ON t.booking_id = b.id
     JOIN flights f ON b.flight_id = f.id
     JOIN airports da ON f.departure_airport_id = da.id
     JOIN airports aa ON f.arrival_airport_id = aa.id
+    WHERE b.status != 'cancelled'
     ORDER BY t.created_at DESC
   `;
   const result = await db.query(query);
@@ -110,6 +123,16 @@ const downloadTicketPDF = asyncHandler(async (req, res) => {
   if (!ticket) {
     res.status(404);
     throw new Error('Ticket not found');
+  }
+
+  if (ticket.booking_status === 'cancelled') {
+    res.status(403);
+    throw new Error('Ticket download not available for cancelled bookings');
+  }
+
+  if (ticket.booking_status === 'pending') {
+    res.status(403);
+    throw new Error('Payment required to download ticket');
   }
 
   // Set headers before starting the pipe
@@ -140,6 +163,11 @@ const emailTicket = asyncHandler(async (req, res) => {
   if (!ticket) {
     res.status(404);
     throw new Error('Ticket not found');
+  }
+
+  if (ticket.booking_status === 'cancelled') {
+    res.status(403);
+    throw new Error('Ticket emailing not available for cancelled bookings');
   }
 
   // Buffer PDF to attach it

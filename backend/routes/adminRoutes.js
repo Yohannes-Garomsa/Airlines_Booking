@@ -7,7 +7,13 @@ const {
   getAllUsers, 
   toggleUserStatus, 
   changeUserRole,
-  createAdmin
+  createAdmin,
+  getFleet,
+  toggleAircraftStatus,
+  getSeatMatrix,
+  getAnalytics,
+  getPayments,
+  getNotifications
 } = require('../controllers/adminController');
 const { 
   createFlight, 
@@ -37,5 +43,14 @@ router.get('/users', getAllUsers);
 router.patch('/users/:id/status', toggleUserStatus);
 router.post('/create', superAdminOnly, createAdmin);
 router.patch('/users/:id/role', superAdminOnly, changeUserRole);
+
+// Fleet
+router.get('/fleet', getFleet);
+router.patch('/fleet/:id/maintenance', toggleAircraftStatus);
+
+router.get('/seats/:flightId', getSeatMatrix);
+router.get('/analytics', getAnalytics);
+router.get('/payments', getPayments);
+router.get('/notifications', getNotifications);
 
 module.exports = router;

@@ -25,7 +25,7 @@ const Ticket = {
 
   getByBookingId: async (bookingId) => {
     const result = await db.query(
-      `SELECT t.*, b.pnr, b.cabin_class, f.airline, f.flight_number, f.departure_time, f.arrival_time,
+      `SELECT t.*, b.pnr, b.cabin_class, b.status as booking_status, f.airline, f.flight_number, f.departure_time, f.arrival_time,
               COALESCE(da.city, f.departure_city) as departure_city, 
               COALESCE(da.iata_code, 'TBA') as departure_iata,
               COALESCE(aa.city, f.arrival_city) as arrival_city, 
@@ -43,7 +43,7 @@ const Ticket = {
 
   getById: async (id) => {
     const result = await db.query(
-      `SELECT t.*, b.pnr, b.cabin_class, f.airline, f.flight_number, f.departure_time, f.arrival_time,
+      `SELECT t.*, b.pnr, b.cabin_class, b.status as booking_status, f.airline, f.flight_number, f.departure_time, f.arrival_time,
               COALESCE(da.city, f.departure_city) as departure_city, 
               COALESCE(da.iata_code, 'TBA') as departure_iata,
               COALESCE(aa.city, f.arrival_city) as arrival_city, 
