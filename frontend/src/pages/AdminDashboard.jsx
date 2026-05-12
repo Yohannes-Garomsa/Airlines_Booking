@@ -46,6 +46,7 @@ const AdminDashboard = () => {
   });
   const [isPassengerModalOpen, setIsPassengerModalOpen] = useState(false);
   const [passengerForm, setPassengerForm] = useState({ name: '', email: '', password: '' });
+  const [adminForm, setAdminForm] = useState({ name: '', email: '', password: '' });
   const [currentFlight, setCurrentFlight] = useState(null);
   const [allAirports, setAllAirports] = useState([]);
 
@@ -72,6 +73,7 @@ const AdminDashboard = () => {
         flights: '/flights',
         bookings: '/admin/bookings',
         users: '/admin/users',
+        staff: '/admin/users',
         tickets: '/tickets'
       };
 
@@ -116,7 +118,11 @@ const AdminDashboard = () => {
 
       if (res.ok) {
         const result = await res.json();
-        setData(prev => ({ ...prev, [activeTab]: result }));
+        if (activeTab === 'staff') {
+          setData(prev => ({ ...prev, users: result }));
+        } else {
+          setData(prev => ({ ...prev, [activeTab]: result }));
+        }
       }
     } catch (err) {
       console.error(err);
@@ -245,6 +251,31 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleAdminSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(adminForm)
+      });
+      if (res.ok) {
+        setIsAdminModalOpen(false);
+        setAdminForm({ name: '', email: '', password: '' });
+        fetchData();
+      } else {
+        const error = await res.json();
+        alert(error.message || 'Failed to create admin');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const resendTicket = async (ticketId) => {
     const token = localStorage.getItem('token');
     try {
@@ -364,13 +395,15 @@ const AdminDashboard = () => {
     { id: 'fleet', label: 'Fleet Mgmt', icon: Wrench },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'notifications', label: 'Alert Center', icon: Bell },
+    { id: 'staff', label: 'Staff Ops', icon: ShieldCheck },
   ];
 
   const filteredData = (Array.isArray(data[activeTab]) ? data[activeTab] : []).filter(item => {
     const searchLower = searchTerm.toLowerCase();
     if (activeTab === 'flights') return item.airline?.toLowerCase().includes(searchLower) || item.departure_city?.toLowerCase().includes(searchLower) || item.flight_number?.toLowerCase().includes(searchLower);
     if (activeTab === 'bookings') return item.user_name?.toLowerCase().includes(searchLower) || item.pnr?.toLowerCase().includes(searchLower);
-    if (activeTab === 'users') return item.name?.toLowerCase().includes(searchLower) || item.email?.toLowerCase().includes(searchLower);
+    if (activeTab === 'users') return (item.name?.toLowerCase().includes(searchLower) || item.email?.toLowerCase().includes(searchLower)) && item.role === 'user';
+    if (activeTab === 'staff') return (item.name?.toLowerCase().includes(searchLower) || item.email?.toLowerCase().includes(searchLower)) && item.role !== 'user';
     if (activeTab === 'tickets') return item.passenger_name?.toLowerCase().includes(searchLower) || item.ticket_number?.includes(searchTerm);
     return true;
   });
@@ -402,6 +435,7 @@ const AdminDashboard = () => {
               { id: 'fleet', label: 'Fleet Mgmt', icon: Wrench },
               { id: 'analytics', label: 'Analytics', icon: BarChart3 },
               { id: 'notifications', label: 'Alert Center', icon: Bell },
+              { id: 'staff', label: 'Staff Ops', icon: ShieldCheck },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -450,7 +484,7 @@ const AdminDashboard = () => {
                   <Plus className="h-5 w-5" /> Add Flight
                 </button>
               )}
-              {activeTab === 'users' && currentUser?.role === 'superadmin' && (
+              {activeTab === 'staff' && currentUser?.role === 'superadmin' && (
                 <button
                   onClick={() => setIsAdminModalOpen(true)}
                   className="bg-accent hover:bg-yellow-500 text-primary font-black px-8 py-4 rounded-2xl shadow-xl flex items-center gap-2 transition-all transform hover:-translate-y-1"
@@ -539,10 +573,11 @@ const AdminDashboard = () => {
                       {activeTab === 'bookings' && ['ID / PNR', 'Passenger', 'Flight Info', 'Class', 'Total', 'Status', 'Actions'].map(h => <th key={h} className="p-6">{h}</th>)}
                       {activeTab === 'tickets' && ['Ticket No.', 'Passenger', 'PNR', 'Departure', 'Actions'].map(h => <th key={h} className="p-6">{h}</th>)}
                       {activeTab === 'users' && ['Passenger Details', 'Role', 'Status', 'Joined', 'Management'].map(h => <th key={h} className="p-6">{h}</th>)}
+                      {activeTab === 'staff' && ['Staff Details', 'Role', 'Status', 'Joined', 'Management'].map(h => <th key={h} className="p-6">{h}</th>)}
                     </tr>
                   </thead>
                   <tbody>
-                    {activeTab === 'users' ? filteredData.map(u => (
+                     {(activeTab === 'users' || activeTab === 'staff') ? filteredData.map(u => (
                       <tr key={u.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                         <td className="p-6">
                           <p className="font-bold text-slate-700">{u.name}</p>
@@ -573,7 +608,7 @@ const AdminDashboard = () => {
                               <button
                                 onClick={() => deleteUser(u.id)}
                                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors shadow-sm border border-red-100"
-                                title="Delete Passenger"
+                                title={`Delete ${activeTab === 'staff' ? 'Staff' : 'Passenger'}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -881,6 +916,57 @@ const AdminDashboard = () => {
                 <div className="pt-4">
                   <button type="submit" className="w-full py-5 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
                     Register Passenger
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        {/* Admin Modal */}
+        {isAdminModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+              <div className="bg-accent p-8 flex justify-between items-center text-primary">
+                <h3 className="text-2xl font-black uppercase tracking-tight">Add New Admin</h3>
+                <button onClick={() => setIsAdminModalOpen(false)} className="p-2 hover:bg-black/10 rounded-full text-primary"><X className="h-6 w-6" /></button>
+              </div>
+              <form onSubmit={handleAdminSubmit} className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Staff Name</label>
+                  <input
+                    required
+                    type="text" 
+                    value={adminForm.name} 
+                    onChange={e => setAdminForm({ ...adminForm, name: e.target.value })}
+                    placeholder="e.g. Michael Smith"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 focus:ring-2 focus:ring-accent outline-none font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Staff Email</label>
+                  <input
+                    required
+                    type="email" 
+                    value={adminForm.email} 
+                    onChange={e => setAdminForm({ ...adminForm, email: e.target.value })}
+                    placeholder="e.g. michael@skybound.com"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 focus:ring-2 focus:ring-accent outline-none font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Access Password</label>
+                  <input
+                    required
+                    type="password" 
+                    value={adminForm.password} 
+                    onChange={e => setAdminForm({ ...adminForm, password: e.target.value })}
+                    placeholder="••••••••"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 focus:ring-2 focus:ring-accent outline-none font-bold"
+                  />
+                </div>
+                <div className="pt-4">
+                  <button type="submit" className="w-full py-5 bg-accent text-primary font-black uppercase tracking-[0.2em] rounded-3xl shadow-xl shadow-accent/20 hover:scale-[1.02] active:scale-95 transition-all">
+                    Authorize Staff Member
                   </button>
                 </div>
               </form>
