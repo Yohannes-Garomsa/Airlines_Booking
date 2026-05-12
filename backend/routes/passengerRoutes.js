@@ -8,11 +8,11 @@ const {
   deletePassenger,
   verifyPassenger
 } = require('../controllers/passengerController');
-const { protect, admin } = require('../middleware/authMiddleware');
+const { protectRoute, adminOnly } = require('../middleware/authMiddleware');
 
 // All routes are protected and require admin access
-router.use(protect);
-router.use(admin);
+router.use(protectRoute);
+router.use(adminOnly);
 
 router.route('/')
   .get(getAllPassengers)
