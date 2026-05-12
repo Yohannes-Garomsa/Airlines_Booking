@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { passengerSchema } from "../schemas/passengerSchema";
+import { countries } from "../constants/countries";
 import { 
   Form, 
   FormControl, 
@@ -68,7 +69,7 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
       passportIssueDate: initialData?.passportIssueDate ? new Date(initialData.passportIssueDate) : null,
       passportType: initialData?.passportType || "Regular",
       residenceCountry: initialData?.residenceCountry || "",
-      nationality: initialData?.nationality || "",
+      nationality: initialData?.nationality || "Ethiopia",
       phoneNumber: initialData?.phoneNumber || "",
       email: initialData?.email || "",
       emergencyContactName: initialData?.emergencyContactName || "",
@@ -404,10 +405,54 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                             name="nationality"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Nationality</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="e.g. Ethiopian" className="h-14 rounded-2xl bg-slate-50 border-0 font-bold" {...field} />
-                                </FormControl>
+                                <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                                  <Globe className="h-3 w-3" /> Nationality / Citizenship
+                                </FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-0 font-bold px-6 transition-all focus:ring-2 focus:ring-primary">
+                                      <SelectValue placeholder="Select Country" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent className="rounded-2xl border-slate-100 p-2 shadow-2xl max-h-80">
+                                    <div className="p-2 sticky top-0 bg-white z-10 border-b border-slate-100 mb-2">
+                                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest px-2">Global Registry</p>
+                                    </div>
+                                    {countries.map(country => (
+                                      <SelectItem key={country} value={country} className="rounded-xl font-bold p-3">
+                                        {country}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                        {flightType === "International" && (
+                          <FormField
+                            control={form.control}
+                            name="passportCountry"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                                  <Globe className="h-3 w-3" /> Passport Issuing Country
+                                </FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-0 font-bold px-6 transition-all focus:ring-2 focus:ring-primary">
+                                      <SelectValue placeholder="Issuing Country" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent className="rounded-2xl border-slate-100 p-2 shadow-2xl max-h-80">
+                                    {countries.map(country => (
+                                      <SelectItem key={country} value={country} className="rounded-xl font-bold p-3">
+                                        {country}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                                 <FormMessage />
                               </FormItem>
                             )}
