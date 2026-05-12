@@ -36,8 +36,16 @@ import {
   Globe,
   MapPin,
   Calendar,
-  Mail
+  Mail,
+  ChevronDown,
+  Search
 } from "lucide-react";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
 
 const steps = [
@@ -46,6 +54,73 @@ const steps = [
   { id: 'contact', title: 'Contact', icon: Phone },
   { id: 'review', title: 'Verify', icon: ShieldCheck },
 ];
+
+function CountrySelector({ value, onChange, placeholder, icon: Icon = Globe }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filteredCountries = countries.filter(c => 
+    c.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="h-16 w-full rounded-[1.5rem] bg-slate-50 border-0 font-bold px-6 flex justify-between items-center hover:bg-slate-100 transition-all text-slate-700"
+        >
+          <div className="flex items-center gap-3">
+            <Icon className="h-4 w-4 text-slate-400" />
+            {value || placeholder}
+          </div>
+          <ChevronDown className={`h-4 w-4 shrink-0 opacity-50 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 w-[400px] rounded-[2rem] overflow-hidden border-0 shadow-2xl bg-white" align="start" side="bottom" sideOffset={12}>
+        <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Search global registry..."
+              className="h-12 rounded-xl bg-white border-slate-200 pl-12 font-bold focus:ring-primary"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+        <ScrollArea className="h-80 p-2">
+          <div className="space-y-1">
+            {filteredCountries.length === 0 && (
+              <div className="p-10 text-center text-slate-400">
+                <Globe className="h-10 w-10 mx-auto mb-4 opacity-20" />
+                <p className="text-[10px] font-black uppercase tracking-widest">No matching territory</p>
+              </div>
+            )}
+            {filteredCountries.map((country) => (
+              <button
+                key={country}
+                onClick={() => {
+                  onChange(country);
+                  setOpen(false);
+                  setSearch("");
+                }}
+                className={`w-full text-left p-4 rounded-xl font-bold flex items-center justify-between group hover:bg-primary hover:text-white transition-all ${
+                  value === country ? 'bg-primary/5 text-primary' : 'text-slate-600'
+                }`}
+              >
+                {country}
+                {value === country && <CheckCircle2 className="h-4 w-4" />}
+              </button>
+            ))}
+          </div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function PassengerForm({ initialData, onSubmit, onCancel }) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -408,23 +483,13 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                                 <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
                                   <Globe className="h-3 w-3" /> Nationality / Citizenship
                                 </FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-0 font-bold px-6 transition-all focus:ring-2 focus:ring-primary">
-                                      <SelectValue placeholder="Select Country" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent className="rounded-2xl border-slate-100 p-2 shadow-2xl max-h-80">
-                                    <div className="p-2 sticky top-0 bg-white z-10 border-b border-slate-100 mb-2">
-                                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest px-2">Global Registry</p>
-                                    </div>
-                                    {countries.map(country => (
-                                      <SelectItem key={country} value={country} className="rounded-xl font-bold p-3">
-                                        {country}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <FormControl>
+                                  <CountrySelector 
+                                    value={field.value} 
+                                    onChange={field.onChange} 
+                                    placeholder="Select Nationality"
+                                  />
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -439,20 +504,13 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                                 <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
                                   <Globe className="h-3 w-3" /> Passport Issuing Country
                                 </FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-0 font-bold px-6 transition-all focus:ring-2 focus:ring-primary">
-                                      <SelectValue placeholder="Issuing Country" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent className="rounded-2xl border-slate-100 p-2 shadow-2xl max-h-80">
-                                    {countries.map(country => (
-                                      <SelectItem key={country} value={country} className="rounded-xl font-bold p-3">
-                                        {country}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <FormControl>
+                                  <CountrySelector 
+                                    value={field.value} 
+                                    onChange={field.onChange} 
+                                    placeholder="Select Issuing Country"
+                                  />
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
