@@ -10,7 +10,13 @@ const {
   createAdmin,
   getAllAirports,
   createAirport,
-  deleteAirport
+  deleteAirport,
+  getFleet,
+  toggleAircraftStatus,
+  getSeatMatrix,
+  getAnalytics,
+  getPayments,
+  getNotifications
 } = require('../controllers/adminController');
 const { 
   createFlight, 
@@ -45,5 +51,14 @@ router.patch('/users/:id/role', superAdminOnly, changeUserRole);
 router.get('/airports', getAllAirports);
 router.post('/airports', createAirport);
 router.delete('/airports/:id', deleteAirport);
+
+// Fleet
+router.get('/fleet', getFleet);
+router.patch('/fleet/:id/maintenance', toggleAircraftStatus);
+
+router.get('/seats/:flightId', getSeatMatrix);
+router.get('/analytics', getAnalytics);
+router.get('/payments', getPayments);
+router.get('/notifications', getNotifications);
 
 module.exports = router;

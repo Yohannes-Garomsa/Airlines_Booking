@@ -29,9 +29,9 @@ const Flight = {
 
     const result = await db.query(
       `INSERT INTO flights 
-       (airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, available_seats) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
-      [airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, total_seats]
+       (airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, available_seats, status, gate, terminal) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
+      [airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, total_seats, status || 'Scheduled', gate, terminal]
     );
     return result.rows[0];
   },
@@ -142,9 +142,10 @@ const Flight = {
        airline = $1, flight_number = $2, departure_city = $3, arrival_city = $4, 
        departure_airport_id = $5, arrival_airport_id = $6, 
        departure_time = $7, arrival_time = $8, economy_price = $9, business_price = $10, 
-       economy_seats = $11, business_seats = $12, total_seats = $13, available_seats = $13
-       WHERE id = $14 RETURNING *`,
-      [airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, id]
+       economy_seats = $11, business_seats = $12, total_seats = $13, available_seats = $13,
+       status = $14, gate = $15, terminal = $16
+       WHERE id = $17 RETURNING *`,
+      [airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, status, gate, terminal, id]
     );
     return result.rows[0];
   },

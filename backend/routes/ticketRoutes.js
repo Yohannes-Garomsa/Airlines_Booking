@@ -18,6 +18,16 @@ const asyncHandler = require('../utils/asyncHandler');
 router.get('/public/:id', getTicket);
 router.get('/public/booking/:bookingId', asyncHandler(async (req, res) => {
   const tickets = await Ticket.getByBookingId(req.params.bookingId);
+  
+  // If no tickets or the first ticket's booking is not confirmed, return error
+  if (tickets.length === 0) {
+    return res.status(404).json({ message: 'No tickets found for this booking' });
+  }
+
+  if (tickets[0].booking_status !== 'confirmed') {
+    return res.status(403).json({ message: 'Tickets are not available for this booking status' });
+  }
+
   res.status(200).json(tickets);
 }));
 router.get('/verify/:identifier', verifyTicket);

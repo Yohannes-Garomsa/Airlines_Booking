@@ -35,8 +35,9 @@ const DashboardPage = () => {
 
       bookings.forEach(booking => {
         if (booking.status === 'pending') {
-          const bookingTime = new Date(booking.booking_date);
-          const expiryTime = new Date(bookingTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours
+          const expiryTime = booking.expires_at 
+            ? new Date(booking.expires_at) 
+            : new Date(new Date(booking.booking_date).getTime() + 3 * 60 * 60 * 1000);
           const remaining = expiryTime - now;
 
           if (remaining > 0) {
