@@ -32,7 +32,10 @@ import {
   ArrowLeft,
   CheckCircle2,
   FileText,
-  Globe
+  Globe,
+  MapPin,
+  Calendar,
+  Mail
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -49,14 +52,31 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
 
   const form = useForm({
     resolver: zodResolver(passengerSchema),
-    defaultValues: initialData || {
-      firstName: "",
-      lastName: "",
-      gender: "Male",
-      flightType: "Domestic",
-      documentType: "Fayda ID",
-      dualCitizenship: false,
-      status: "Pending",
+    defaultValues: {
+      firstName: initialData?.firstName || "",
+      middleName: initialData?.middleName || "",
+      lastName: initialData?.lastName || "",
+      gender: initialData?.gender || "Male",
+      dateOfBirth: initialData?.dateOfBirth ? new Date(initialData.dateOfBirth) : null,
+      flightType: initialData?.flightType || "Domestic",
+      documentType: initialData?.documentType || "Fayda ID",
+      fanNumber: initialData?.fanNumber || "",
+      finNumber: initialData?.finNumber || "",
+      passportNumber: initialData?.passportNumber || "",
+      passportExpiry: initialData?.passportExpiry ? new Date(initialData.passportExpiry) : null,
+      passportCountry: initialData?.passportCountry || "",
+      passportIssueDate: initialData?.passportIssueDate ? new Date(initialData.passportIssueDate) : null,
+      passportType: initialData?.passportType || "Regular",
+      residenceCountry: initialData?.residenceCountry || "",
+      nationality: initialData?.nationality || "",
+      phoneNumber: initialData?.phoneNumber || "",
+      email: initialData?.email || "",
+      emergencyContactName: initialData?.emergencyContactName || "",
+      emergencyContactPhone: initialData?.emergencyContactPhone || "",
+      emergencyRelationship: initialData?.emergencyRelationship || "",
+      dualCitizenship: initialData?.dualCitizenship || false,
+      status: initialData?.status || "Pending",
+      adminNotes: initialData?.adminNotes || "",
     }
   });
 
