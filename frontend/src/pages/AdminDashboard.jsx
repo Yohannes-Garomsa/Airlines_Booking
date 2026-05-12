@@ -49,6 +49,7 @@ const AdminDashboard = () => {
   const [adminForm, setAdminForm] = useState({ name: '', email: '', password: '' });
   const [currentFlight, setCurrentFlight] = useState(null);
   const [allAirports, setAllAirports] = useState([]);
+  const [bookingStatusFilter, setBookingStatusFilter] = useState('all');
 
   const fetchStats = async () => {
     const token = localStorage.getItem('token');
@@ -401,7 +402,11 @@ const AdminDashboard = () => {
   const filteredData = (Array.isArray(data[activeTab]) ? data[activeTab] : []).filter(item => {
     const searchLower = searchTerm.toLowerCase();
     if (activeTab === 'flights') return item.airline?.toLowerCase().includes(searchLower) || item.departure_city?.toLowerCase().includes(searchLower) || item.flight_number?.toLowerCase().includes(searchLower);
-    if (activeTab === 'bookings') return item.user_name?.toLowerCase().includes(searchLower) || item.pnr?.toLowerCase().includes(searchLower);
+    if (activeTab === 'bookings') {
+      const matchesSearch = item.user_name?.toLowerCase().includes(searchLower) || item.pnr?.toLowerCase().includes(searchLower);
+      const matchesStatus = bookingStatusFilter === 'all' || item.status?.toLowerCase() === bookingStatusFilter.toLowerCase();
+      return matchesSearch && matchesStatus;
+    }
     if (activeTab === 'users') return (item.name?.toLowerCase().includes(searchLower) || item.email?.toLowerCase().includes(searchLower)) && item.role === 'user';
     if (activeTab === 'staff') return (item.name?.toLowerCase().includes(searchLower) || item.email?.toLowerCase().includes(searchLower)) && item.role !== 'user';
     if (activeTab === 'tickets') return item.passenger_name?.toLowerCase().includes(searchLower) || item.ticket_number?.includes(searchTerm);
@@ -566,6 +571,23 @@ const AdminDashboard = () => {
               )}
 
               <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden">
+                {activeTab === 'bookings' && (
+                  <div className="flex flex-wrap gap-3 p-8 border-b border-slate-100 bg-slate-50/30">
+                    {['all', 'pending', 'confirmed', 'cancelled'].map(status => (
+                      <button
+                        key={status}
+                        onClick={() => setBookingStatusFilter(status)}
+                        className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all transform active:scale-95 ${
+                          bookingStatusFilter === status 
+                          ? 'bg-primary text-white shadow-xl shadow-primary/20 -translate-y-1' 
+                          : 'bg-white text-slate-400 border border-slate-200 hover:border-primary hover:text-primary'
+                        }`}
+                      >
+                        {status} Stage
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-100 font-black text-[10px] uppercase text-slate-400">
