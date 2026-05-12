@@ -99,42 +99,62 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
     <div className="max-w-4xl mx-auto">
       {/* Flight Type Selector */}
       <div className="flex justify-center mb-12">
-        <Tabs value={flightType} onValueChange={(v) => setValue("flightType", v)} className="w-full max-w-md">
-          <TabsList className="grid grid-cols-2 p-1 bg-slate-100 rounded-[2rem] h-16">
-            <TabsTrigger value="Domestic" className="rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg">
-              Domestic Ops
+        <Tabs value={flightType} onValueChange={(v) => setValue("flightType", v)} className="w-full max-w-2xl">
+          <TabsList className="grid grid-cols-2 p-2 bg-slate-900 rounded-[2.5rem] h-20 shadow-2xl">
+            <TabsTrigger 
+              value="Domestic" 
+              className="rounded-[2rem] font-black uppercase text-[11px] tracking-widest text-slate-400 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-xl transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${flightType === 'Domestic' ? 'bg-white/20' : 'bg-slate-800'}`}>
+                  <MapPin className="h-4 w-4" />
+                </div>
+                Domestic Ops
+              </div>
             </TabsTrigger>
-            <TabsTrigger value="International" className="rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg">
-              International
+            <TabsTrigger 
+              value="International" 
+              className="rounded-[2rem] font-black uppercase text-[11px] tracking-widest text-slate-400 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-xl transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${flightType === 'International' ? 'bg-white/20' : 'bg-slate-800'}`}>
+                  <Globe className="h-4 w-4" />
+                </div>
+                International
+              </div>
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
       {/* Stepper */}
-      <div className="flex justify-between items-center mb-16 px-4">
+      <div className="flex justify-between items-center mb-16 px-8 py-10 bg-white/40 backdrop-blur-md rounded-[3rem] border border-white/50 shadow-sm">
         {steps.map((step, index) => {
           const Icon = step.icon;
           const isCompleted = currentStep > index;
           const isActive = currentStep === index;
           return (
             <React.Fragment key={step.id}>
-              <div className="flex flex-col items-center gap-3 relative">
-                <div className={`h-14 w-14 rounded-full flex items-center justify-center transition-all duration-500 border-2 ${
-                  isCompleted ? 'bg-green-500 border-green-500 shadow-xl shadow-green-200' : 
-                  isActive ? 'bg-primary border-primary shadow-xl shadow-primary/20 scale-110' : 
+              <div className="flex flex-col items-center gap-4 relative z-10">
+                <div className={`h-16 w-16 rounded-3xl flex items-center justify-center transition-all duration-700 border-2 ${
+                  isCompleted ? 'bg-green-500 border-green-500 shadow-2xl shadow-green-200 rotate-[360deg]' : 
+                  isActive ? 'bg-slate-900 border-slate-900 shadow-2xl shadow-slate-900/40 scale-110 -rotate-3' : 
                   'bg-white border-slate-200'
                 }`}>
-                  {isCompleted ? <CheckCircle2 className="text-white h-6 w-6" /> : <Icon className={`h-6 w-6 ${isActive ? 'text-white' : 'text-slate-400'}`} />}
+                  {isCompleted ? <CheckCircle2 className="text-white h-7 w-7" /> : <Icon className={`h-7 w-7 ${isActive ? 'text-white' : 'text-slate-400'}`} />}
                 </div>
-                <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-primary' : 'text-slate-400'}`}>{step.title}</span>
+                <div className="text-center">
+                  <span className={`text-[10px] font-black uppercase tracking-[0.2em] block ${isActive ? 'text-slate-900' : 'text-slate-400'}`}>{step.title}</span>
+                  <span className={`text-[8px] font-bold uppercase tracking-widest block mt-1 ${isActive ? 'text-primary' : 'text-slate-300'}`}>Phase 0{index + 1}</span>
+                </div>
               </div>
               {index < steps.length - 1 && (
-                <div className="flex-1 h-[2px] bg-slate-100 mx-4 -mt-8">
+                <div className="flex-1 h-[3px] bg-slate-100 mx-4 -mt-14 relative overflow-hidden rounded-full">
                   <motion.div 
                     initial={{ width: "0%" }}
                     animate={{ width: isCompleted ? "100%" : "0%" }}
-                    className="h-full bg-green-500"
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                    className="h-full bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]"
                   />
                 </div>
               )}
@@ -153,8 +173,18 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
               exit={{ x: -20, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="border-0 shadow-2xl shadow-slate-200/50 rounded-[3rem] overflow-hidden">
+              <Card className="border-0 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] rounded-[3rem] overflow-hidden bg-white/80 backdrop-blur-xl border border-white/20">
                 <CardContent className="p-12">
+                  <div className="mb-10 flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                      {React.createElement(steps[currentStep].icon, { className: "h-6 w-6" })}
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black uppercase tracking-tight text-slate-800">{steps[currentStep].title} Information</h3>
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mt-1">Registry Protocol Phase 0{currentStep + 1}</p>
+                    </div>
+                  </div>
+
                   {currentStep === 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <FormField
@@ -162,9 +192,13 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                         name="firstName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">First Name</FormLabel>
+                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                              <User className="h-3 w-3" /> First Name
+                            </FormLabel>
                             <FormControl>
-                              <Input placeholder="Abebe" className="h-14 rounded-2xl bg-slate-50 border-0 focus:ring-2 focus:ring-primary font-bold" {...field} />
+                              <div className="relative group">
+                                <Input placeholder="Abebe" className="h-16 rounded-[1.5rem] bg-slate-50 border-0 focus:ring-2 focus:ring-primary font-bold pl-6 transition-all group-focus-within:bg-white group-focus-within:shadow-xl" {...field} />
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -175,9 +209,13 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                         name="lastName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Last Name</FormLabel>
+                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                              <User className="h-3 w-3" /> Last Name
+                            </FormLabel>
                             <FormControl>
-                              <Input placeholder="Bikila" className="h-14 rounded-2xl bg-slate-50 border-0 focus:ring-2 focus:ring-primary font-bold" {...field} />
+                              <div className="relative group">
+                                <Input placeholder="Bikila" className="h-16 rounded-[1.5rem] bg-slate-50 border-0 focus:ring-2 focus:ring-primary font-bold pl-6 transition-all group-focus-within:bg-white group-focus-within:shadow-xl" {...field} />
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -188,14 +226,16 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                         name="gender"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Gender</FormLabel>
+                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                              <User className="h-3 w-3" /> Gender Identity
+                            </FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-0 focus:ring-2 focus:ring-primary font-bold">
+                                <SelectTrigger className="h-16 rounded-[1.5rem] bg-slate-50 border-0 focus:ring-2 focus:ring-primary font-bold px-6 transition-all">
                                   <SelectValue placeholder="Select Gender" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="rounded-2xl border-slate-100 p-2">
+                              <SelectContent className="rounded-2xl border-slate-100 p-2 shadow-2xl">
                                 <SelectItem value="Male" className="rounded-xl font-bold p-3">Male</SelectItem>
                                 <SelectItem value="Female" className="rounded-xl font-bold p-3">Female</SelectItem>
                                 <SelectItem value="Other" className="rounded-xl font-bold p-3">Other</SelectItem>
@@ -210,12 +250,14 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                         name="dateOfBirth"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Date of Birth</FormLabel>
+                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                              <Calendar className="h-3 w-3" /> Date of Birth
+                            </FormLabel>
                             <FormControl>
-                              <Input type="date" className="h-14 rounded-2xl bg-slate-50 border-0 focus:ring-2 focus:ring-primary font-bold" {...field} value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''} onChange={e => field.onChange(new Date(e.target.value))} />
+                              <Input type="date" className="h-16 rounded-[1.5rem] bg-slate-50 border-0 focus:ring-2 focus:ring-primary font-bold px-6 transition-all" {...field} value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''} onChange={e => field.onChange(new Date(e.target.value))} />
                             </FormControl>
-                            <div className="mt-2 flex items-center gap-2">
-                              <Badge className="bg-primary/5 text-primary border-0 font-black text-[10px] uppercase">Detected: {passengerType}</Badge>
+                            <div className="mt-3 flex items-center gap-2 px-1">
+                              <Badge className="bg-primary text-white border-0 font-black text-[9px] uppercase px-3 py-1 rounded-full shadow-lg shadow-primary/20">Detected Type: {passengerType}</Badge>
                             </div>
                             <FormMessage />
                           </FormItem>
@@ -240,31 +282,31 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                                   className="grid grid-cols-1 md:grid-cols-2 gap-6"
                                 >
                                   <FormItem>
-                                    <FormLabel className="flex items-center justify-between p-8 rounded-3xl border-2 cursor-pointer transition-all hover:bg-slate-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/5">
-                                      <div className="flex items-center gap-4">
-                                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                                          <FileText className="h-5 w-5" />
+                                    <FormLabel className="flex items-center justify-between p-8 rounded-[2rem] border-2 border-slate-100 cursor-pointer transition-all hover:bg-slate-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/[0.03] data-[state=checked]:shadow-2xl data-[state=checked]:shadow-primary/10">
+                                      <div className="flex items-center gap-6">
+                                        <div className="h-14 w-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-primary group-data-[state=checked]:bg-primary group-data-[state=checked]:text-white transition-colors">
+                                          <FileText className="h-6 w-6" />
                                         </div>
                                         <div>
-                                          <p className="font-black text-slate-800 uppercase tracking-tight">Fayda ID</p>
-                                          <p className="text-[10px] font-bold text-slate-400">National ID System</p>
+                                          <p className="font-black text-slate-800 uppercase tracking-tight text-lg">Fayda ID</p>
+                                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">National Registry System</p>
                                         </div>
                                       </div>
                                       <RadioGroupItem value="Fayda ID" className="h-6 w-6 border-slate-300 text-primary" />
                                     </FormLabel>
                                   </FormItem>
                                   <FormItem>
-                                    <FormLabel className="flex items-center justify-between p-8 rounded-3xl border-2 cursor-pointer transition-all hover:bg-slate-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/5">
-                                      <div className="flex items-center gap-4">
-                                        <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
-                                          <Globe className="h-5 w-5" />
+                                    <FormLabel className="flex items-center justify-between p-8 rounded-[2rem] border-2 border-slate-100 cursor-pointer transition-all hover:bg-slate-50 data-[state=checked]:border-accent data-[state=checked]:bg-accent/[0.03] data-[state=checked]:shadow-2xl data-[state=checked]:shadow-accent/10">
+                                      <div className="flex items-center gap-6">
+                                        <div className="h-14 w-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-accent transition-colors">
+                                          <Globe className="h-6 w-6" />
                                         </div>
                                         <div>
-                                          <p className="font-black text-slate-800 uppercase tracking-tight">Passport</p>
-                                          <p className="text-[10px] font-bold text-slate-400">Standard Travel Doc</p>
+                                          <p className="font-black text-slate-800 uppercase tracking-tight text-lg">Passport</p>
+                                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">International Standard</p>
                                         </div>
                                       </div>
-                                      <RadioGroupItem value="Passport" className="h-6 w-6 border-slate-300 text-primary" />
+                                      <RadioGroupItem value="Passport" className="h-6 w-6 border-slate-300 text-accent" />
                                     </FormLabel>
                                   </FormItem>
                                 </RadioGroup>
@@ -362,9 +404,11 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                         name="phoneNumber"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Phone Number</FormLabel>
+                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                              <Phone className="h-3 w-3" /> Primary Phone
+                            </FormLabel>
                             <FormControl>
-                              <Input placeholder="+251 ..." className="h-14 rounded-2xl bg-slate-50 border-0 font-bold" {...field} />
+                              <Input placeholder="+251 ..." className="h-16 rounded-[1.5rem] bg-slate-50 border-0 font-bold px-6 transition-all" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -375,9 +419,11 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Email Address</FormLabel>
+                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                              <Mail className="h-3 w-3" /> Electronic Mail
+                            </FormLabel>
                             <FormControl>
-                              <Input placeholder="pax@example.com" className="h-14 rounded-2xl bg-slate-50 border-0 font-bold" {...field} />
+                              <Input placeholder="pax@example.com" className="h-16 rounded-[1.5rem] bg-slate-50 border-0 font-bold px-6 transition-all" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -388,9 +434,11 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                         name="emergencyContactName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Emergency Contact</FormLabel>
+                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                              <User className="h-3 w-3" /> Emergency Contact
+                            </FormLabel>
                             <FormControl>
-                              <Input placeholder="Full Name" className="h-14 rounded-2xl bg-slate-50 border-0 font-bold" {...field} />
+                              <Input placeholder="Full Name" className="h-16 rounded-[1.5rem] bg-slate-50 border-0 font-bold px-6 transition-all" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -401,9 +449,11 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                         name="emergencyContactPhone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Emergency Phone</FormLabel>
+                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                              <Phone className="h-3 w-3" /> Emergency Line
+                            </FormLabel>
                             <FormControl>
-                              <Input placeholder="+251 ..." className="h-14 rounded-2xl bg-slate-50 border-0 font-bold" {...field} />
+                              <Input placeholder="+251 ..." className="h-16 rounded-[1.5rem] bg-slate-50 border-0 font-bold px-6 transition-all" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
