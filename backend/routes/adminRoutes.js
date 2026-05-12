@@ -8,6 +8,9 @@ const {
   toggleUserStatus, 
   changeUserRole,
   createAdmin,
+  getAllAirports,
+  createAirport,
+  deleteAirport,
   getFleet,
   toggleAircraftStatus,
   getSeatMatrix,
@@ -43,6 +46,11 @@ router.get('/users', getAllUsers);
 router.patch('/users/:id/status', toggleUserStatus);
 router.post('/create', superAdminOnly, createAdmin);
 router.patch('/users/:id/role', superAdminOnly, changeUserRole);
+
+// Airport management
+router.get('/airports', getAllAirports);
+router.post('/airports', createAirport);
+router.delete('/airports/:id', deleteAirport);
 
 // Fleet
 router.get('/fleet', getFleet);

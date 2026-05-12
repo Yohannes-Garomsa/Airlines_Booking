@@ -23,6 +23,16 @@ dist/
 *.swp
 *.swo
 
-# OS files
-.DS_Store
-Thumbs.db
+# Temporary diagnostic scripts
+check_*.js
+migrate.js
+makeAdmin.js
+makeSuperAdmin.js
+run_migration_v4.js
+seed.js
+seedAirports.js
+
+# Database schemas and migrations
+schema_*.sql
+migration_v4.sql
+add_indexes.sql
