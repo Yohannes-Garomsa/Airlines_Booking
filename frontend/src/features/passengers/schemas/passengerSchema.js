@@ -12,8 +12,8 @@ export const passengerSchema = z.object({
   
   // Domestic Fields
   documentType: z.enum(["Fayda ID", "Passport"]).optional(),
-  fanNumber: z.string().regex(/^\d{16}$/, "FAN must be exactly 16 digits").optional(),
-  finNumber: z.string().regex(/^\d{12}$/, "FIN must be exactly 12 digits").optional(),
+  fanNumber: z.string().optional().refine(val => !val || /^\d{16}$/.test(val), "FAN must be exactly 16 digits"),
+  finNumber: z.string().optional().refine(val => !val || /^\d{12}$/.test(val), "FIN must be exactly 12 digits"),
   
   // International/Shared Passport Fields
   passportNumber: z.string().min(5, "Passport number is required").optional(),
@@ -40,7 +40,7 @@ export const passengerSchema = z.object({
 }).refine((data) => {
   if (data.flightType === "Domestic") {
     if (data.documentType === "Fayda ID") {
-      return !!data.fanNumber && !!data.finNumber;
+      return !!data.fanNumber || !!data.finNumber;
     }
     if (data.documentType === "Passport") {
       return !!data.passportNumber && !!data.passportExpiry;

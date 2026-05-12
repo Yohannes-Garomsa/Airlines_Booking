@@ -222,6 +222,26 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
     }
   });
 
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleFinalSubmit = async (data) => {
+    try {
+      await onSubmit(data);
+      setIsSuccess(true);
+      // Let the success state stay for a moment for the "WOW" effect
+      setTimeout(() => {
+        onCancel();
+      }, 2000);
+    } catch (error) {
+      console.error("Submission failed", error);
+      // The form will show general errors if we want, but usually it's field-level
+    }
+  };
+
+  const onInvalid = (errors) => {
+    console.error("Validation Errors:", errors);
+  };
+
   const { watch, setValue, trigger } = form;
   const watchedFlightType = watch("flightType");
   const watchedDob = watch("dateOfBirth");
@@ -486,7 +506,9 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                               name="fanNumber"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">FAN Number (16 Digits)</FormLabel>
+                                  <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                                    FAN Number (16 Digits) <span className="text-[8px] text-primary/40 font-black tracking-normal">OR FIN Required</span>
+                                  </FormLabel>
                                   <FormControl>
                                     <Input placeholder="0000 0000 0000 0000" className="h-14 rounded-2xl bg-slate-50 border-0 font-bold" {...field} />
                                   </FormControl>
@@ -499,7 +521,9 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                               name="finNumber"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">FIN Number (12 Digits)</FormLabel>
+                                  <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
+                                    FIN Number (12 Digits) <span className="text-[8px] text-primary/40 font-black tracking-normal">OR FAN Required</span>
+                                  </FormLabel>
                                   <FormControl>
                                     <Input placeholder="0000 0000 0000" className="h-14 rounded-2xl bg-slate-50 border-0 font-bold" {...field} />
                                   </FormControl>
@@ -660,65 +684,85 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                   )}
 
                   {currentStep === 3 && (
-                    <div className="flex flex-col items-center text-center py-10 space-y-8">
-                      <div className="h-24 w-24 rounded-full bg-green-50 flex items-center justify-center text-green-500 mb-4 animate-bounce">
-                        <ShieldCheck className="h-12 w-12" />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-black uppercase tracking-tight text-slate-800">Ready for Verification</h3>
-                        <p className="text-slate-400 font-medium mt-2 max-w-md mx-auto">Please review the passenger details. Once submitted, the record will enter the verification pipeline.</p>
-                      </div>
-                      
-                      <div className="w-full max-w-lg bg-slate-50 rounded-[2.5rem] p-8 text-left space-y-4 border border-slate-100">
-                        <div className="flex justify-between border-b border-slate-200 pb-4">
-                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Full Name</span>
-                          <span className="font-bold text-slate-800">{watch("firstName")} {watch("lastName")}</span>
+                    <AnimatePresence>
+                      {isSuccess ? (
+                        <motion.div 
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="flex flex-col items-center text-center py-20 space-y-6"
+                        >
+                          <div className="h-32 w-32 rounded-full bg-green-500 flex items-center justify-center text-white shadow-2xl shadow-green-200">
+                            <CheckCircle2 className="h-16 w-16" />
+                          </div>
+                          <div>
+                            <h3 className="text-3xl font-black uppercase tracking-tight text-slate-800">Registration Complete</h3>
+                            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-2">Manifest Updated Successfully</p>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <div className="flex flex-col items-center text-center py-10 space-y-8">
+                          <div className="h-24 w-24 rounded-full bg-green-50 flex items-center justify-center text-green-500 mb-4 animate-bounce">
+                            <ShieldCheck className="h-12 w-12" />
+                          </div>
+                          <div>
+                            <h3 className="text-2xl font-black uppercase tracking-tight text-slate-800">Ready for Verification</h3>
+                            <p className="text-slate-400 font-medium mt-2 max-w-md mx-auto">Please review the passenger details. Once submitted, the record will enter the verification pipeline.</p>
+                          </div>
+                          
+                          <div className="w-full max-w-lg bg-slate-50 rounded-[2.5rem] p-8 text-left space-y-4 border border-slate-100">
+                            <div className="flex justify-between border-b border-slate-200 pb-4">
+                              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Full Name</span>
+                              <span className="font-bold text-slate-800">{watch("firstName")} {watch("lastName")}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-200 pb-4">
+                              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Flight Type</span>
+                              <span className="font-bold text-primary uppercase text-[10px] tracking-widest">{watch("flightType")}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-200 pb-4">
+                              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Identity</span>
+                              <span className="font-bold text-slate-800">{watch("documentType") || "Passport"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Type</span>
+                              <span className="font-bold text-slate-800">{passengerType}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex justify-between border-b border-slate-200 pb-4">
-                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Flight Type</span>
-                          <span className="font-bold text-primary uppercase text-[10px] tracking-widest">{watch("flightType")}</span>
-                        </div>
-                        <div className="flex justify-between border-b border-slate-200 pb-4">
-                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Identity</span>
-                          <span className="font-bold text-slate-800">{watch("documentType") || "Passport"}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Type</span>
-                          <span className="font-bold text-slate-800">{passengerType}</span>
-                        </div>
-                      </div>
-                    </div>
+                      )}
+                    </AnimatePresence>
                   )}
                 </CardContent>
 
-                <div className="bg-slate-50 p-8 flex justify-between items-center px-12 border-t border-slate-100">
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    onClick={currentStep === 0 ? onCancel : () => setCurrentStep(p => p - 1)}
-                    className="rounded-2xl h-14 px-8 font-bold text-slate-500 hover:bg-white"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" /> {currentStep === 0 ? "Cancel" : "Back"}
-                  </Button>
-                  
-                  {currentStep < steps.length - 1 ? (
+                {!isSuccess && (
+                  <div className="bg-slate-50 p-8 flex justify-between items-center px-12 border-t border-slate-100">
                     <Button 
                       type="button" 
-                      onClick={nextStep}
-                      className="bg-primary hover:bg-blue-800 text-white rounded-2xl h-14 px-10 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-primary/20 transition-all hover:scale-105"
+                      variant="ghost" 
+                      onClick={currentStep === 0 ? onCancel : () => setCurrentStep(p => p - 1)}
+                      className="rounded-2xl h-14 px-8 font-bold text-slate-500 hover:bg-white"
                     >
-                      Continue <ArrowRight className="h-4 w-4 ml-2" />
+                      <ArrowLeft className="h-4 w-4 mr-2" /> {currentStep === 0 ? "Cancel" : "Back"}
                     </Button>
-                  ) : (
-                    <Button 
-                      type="submit"
-                      disabled={form.formState.isSubmitting}
-                      className="bg-green-600 hover:bg-green-700 text-white rounded-2xl h-14 px-10 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-green-200 transition-all hover:scale-105 disabled:opacity-50"
-                    >
-                      {form.formState.isSubmitting ? "Processing..." : "Complete Registration"} <CheckCircle2 className="h-4 w-4 ml-2" />
-                    </Button>
-                  )}
-                </div>
+                    
+                    {currentStep < steps.length - 1 ? (
+                      <Button 
+                        type="button" 
+                        onClick={nextStep}
+                        className="bg-primary hover:bg-blue-800 text-white rounded-2xl h-14 px-10 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-primary/20 transition-all hover:scale-105"
+                      >
+                        Continue <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    ) : (
+                      <Button 
+                        type="submit"
+                        disabled={form.formState.isSubmitting}
+                        className="bg-green-600 hover:bg-green-700 text-white rounded-2xl h-14 px-10 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-green-200 transition-all hover:scale-105 disabled:opacity-50"
+                      >
+                        {form.formState.isSubmitting ? "Processing..." : "Complete Registration"} <CheckCircle2 className="h-4 w-4 ml-2" />
+                      </Button>
+                    )}
+                  </div>
+                )}
               </Card>
             </motion.div>
           </AnimatePresence>
