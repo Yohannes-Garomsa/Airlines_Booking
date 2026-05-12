@@ -8,6 +8,8 @@ const {
   toggleUserStatus, 
   changeUserRole,
   createAdmin,
+  deleteUser,
+  createPassenger,
   getAllAirports,
   createAirport,
   deleteAirport,
@@ -45,7 +47,9 @@ router.get('/bookings/:id', getBookingDetails);
 router.get('/users', getAllUsers);
 router.patch('/users/:id/status', toggleUserStatus);
 router.post('/create', superAdminOnly, createAdmin);
+router.post('/users', createPassenger);
 router.patch('/users/:id/role', superAdminOnly, changeUserRole);
+router.delete('/users/:id', superAdminOnly, deleteUser);
 
 // Airport management
 router.get('/airports', getAllAirports);

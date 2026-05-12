@@ -44,6 +44,8 @@ const AdminDashboard = () => {
   const [airportFormData, setAirportFormData] = useState({
     name: '', city: '', country: '', iata_code: '', icao_code: ''
   });
+  const [isPassengerModalOpen, setIsPassengerModalOpen] = useState(false);
+  const [passengerForm, setPassengerForm] = useState({ name: '', email: '', password: '' });
   const [currentFlight, setCurrentFlight] = useState(null);
   const [allAirports, setAllAirports] = useState([]);
 
@@ -199,18 +201,45 @@ const AdminDashboard = () => {
     }
   };
 
-  const updateUserRole = async (id, role) => {
+  const deleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this passenger?')) return;
     const token = localStorage.getItem('token');
     try {
-      await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/users/${id}/role`, {
-        method: 'PATCH',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ role })
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-      fetchData();
+      if (res.ok) {
+        fetchData();
+      } else {
+        const error = await res.json();
+        alert(error.message || 'Failed to delete user');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handlePassengerSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(passengerForm)
+      });
+      if (res.ok) {
+        setIsPassengerModalOpen(false);
+        setPassengerForm({ name: '', email: '', password: '' });
+        fetchData();
+      } else {
+        const error = await res.json();
+        alert(error.message || 'Failed to create passenger');
+      }
     } catch (err) {
       console.error(err);
     }
@@ -429,6 +458,14 @@ const AdminDashboard = () => {
                   <Plus className="h-5 w-5" /> Add Admin
                 </button>
               )}
+              {activeTab === 'users' && (
+                <button
+                  onClick={() => setIsPassengerModalOpen(true)}
+                  className="bg-primary hover:bg-blue-800 text-white font-black px-8 py-4 rounded-2xl shadow-xl flex items-center gap-2 transition-all transform hover:-translate-y-1"
+                >
+                  <Plus className="h-5 w-5" /> Add Passenger
+                </button>
+              )}
             </div>
           </header>
 
@@ -534,13 +571,11 @@ const AdminDashboard = () => {
 
                             {currentUser?.role === 'superadmin' && u.role !== 'superadmin' && (
                               <button
-                                onClick={() => updateUserRole(u.id, u.role === 'admin' ? 'user' : 'admin')}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-sm ${u.role === 'admin'
-                                    ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                                    : 'bg-primary text-white hover:bg-blue-800'
-                                  }`}
+                                onClick={() => deleteUser(u.id)}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors shadow-sm border border-red-100"
+                                title="Delete Passenger"
                               >
-                                {u.role === 'admin' ? 'Demote' : 'Promote'}
+                                <Trash2 className="h-4 w-4" />
                               </button>
                             )}
                           </div>
@@ -795,6 +830,57 @@ const AdminDashboard = () => {
                 <div className="col-span-2 pt-6">
                   <button type="submit" className="w-full py-5 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
                     {selectedItem ? 'Update Flight' : 'Add Flight'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        {/* Passenger Modal */}
+        {isPassengerModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+              <div className="bg-primary p-8 flex justify-between items-center text-white">
+                <h3 className="text-2xl font-black uppercase tracking-tight">Add New Passenger</h3>
+                <button onClick={() => setIsPassengerModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="h-6 w-6" /></button>
+              </div>
+              <form onSubmit={handlePassengerSubmit} className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                  <input
+                    required
+                    type="text" 
+                    value={passengerForm.name} 
+                    onChange={e => setPassengerForm({ ...passengerForm, name: e.target.value })}
+                    placeholder="e.g. John Doe"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                  <input
+                    required
+                    type="email" 
+                    value={passengerForm.email} 
+                    onChange={e => setPassengerForm({ ...passengerForm, email: e.target.value })}
+                    placeholder="e.g. john@example.com"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Security Password</label>
+                  <input
+                    required
+                    type="password" 
+                    value={passengerForm.password} 
+                    onChange={e => setPassengerForm({ ...passengerForm, password: e.target.value })}
+                    placeholder="••••••••"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
+                  />
+                </div>
+                <div className="pt-4">
+                  <button type="submit" className="w-full py-5 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                    Register Passenger
                   </button>
                 </div>
               </form>

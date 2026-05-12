@@ -38,6 +38,10 @@ const User = {
     const query = `UPDATE users SET ${fields.join(', ')} WHERE id = $${i} RETURNING id, name, email, role, is_blocked`;
     const result = await db.query(query, values);
     return result.rows[0];
+  },
+
+  delete: async (id) => {
+    await db.query('DELETE FROM users WHERE id = $1', [id]);
   }
 };
 

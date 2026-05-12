@@ -209,6 +209,36 @@ const createAdmin = asyncHandler(async (req, res) => {
   });
 });
 
+const deleteUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const user = await User.getById(id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+  if (user.role === 'superadmin') {
+    res.status(403);
+    throw new Error('Superadmin accounts cannot be deleted for security reasons.');
+  }
+  await User.delete(id);
+  res.status(200).json({ message: 'User deleted successfully' });
+});
+
+const createPassenger = asyncHandler(async (req, res) => {
+  const { name, email, password } = req.body;
+
+  const userExists = await User.findByEmail(email);
+  if (userExists) {
+    res.status(400);
+    throw new Error('User already exists with this email');
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const newUser = await User.create(name, email, hashedPassword, 'user');
+
+  res.status(201).json(newUser);
+});
+
 // --- Airport Management ---
 
 const getAllAirports = asyncHandler(async (req, res) => {
@@ -239,6 +269,8 @@ module.exports = {
   toggleUserStatus,
   changeUserRole,
   createAdmin,
+  deleteUser,
+  createPassenger,
   getAllAirports,
   createAirport,
   deleteAirport,
