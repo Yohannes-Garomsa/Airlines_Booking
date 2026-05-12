@@ -8,6 +8,7 @@ import {
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import AdminOverview from '../components/admin/AdminOverview';
+import PassengerManagement from '../features/passengers/index';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -471,16 +472,18 @@ const AdminDashboard = () => {
             </h2>
 
             <div className="flex gap-4">
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
-                <input
-                  type="text"
-                  placeholder={`Query ${activeTab}...`}
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-12 pr-6 py-4 w-80 bg-white border border-slate-200 rounded-2xl shadow-sm outline-none font-bold text-sm focus:border-primary transition-all"
-                />
-              </div>
+              {activeTab !== 'users' && (
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                  <input
+                    type="text"
+                    placeholder={`Query ${activeTab}...`}
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className="pl-12 pr-6 py-4 w-80 bg-white border border-slate-200 rounded-2xl shadow-sm outline-none font-bold text-sm focus:border-primary transition-all"
+                  />
+                </div>
+              )}
               {activeTab === 'flights' && (
                 <button
                   onClick={() => openModal()}
@@ -495,14 +498,6 @@ const AdminDashboard = () => {
                   className="bg-accent hover:bg-yellow-500 text-primary font-black px-8 py-4 rounded-2xl shadow-xl flex items-center gap-2 transition-all transform hover:-translate-y-1"
                 >
                   <Plus className="h-5 w-5" /> Add Admin
-                </button>
-              )}
-              {activeTab === 'users' && (
-                <button
-                  onClick={() => setIsPassengerModalOpen(true)}
-                  className="bg-primary hover:bg-blue-800 text-white font-black px-8 py-4 rounded-2xl shadow-xl flex items-center gap-2 transition-all transform hover:-translate-y-1"
-                >
-                  <Plus className="h-5 w-5" /> Add Passenger
                 </button>
               )}
             </div>
@@ -570,8 +565,11 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden">
-                {activeTab === 'bookings' && (
+              {activeTab === 'users' && <PassengerManagement />}
+
+              {activeTab !== 'users' && (
+                <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden">
+                  {activeTab === 'bookings' && (
                   <div className="flex flex-wrap gap-3 p-8 border-b border-slate-100 bg-slate-50/30">
                     {['all', 'pending', 'confirmed', 'cancelled'].map(status => (
                       <button
@@ -592,14 +590,13 @@ const AdminDashboard = () => {
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-100 font-black text-[10px] uppercase text-slate-400">
                       {activeTab === 'flights' && ['Airline', 'Route', 'Economy', 'Business', 'Seats', 'Actions'].map(h => <th key={h} className="p-6">{h}</th>)}
-                      {activeTab === 'bookings' && ['ID / PNR', 'Passenger', 'Flight Info', 'Class', 'Total', 'Status', 'Actions'].map(h => <th key={h} className="p-6">{h}</th>)}
-                      {activeTab === 'tickets' && ['Ticket No.', 'Passenger', 'PNR', 'Departure', 'Actions'].map(h => <th key={h} className="p-6">{h}</th>)}
-                      {activeTab === 'users' && ['Passenger Details', 'Role', 'Status', 'Joined', 'Management'].map(h => <th key={h} className="p-6">{h}</th>)}
-                      {activeTab === 'staff' && ['Staff Details', 'Role', 'Status', 'Joined', 'Management'].map(h => <th key={h} className="p-6">{h}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                     {(activeTab === 'users' || activeTab === 'staff') ? filteredData.map(u => (
+                        {activeTab === 'bookings' && ['ID / PNR', 'Passenger', 'Flight Info', 'Class', 'Total', 'Status', 'Actions'].map(h => <th key={h} className="p-6">{h}</th>)}
+                        {activeTab === 'tickets' && ['Ticket No.', 'Passenger', 'PNR', 'Departure', 'Actions'].map(h => <th key={h} className="p-6">{h}</th>)}
+                        {activeTab === 'staff' && ['Staff Details', 'Role', 'Status', 'Joined', 'Management'].map(h => <th key={h} className="p-6">{h}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                       {activeTab === 'staff' ? filteredData.map(u => (
                       <tr key={u.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                         <td className="p-6">
                           <p className="font-bold text-slate-700">{u.name}</p>
@@ -737,6 +734,7 @@ const AdminDashboard = () => {
                   </div>
                 )}
               </div>
+              )}
             </div>
           )}
         </main>
