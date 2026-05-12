@@ -55,12 +55,78 @@ const steps = [
   { id: 'review', title: 'Verify', icon: ShieldCheck },
 ];
 
+function PhoneInput({ value, onChange, label, countries, selectedCountryName }) {
+  // Find the country object by name
+  const selectedCountry = countries.find(c => c.name === selectedCountryName) || countries.find(c => c.name === "Ethiopia");
+  
+  // Local state for the prefix and the rest of the number
+  const [prefix, setPrefix] = useState(`+${selectedCountry.phone}`);
+  
+  useEffect(() => {
+    if (selectedCountry) {
+      const newPrefix = `+${selectedCountry.phone}`;
+      setPrefix(newPrefix);
+      
+      // If there's an existing value, we might want to update its prefix
+      // but usually we just want to set the default for new entries
+    }
+  }, [selectedCountryName]);
+
+  const handleNumberChange = (e) => {
+    const val = e.target.value.replace(/\D/g, ""); // Only digits
+    onChange(`${prefix}${val}`);
+  };
+
+  const currentNumber = value ? value.replace(prefix, "") : "";
+
+  return (
+    <div className="flex gap-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="h-16 rounded-[1.5rem] bg-slate-50 border-0 font-bold px-4 min-w-[100px] flex gap-2">
+            <span className="text-lg">{selectedCountry.code}</span>
+            <span className="text-slate-400 text-xs">{prefix}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[300px] p-0 rounded-3xl overflow-hidden shadow-2xl border-0">
+          <ScrollArea className="h-80">
+            <div className="p-2 space-y-1">
+              {countries.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => setPrefix(`+${c.phone}`)}
+                  className="w-full text-left p-4 rounded-xl hover:bg-slate-50 flex items-center justify-between group transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{c.code}</span>
+                    <div>
+                      <p className="font-bold text-slate-800 text-sm">{c.name}</p>
+                      <p className="text-[10px] font-black text-slate-400">+{c.phone}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
+        </PopoverContent>
+      </Popover>
+      <Input 
+        placeholder="Number" 
+        className="h-16 rounded-[1.5rem] bg-slate-50 border-0 font-bold px-6 flex-1 focus:ring-2 focus:ring-primary" 
+        value={currentNumber}
+        onChange={handleNumberChange}
+      />
+    </div>
+  );
+}
+
 function CountrySelector({ value, onChange, placeholder, icon: Icon = Globe }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   const filteredCountries = countries.filter(c => 
-    c.toLowerCase().includes(search.toLowerCase())
+    c.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -101,18 +167,18 @@ function CountrySelector({ value, onChange, placeholder, icon: Icon = Globe }) {
             )}
             {filteredCountries.map((country) => (
               <button
-                key={country}
+                key={country.code}
                 onClick={() => {
-                  onChange(country);
+                  onChange(country.name);
                   setOpen(false);
                   setSearch("");
                 }}
                 className={`w-full text-left p-4 rounded-xl font-bold flex items-center justify-between group hover:bg-primary hover:text-white transition-all ${
-                  value === country ? 'bg-primary/5 text-primary' : 'text-slate-600'
+                  value === country.name ? 'bg-primary/5 text-primary' : 'text-slate-600'
                 }`}
               >
-                {country}
-                {value === country && <CheckCircle2 className="h-4 w-4" />}
+                {country.name}
+                {value === country.name && <CheckCircle2 className="h-4 w-4" />}
               </button>
             ))}
           </div>
@@ -528,10 +594,15 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
-                              <Phone className="h-3 w-3" /> Primary Phone
+                              <Phone className="h-3 w-3" /> Primary Phone (Linked to {watch("nationality")})
                             </FormLabel>
                             <FormControl>
-                              <Input placeholder="+251 ..." className="h-16 rounded-[1.5rem] bg-slate-50 border-0 font-bold px-6 transition-all" {...field} />
+                              <PhoneInput 
+                                value={field.value} 
+                                onChange={field.onChange} 
+                                countries={countries}
+                                selectedCountryName={watch("nationality")}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -573,10 +644,15 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1 flex items-center gap-2">
-                              <Phone className="h-3 w-3" /> Emergency Line
+                              <Phone className="h-3 w-3" /> Emergency Line (Linked to {watch("nationality")})
                             </FormLabel>
                             <FormControl>
-                              <Input placeholder="+251 ..." className="h-16 rounded-[1.5rem] bg-slate-50 border-0 font-bold px-6 transition-all" {...field} />
+                              <PhoneInput 
+                                value={field.value} 
+                                onChange={field.onChange} 
+                                countries={countries}
+                                selectedCountryName={watch("nationality")}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
