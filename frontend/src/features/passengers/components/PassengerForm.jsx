@@ -430,54 +430,52 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
 
                   {currentStep === 1 && (
                     <div className="space-y-10">
-                      {flightType === "Domestic" && (
-                        <FormField
-                          control={form.control}
-                          name="documentType"
-                          render={({ field }) => (
-                            <FormItem className="space-y-6">
-                              <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest text-center block">Identity Document Type</FormLabel>
-                              <FormControl>
-                                <RadioGroup
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                                >
-                                  <FormItem>
-                                    <FormLabel className="flex items-center justify-between p-8 rounded-[2rem] border-2 border-slate-100 cursor-pointer transition-all hover:bg-slate-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/[0.03] data-[state=checked]:shadow-2xl data-[state=checked]:shadow-primary/10">
-                                      <div className="flex items-center gap-6">
-                                        <div className="h-14 w-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-primary group-data-[state=checked]:bg-primary group-data-[state=checked]:text-white transition-colors">
-                                          <FileText className="h-6 w-6" />
-                                        </div>
-                                        <div>
-                                          <p className="font-black text-slate-800 uppercase tracking-tight text-lg">Fayda ID</p>
-                                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">National Registry System</p>
-                                        </div>
+                      <FormField
+                        control={form.control}
+                        name="documentType"
+                        render={({ field }) => (
+                          <FormItem className="space-y-6">
+                            <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest text-center block">Identity Document Type</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                              >
+                                <FormItem>
+                                  <FormLabel className={`flex items-center justify-between p-8 rounded-[2rem] border-2 border-slate-100 cursor-pointer transition-all hover:bg-slate-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary/[0.03] data-[state=checked]:shadow-2xl data-[state=checked]:shadow-primary/10 ${flightType === "International" ? "opacity-40 cursor-not-allowed grayscale" : ""}`}>
+                                    <div className="flex items-center gap-6">
+                                      <div className="h-14 w-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-primary group-data-[state=checked]:bg-primary group-data-[state=checked]:text-white transition-colors">
+                                        <FileText className="h-6 w-6" />
                                       </div>
-                                      <RadioGroupItem value="Fayda ID" className="h-6 w-6 border-slate-300 text-primary" />
-                                    </FormLabel>
-                                  </FormItem>
-                                  <FormItem>
-                                    <FormLabel className="flex items-center justify-between p-8 rounded-[2rem] border-2 border-slate-100 cursor-pointer transition-all hover:bg-slate-50 data-[state=checked]:border-accent data-[state=checked]:bg-accent/[0.03] data-[state=checked]:shadow-2xl data-[state=checked]:shadow-accent/10">
-                                      <div className="flex items-center gap-6">
-                                        <div className="h-14 w-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-accent transition-colors">
-                                          <Globe className="h-6 w-6" />
-                                        </div>
-                                        <div>
-                                          <p className="font-black text-slate-800 uppercase tracking-tight text-lg">Passport</p>
-                                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">International Standard</p>
-                                        </div>
+                                      <div>
+                                        <p className="font-black text-slate-800 uppercase tracking-tight text-lg">Fayda ID</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">National Registry System</p>
                                       </div>
-                                      <RadioGroupItem value="Passport" className="h-6 w-6 border-slate-300 text-accent" />
-                                    </FormLabel>
-                                  </FormItem>
-                                </RadioGroup>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
+                                    </div>
+                                    <RadioGroupItem value="Fayda ID" disabled={flightType === "International"} className="h-6 w-6 border-slate-300 text-primary" />
+                                  </FormLabel>
+                                </FormItem>
+                                <FormItem>
+                                  <FormLabel className="flex items-center justify-between p-8 rounded-[2rem] border-2 border-slate-100 cursor-pointer transition-all hover:bg-slate-50 data-[state=checked]:border-accent data-[state=checked]:bg-accent/[0.03] data-[state=checked]:shadow-2xl data-[state=checked]:shadow-accent/10">
+                                    <div className="flex items-center gap-6">
+                                      <div className="h-14 w-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-accent transition-colors">
+                                        <Globe className="h-6 w-6" />
+                                      </div>
+                                      <div>
+                                        <p className="font-black text-slate-800 uppercase tracking-tight text-lg">Passport</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">International Standard</p>
+                                      </div>
+                                    </div>
+                                    <RadioGroupItem value="Passport" className="h-6 w-6 border-slate-300 text-accent" />
+                                  </FormLabel>
+                                </FormItem>
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
                       {/* Dynamic Identity Fields */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -540,7 +538,7 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                             />
                           </>
                         )}
-                        {flightType === "International" && (
+                        {(watch("documentType") === "Passport" || flightType === "International") && (
                           <FormField
                             control={form.control}
                             name="nationality"
@@ -561,7 +559,7 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                             )}
                           />
                         )}
-                        {flightType === "International" && (
+                        {(watch("documentType") === "Passport" || flightType === "International") && (
                           <FormField
                             control={form.control}
                             name="passportCountry"
