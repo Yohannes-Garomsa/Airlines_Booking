@@ -34,6 +34,7 @@ app.use('/api/tickets', require('./routes/ticketRoutes'));
 app.use('/api/seats', require('./routes/seatRoutes'));
 app.use('/api/airports', require('./routes/airportRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/passengers', require('./routes/passengerRoutes'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Airline Booking API is running' });

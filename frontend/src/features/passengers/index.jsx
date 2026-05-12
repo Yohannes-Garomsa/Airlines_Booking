@@ -18,38 +18,57 @@ export default function PassengerManagement() {
     loadPassengers();
   }, []);
 
-  const loadPassengers = () => {
+  const loadPassengers = async () => {
     setLoading(true);
-    // Simulate API delay
-    setTimeout(() => {
-      setPassengers(passengerService.getAll());
+    try {
+      const data = await passengerService.getAll();
+      setPassengers(data);
+    } catch (error) {
+      console.error("Failed to load passengers", error);
+    } finally {
       setLoading(false);
-    }, 800);
-  };
-
-  const handleCreate = (data) => {
-    passengerService.create(data);
-    setIsFormOpen(false);
-    loadPassengers();
-  };
-
-  const handleUpdate = (data) => {
-    passengerService.update(editingPassenger.id, data);
-    setEditingPassenger(null);
-    setIsFormOpen(false);
-    loadPassengers();
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm("Delete this passenger record?")) {
-      passengerService.delete(id);
-      loadPassengers();
     }
   };
 
-  const handleVerify = (passenger) => {
-    passengerService.update(passenger.id, { status: 'Verified' });
-    loadPassengers();
+  const handleCreate = async (data) => {
+    try {
+      await passengerService.create(data);
+      setIsFormOpen(false);
+      await loadPassengers();
+    } catch (error) {
+      console.error("Failed to create passenger", error);
+    }
+  };
+
+  const handleUpdate = async (data) => {
+    try {
+      await passengerService.update(editingPassenger.id, data);
+      setEditingPassenger(null);
+      setIsFormOpen(false);
+      await loadPassengers();
+    } catch (error) {
+      console.error("Failed to update passenger", error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Delete this passenger record?")) {
+      try {
+        await passengerService.delete(id);
+        await loadPassengers();
+      } catch (error) {
+        console.error("Failed to delete passenger", error);
+      }
+    }
+  };
+
+  const handleVerify = async (passenger) => {
+    try {
+      await passengerService.verify(passenger.id, 'Verified', 'Verified via Admin Dashboard');
+      await loadPassengers();
+    } catch (error) {
+      console.error("Failed to verify passenger", error);
+    }
   };
 
   return (
