@@ -5,25 +5,30 @@ const asyncHandler = require('../utils/asyncHandler');
 
 // --- Dashboard Stats ---
 
-const getDashboardStats = asyncHandler(async (req, res) => {
-  const result = await db.query(`
-    SELECT 
-      (SELECT COUNT(*) FROM flights) as total_flights,
-      (SELECT COUNT(*) FROM flights WHERE status = 'Delayed') as delayed_flights,
-      (SELECT COUNT(*) FROM flights WHERE status = 'Cancelled') as cancelled_flights,
-      (SELECT COUNT(*) FROM bookings) as total_bookings,
-      (SELECT COUNT(*) FROM users WHERE role = 'user') as total_users,
-      (SELECT COALESCE(SUM(total_price), 0) FROM bookings WHERE status IN ('confirmed', 'completed')) as total_revenue,
-      (SELECT COALESCE(AVG(occupancy), 0) FROM (
-        SELECT (COUNT(p.id)::float / NULLIF(f.economy_seats + f.business_seats, 0)::float) * 100 as occupancy
-        FROM flights f
-        LEFT JOIN bookings b ON f.id = b.flight_id AND b.status IN ('confirmed', 'completed')
-        LEFT JOIN passengers p ON b.id = p.booking_id
-        GROUP BY f.id, f.economy_seats, f.business_seats
-      ) as sub) as avg_occupancy
-  `);
-  res.status(200).json(result.rows[0]);
-});
+const getDashboardStats = async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT 
+        (SELECT COUNT(*) FROM flights) as total_flights,
+        (SELECT COUNT(*) FROM flights WHERE status = 'Delayed') as delayed_flights,
+        (SELECT COUNT(*) FROM flights WHERE status = 'Cancelled') as cancelled_flights,
+        (SELECT COUNT(*) FROM bookings) as total_bookings,
+        (SELECT COUNT(*) FROM users WHERE role = 'user') as total_users,
+        (SELECT COALESCE(SUM(total_price), 0) FROM bookings WHERE status IN ('confirmed', 'completed')) as total_revenue,
+        (SELECT COALESCE(AVG(occupancy), 0) FROM (
+          SELECT (COUNT(p.id)::float / NULLIF(f.economy_seats + f.business_seats, 0)::float) * 100 as occupancy
+          FROM flights f
+          LEFT JOIN bookings b ON f.id = b.flight_id AND b.status IN ('confirmed', 'completed')
+          LEFT JOIN passengers p ON b.id = p.booking_id
+          GROUP BY f.id, f.economy_seats, f.business_seats
+        ) as sub) as avg_occupancy
+    `);
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('DASHBOARD STATS ERROR:', err);
+    res.status(500).json({ message: err.message, stack: err.stack });
+  }
+};
 
 // --- Booking Management ---
 
@@ -177,7 +182,7 @@ const createAdmin = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
   // 1. Check if email already exists
-  const userExists = await User.getByEmail(email);
+  const userExists = await User.findByEmail(email);
   if (userExists) {
     res.status(400);
     throw new Error('User already exists with this email');
@@ -194,12 +199,7 @@ const createAdmin = asyncHandler(async (req, res) => {
 
   // 3. Create the Admin
   const hashedPassword = await bcrypt.hash(password, 10);
-  const newAdmin = await User.create({
-    name,
-    email,
-    password: hashedPassword,
-    role: 'admin'
-  });
+  const newAdmin = await User.create(name, email, hashedPassword, 'admin');
 
   res.status(201).json({
     id: newAdmin.id,
