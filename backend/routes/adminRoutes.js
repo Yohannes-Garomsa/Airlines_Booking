@@ -7,7 +7,10 @@ const {
   getAllUsers, 
   toggleUserStatus, 
   changeUserRole,
-  createAdmin
+  createAdmin,
+  getAllAirports,
+  createAirport,
+  deleteAirport
 } = require('../controllers/adminController');
 const { 
   createFlight, 
@@ -37,5 +40,10 @@ router.get('/users', getAllUsers);
 router.patch('/users/:id/status', toggleUserStatus);
 router.post('/create', superAdminOnly, createAdmin);
 router.patch('/users/:id/role', superAdminOnly, changeUserRole);
+
+// Airport management
+router.get('/airports', getAllAirports);
+router.post('/airports', createAirport);
+router.delete('/airports/:id', deleteAirport);
 
 module.exports = router;

@@ -116,6 +116,28 @@ const createAdmin = asyncHandler(async (req, res) => {
   });
 });
 
+// --- Airport Management ---
+
+const getAllAirports = asyncHandler(async (req, res) => {
+  const result = await db.query("SELECT * FROM airports ORDER BY city ASC");
+  res.status(200).json(result.rows);
+});
+
+const createAirport = asyncHandler(async (req, res) => {
+  const { name, city, country, iata_code, icao_code } = req.body;
+  const result = await db.query(
+    "INSERT INTO airports (name, city, country, iata_code, icao_code) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+    [name, city, country, iata_code, icao_code]
+  );
+  res.status(201).json(result.rows[0]);
+});
+
+const deleteAirport = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  await db.query("DELETE FROM airports WHERE id = $1", [id]);
+  res.status(200).json({ message: 'Airport deleted' });
+});
+
 module.exports = {
   getDashboardStats,
   getAllBookings,
@@ -123,5 +145,8 @@ module.exports = {
   getAllUsers,
   toggleUserStatus,
   changeUserRole,
-  createAdmin
+  createAdmin,
+  getAllAirports,
+  createAirport,
+  deleteAirport
 };

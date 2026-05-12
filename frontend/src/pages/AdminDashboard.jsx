@@ -19,6 +19,9 @@ const AdminDashboard = () => {
     departure_time: '', arrival_time: '', economy_price: '', 
     economy_seats: '', business_seats: ''
   });
+  const [isAirportModalOpen, setIsAirportModalOpen] = useState(false);
+  const [airportFormData, setAirportFormData] = useState({ name: '', city: '', country: '', iata_code: '', icao_code: '' });
+  const [allAirports, setAllAirports] = useState([]);
 
   const fetchStats = async () => {
     const token = localStorage.getItem('token');
@@ -43,7 +46,8 @@ const AdminDashboard = () => {
         flights: '/flights',
         bookings: '/admin/bookings',
         users: '/admin/users',
-        tickets: '/tickets'
+        tickets: '/tickets',
+        airports: '/admin/airports'
       };
       
       const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}${endpoints[activeTab]}`, {
@@ -149,13 +153,65 @@ const AdminDashboard = () => {
     }
   };
 
+  const deleteAirport = async (id) => {
+    if (!window.confirm('Delete this airport? This might affect existing flights.')) return;
+    const token = localStorage.getItem('token');
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/airports/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAirportSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/airports`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(airportFormData)
+      });
+      if (res.ok) {
+        setIsAirportModalOpen(false);
+        setAirportFormData({ name: '', city: '', country: '', iata_code: '', icao_code: '' });
+        fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchAllAirports = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/airports`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setAllAirports(result);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const openModal = (flight = null) => {
+    fetchAllAirports();
     if (flight) {
       setCurrentFlight(flight);
       setFormData({
         airline: flight.airline,
-        departure_city: flight.departure_city,
-        arrival_city: flight.arrival_city,
+        departure_airport_id: flight.departure_airport_id,
+        arrival_airport_id: flight.arrival_airport_id,
         departure_time: flight.departure_time.slice(0, 16),
         arrival_time: flight.arrival_time.slice(0, 16),
         economy_price: flight.economy_price,
@@ -165,7 +221,7 @@ const AdminDashboard = () => {
     } else {
       setCurrentFlight(null);
       setFormData({
-        airline: '', departure_city: '', arrival_city: '', 
+        airline: '', departure_airport_id: '', arrival_airport_id: '', 
         departure_time: '', arrival_time: '', economy_price: '', 
         economy_seats: '', business_seats: ''
       });
@@ -208,6 +264,7 @@ const AdminDashboard = () => {
     if (activeTab === 'bookings') return item.user_name?.toLowerCase().includes(searchLower) || item.pnr?.toLowerCase().includes(searchLower);
     if (activeTab === 'users') return item.name?.toLowerCase().includes(searchLower) || item.email?.toLowerCase().includes(searchLower);
     if (activeTab === 'tickets') return item.passenger_name?.toLowerCase().includes(searchLower) || item.ticket_number?.includes(searchTerm);
+    if (activeTab === 'airports') return item.name?.toLowerCase().includes(searchLower) || item.iata_code?.toLowerCase().includes(searchLower) || item.city?.toLowerCase().includes(searchLower);
     return true;
   });
 
@@ -230,6 +287,7 @@ const AdminDashboard = () => {
             { id: 'flights', label: 'Fleet & Flights', icon: Plane },
             { id: 'bookings', label: 'Reservations', icon: ShoppingBag },
             { id: 'tickets', label: 'E-Tickets', icon: Ticket },
+            { id: 'airports', label: 'Airport Hubs', icon: ExternalLink },
             { id: 'users', label: currentUser?.role === 'superadmin' ? 'Team & Passengers' : 'Passengers', icon: Users },
           ].map(tab => (
             <button
@@ -281,6 +339,14 @@ const AdminDashboard = () => {
                 className="bg-primary hover:bg-blue-800 text-white font-black px-8 py-4 rounded-2xl shadow-xl flex items-center gap-2 transition-all transform hover:-translate-y-1"
               >
                 <Plus className="h-5 w-5" /> Add Flight
+              </button>
+            )}
+            {activeTab === 'airports' && (
+              <button 
+                onClick={() => setIsAirportModalOpen(true)}
+                className="bg-primary hover:bg-blue-800 text-white font-black px-8 py-4 rounded-2xl shadow-xl flex items-center gap-2 transition-all transform hover:-translate-y-1"
+              >
+                <Plus className="h-5 w-5" /> Add Airport
               </button>
             )}
             {activeTab === 'users' && currentUser?.role === 'superadmin' && (
@@ -342,6 +408,7 @@ const AdminDashboard = () => {
                     {activeTab === 'flights' && ['Airline', 'Route', 'Economy', 'Business', 'Seats', 'Actions'].map(h => <th key={h} className="p-6">{h}</th>)}
                     {activeTab === 'bookings' && ['ID / PNR', 'Passenger', 'Flight Info', 'Class', 'Total', 'Status', 'Actions'].map(h => <th key={h} className="p-6">{h}</th>)}
                     {activeTab === 'tickets' && ['Ticket No.', 'Passenger', 'PNR', 'Departure', 'Actions'].map(h => <th key={h} className="p-6">{h}</th>)}
+                    {activeTab === 'airports' && ['Name', 'City', 'Code (IATA/ICAO)', 'Country', 'Actions'].map(h => <th key={h} className="p-6">{h}</th>)}
                     {activeTab === 'users' && ['Passenger Details', 'Role', 'Status', 'Joined', 'Management'].map(h => <th key={h} className="p-6">{h}</th>)}
                   </tr>
                 </thead>
@@ -478,6 +545,29 @@ const AdminDashboard = () => {
                           </td>
                         </>
                       )}
+                      {activeTab === 'airports' && (
+                        <>
+                          <td className="p-6">
+                             <div className="font-bold text-slate-700">{item.name}</div>
+                          </td>
+                          <td className="p-6">
+                             <div className="font-bold text-slate-700">{item.city}</div>
+                          </td>
+                          <td className="p-6">
+                             <span className="font-black text-primary mr-2">{item.iata_code}</span>
+                             <span className="text-xs text-slate-400">/ {item.icao_code}</span>
+                          </td>
+                          <td className="p-6 text-slate-500 font-medium">{item.country}</td>
+                          <td className="p-6">
+                            <button 
+                              onClick={() => deleteAirport(item.id)}
+                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -511,21 +601,33 @@ const AdminDashboard = () => {
                  />
                </div>
                <div>
-                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Departure City</label>
-                 <input 
-                   required
-                   type="text" value={formData.departure_city} onChange={e => setFormData({...formData, departure_city: e.target.value})}
-                   className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
-                 />
-               </div>
-               <div>
-                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Arrival City</label>
-                 <input 
-                   required
-                   type="text" value={formData.arrival_city} onChange={e => setFormData({...formData, arrival_city: e.target.value})}
-                   className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
-                 />
-               </div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Departure Airport</label>
+                  <select 
+                    required
+                    value={formData.departure_airport_id} 
+                    onChange={e => setFormData({...formData, departure_airport_id: e.target.value})}
+                    className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
+                  >
+                    <option value="">Select Airport</option>
+                    {allAirports.map(a => (
+                      <option key={a.id} value={a.id}>{a.city} ({a.iata_code}) - {a.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Arrival Airport</label>
+                  <select 
+                    required
+                    value={formData.arrival_airport_id} 
+                    onChange={e => setFormData({...formData, arrival_airport_id: e.target.value})}
+                    className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
+                  >
+                    <option value="">Select Airport</option>
+                    {allAirports.map(a => (
+                      <option key={a.id} value={a.id}>{a.city} ({a.iata_code}) - {a.name}</option>
+                    ))}
+                  </select>
+                </div>
                <div>
                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Departure Time</label>
                  <input 
@@ -617,6 +719,66 @@ const AdminDashboard = () => {
                  Create Admin Account
                </button>
                <p className="text-[9px] text-center text-slate-400 font-bold uppercase tracking-widest">Limit: 3 Admins Maximum</p>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Airport Creation Modal */}
+      {isAirportModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="bg-primary p-8 flex justify-between items-center text-white">
+              <h3 className="text-2xl font-black uppercase tracking-tight">Add New Airport</h3>
+              <button onClick={() => setIsAirportModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="h-6 w-6" /></button>
+            </div>
+            <form onSubmit={handleAirportSubmit} className="p-8 grid grid-cols-2 gap-6">
+               <div className="col-span-2">
+                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Airport Name</label>
+                 <input 
+                   required
+                   type="text" value={airportFormData.name} onChange={e => setAirportFormData({...airportFormData, name: e.target.value})}
+                   className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
+                   placeholder="e.g. Dubai International Airport"
+                 />
+               </div>
+               <div>
+                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">City</label>
+                 <input 
+                   required
+                   type="text" value={airportFormData.city} onChange={e => setAirportFormData({...airportFormData, city: e.target.value})}
+                   className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
+                 />
+               </div>
+               <div>
+                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Country</label>
+                 <input 
+                   required
+                   type="text" value={airportFormData.country} onChange={e => setAirportFormData({...airportFormData, country: e.target.value})}
+                   className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
+                 />
+               </div>
+               <div>
+                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">IATA Code</label>
+                 <input 
+                   required maxLength="3"
+                   type="text" value={airportFormData.iata_code} onChange={e => setAirportFormData({...airportFormData, iata_code: e.target.value.toUpperCase()})}
+                   className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold uppercase"
+                   placeholder="DXB"
+                 />
+               </div>
+               <div>
+                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">ICAO Code</label>
+                 <input 
+                   required maxLength="4"
+                   type="text" value={airportFormData.icao_code} onChange={e => setAirportFormData({...airportFormData, icao_code: e.target.value.toUpperCase()})}
+                   className="w-full bg-slate-50 border-0 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold uppercase"
+                   placeholder="OMDB"
+                 />
+               </div>
+               <button className="col-span-2 bg-primary hover:bg-blue-800 text-white font-black py-5 rounded-2xl shadow-xl mt-4 transition-all">
+                 Register Airport
+               </button>
             </form>
           </div>
         </div>
