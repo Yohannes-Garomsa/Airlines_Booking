@@ -3,33 +3,33 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { passengerSchema } from "../schemas/passengerSchema";
 import { countries } from "../constants/countries";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  User, 
-  CreditCard, 
-  Phone, 
-  ShieldCheck, 
-  ArrowRight, 
+import {
+  User,
+  CreditCard,
+  Phone,
+  ShieldCheck,
+  ArrowRight,
   ArrowLeft,
   CheckCircle2,
   FileText,
@@ -40,10 +40,10 @@ import {
   ChevronDown,
   Search
 } from "lucide-react";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
@@ -58,15 +58,15 @@ const steps = [
 function PhoneInput({ value, onChange, label, countries, selectedCountryName }) {
   // Find the country object by name
   const selectedCountry = countries.find(c => c.name === selectedCountryName) || countries.find(c => c.name === "Ethiopia");
-  
+
   // Local state for the prefix and the rest of the number
   const [prefix, setPrefix] = useState(`+${selectedCountry.phone}`);
-  
+
   useEffect(() => {
     if (selectedCountry) {
       const newPrefix = `+${selectedCountry.phone}`;
       setPrefix(newPrefix);
-      
+
       // If there's an existing value, we might want to update its prefix
       // but usually we just want to set the default for new entries
     }
@@ -111,9 +111,9 @@ function PhoneInput({ value, onChange, label, countries, selectedCountryName }) 
           </ScrollArea>
         </PopoverContent>
       </Popover>
-      <Input 
-        placeholder="Number" 
-        className="h-16 rounded-[1.5rem] bg-slate-50 border-0 font-bold px-6 flex-1 focus:ring-2 focus:ring-primary" 
+      <Input
+        placeholder="Number"
+        className="h-16 rounded-[1.5rem] bg-slate-50 border-0 font-bold px-6 flex-1 focus:ring-2 focus:ring-primary"
         value={currentNumber}
         onChange={handleNumberChange}
       />
@@ -125,7 +125,7 @@ function CountrySelector({ value, onChange, placeholder, icon: Icon = Globe }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const filteredCountries = countries.filter(c => 
+  const filteredCountries = countries.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -173,9 +173,8 @@ function CountrySelector({ value, onChange, placeholder, icon: Icon = Globe }) {
                   setOpen(false);
                   setSearch("");
                 }}
-                className={`w-full text-left p-4 rounded-xl font-bold flex items-center justify-between group hover:bg-primary hover:text-white transition-all ${
-                  value === country.name ? 'bg-primary/5 text-primary' : 'text-slate-600'
-                }`}
+                className={`w-full text-left p-4 rounded-xl font-bold flex items-center justify-between group hover:bg-primary hover:text-white transition-all ${value === country.name ? 'bg-primary/5 text-primary' : 'text-slate-600'
+                  }`}
               >
                 {country.name}
                 {value === country.name && <CheckCircle2 className="h-4 w-4" />}
@@ -222,26 +221,6 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
     }
   });
 
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  const handleFinalSubmit = async (data) => {
-    try {
-      await onSubmit(data);
-      setIsSuccess(true);
-      // Let the success state stay for a moment for the "WOW" effect
-      setTimeout(() => {
-        onCancel();
-      }, 2000);
-    } catch (error) {
-      console.error("Submission failed", error);
-      // The form will show general errors if we want, but usually it's field-level
-    }
-  };
-
-  const onInvalid = (errors) => {
-    console.error("Validation Errors:", errors);
-  };
-
   const { watch, setValue, trigger } = form;
   const watchedFlightType = watch("flightType");
   const watchedDob = watch("dateOfBirth");
@@ -266,10 +245,10 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
   };
 
   const getStepFields = (step) => {
-    switch(step) {
+    switch (step) {
       case 0: return ["firstName", "lastName", "gender", "dateOfBirth"];
-      case 1: 
-        return flightType === "Domestic" 
+      case 1:
+        return flightType === "Domestic"
           ? ["documentType", "fanNumber", "finNumber", "passportNumber", "passportExpiry"]
           : ["passportNumber", "passportExpiry", "passportCountry", "nationality"];
       case 2: return ["phoneNumber", "email", "emergencyContactName", "emergencyContactPhone"];
@@ -283,8 +262,8 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
       <div className="flex justify-center mb-12">
         <Tabs value={flightType} onValueChange={(v) => setValue("flightType", v)} className="w-full max-w-2xl">
           <TabsList className="grid grid-cols-2 p-2 bg-slate-900 rounded-[2.5rem] h-20 shadow-2xl">
-            <TabsTrigger 
-              value="Domestic" 
+            <TabsTrigger
+              value="Domestic"
               className="rounded-[2rem] font-black uppercase text-[11px] tracking-widest text-slate-400 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-xl transition-all"
             >
               <div className="flex items-center gap-3">
@@ -294,8 +273,8 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                 Domestic Ops
               </div>
             </TabsTrigger>
-            <TabsTrigger 
-              value="International" 
+            <TabsTrigger
+              value="International"
               className="rounded-[2rem] font-black uppercase text-[11px] tracking-widest text-slate-400 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-xl transition-all"
             >
               <div className="flex items-center gap-3">
@@ -318,11 +297,10 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
           return (
             <React.Fragment key={step.id}>
               <div className="flex flex-col items-center gap-4 relative z-10">
-                <div className={`h-16 w-16 rounded-3xl flex items-center justify-center transition-all duration-700 border-2 ${
-                  isCompleted ? 'bg-green-500 border-green-500 shadow-2xl shadow-green-200 rotate-[360deg]' : 
-                  isActive ? 'bg-slate-900 border-slate-900 shadow-2xl shadow-slate-900/40 scale-110 -rotate-3' : 
-                  'bg-white border-slate-200'
-                }`}>
+                <div className={`h-16 w-16 rounded-3xl flex items-center justify-center transition-all duration-700 border-2 ${isCompleted ? 'bg-green-500 border-green-500 shadow-2xl shadow-green-200 rotate-[360deg]' :
+                    isActive ? 'bg-slate-900 border-slate-900 shadow-2xl shadow-slate-900/40 scale-110 -rotate-3' :
+                      'bg-white border-slate-200'
+                  }`}>
                   {isCompleted ? <CheckCircle2 className="text-white h-7 w-7" /> : <Icon className={`h-7 w-7 ${isActive ? 'text-white' : 'text-slate-400'}`} />}
                 </div>
                 <div className="text-center">
@@ -332,7 +310,7 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
               </div>
               {index < steps.length - 1 && (
                 <div className="flex-1 h-[3px] bg-slate-100 mx-4 -mt-14 relative overflow-hidden rounded-full">
-                  <motion.div 
+                  <motion.div
                     initial={{ width: "0%" }}
                     animate={{ width: isCompleted ? "100%" : "0%" }}
                     transition={{ duration: 0.8, ease: "easeInOut" }}
@@ -436,7 +414,7 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                               <Calendar className="h-3 w-3" /> Date of Birth
                             </FormLabel>
                             <FormControl>
-                              <Input type="date" className="h-16 rounded-[1.5rem] bg-slate-50 border-0 focus:ring-2 focus:ring-primary font-bold px-6 transition-all" {...field} value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''} onChange={e => field.onChange(new Date(e.target.value))} />
+                              <Input type="date" className="h-16 rounded-[1.5rem] bg-slate-50 border-0 focus:ring-2 focus:ring-primary font-bold px-6 transition-all" {...field} value={field.value && !isNaN(new Date(field.value)) ? new Date(field.value).toISOString().split('T')[0] : ''} onChange={e => field.onChange(e.target.value ? new Date(e.target.value) : null)} />
                             </FormControl>
                             <div className="mt-3 flex items-center gap-2 px-1">
                               <Badge className="bg-primary text-white border-0 font-black text-[9px] uppercase px-3 py-1 rounded-full shadow-lg shadow-primary/20">Detected Type: {passengerType}</Badge>
@@ -554,7 +532,7 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                                 <FormItem>
                                   <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Expiry Date</FormLabel>
                                   <FormControl>
-                                    <Input type="date" className="h-14 rounded-2xl bg-slate-50 border-0 font-bold" {...field} value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''} onChange={e => field.onChange(new Date(e.target.value))} />
+                                    <Input type="date" className="h-14 rounded-2xl bg-slate-50 border-0 font-bold" {...field} value={field.value && !isNaN(new Date(field.value)) ? new Date(field.value).toISOString().split('T')[0] : ''} onChange={e => field.onChange(e.target.value ? new Date(e.target.value) : null)} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -572,9 +550,9 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                                   <Globe className="h-3 w-3" /> Nationality / Citizenship
                                 </FormLabel>
                                 <FormControl>
-                                  <CountrySelector 
-                                    value={field.value} 
-                                    onChange={field.onChange} 
+                                  <CountrySelector
+                                    value={field.value}
+                                    onChange={field.onChange}
                                     placeholder="Select Nationality"
                                   />
                                 </FormControl>
@@ -593,9 +571,9 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                                   <Globe className="h-3 w-3" /> Passport Issuing Country
                                 </FormLabel>
                                 <FormControl>
-                                  <CountrySelector 
-                                    value={field.value} 
-                                    onChange={field.onChange} 
+                                  <CountrySelector
+                                    value={field.value}
+                                    onChange={field.onChange}
                                     placeholder="Select Issuing Country"
                                   />
                                 </FormControl>
@@ -619,9 +597,9 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                               <Phone className="h-3 w-3" /> Primary Phone (Linked to {watch("nationality")})
                             </FormLabel>
                             <FormControl>
-                              <PhoneInput 
-                                value={field.value} 
-                                onChange={field.onChange} 
+                              <PhoneInput
+                                value={field.value}
+                                onChange={field.onChange}
                                 countries={countries}
                                 selectedCountryName={watch("nationality")}
                               />
@@ -669,9 +647,9 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                               <Phone className="h-3 w-3" /> Emergency Line (Linked to {watch("nationality")})
                             </FormLabel>
                             <FormControl>
-                              <PhoneInput 
-                                value={field.value} 
-                                onChange={field.onChange} 
+                              <PhoneInput
+                                value={field.value}
+                                onChange={field.onChange}
                                 countries={countries}
                                 selectedCountryName={watch("nationality")}
                               />
@@ -684,85 +662,88 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                   )}
 
                   {currentStep === 3 && (
-                    <AnimatePresence>
-                      {isSuccess ? (
-                        <motion.div 
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="flex flex-col items-center text-center py-20 space-y-6"
-                        >
-                          <div className="h-32 w-32 rounded-full bg-green-500 flex items-center justify-center text-white shadow-2xl shadow-green-200">
-                            <CheckCircle2 className="h-16 w-16" />
-                          </div>
-                          <div>
-                            <h3 className="text-3xl font-black uppercase tracking-tight text-slate-800">Registration Complete</h3>
-                            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-2">Manifest Updated Successfully</p>
-                          </div>
-                        </motion.div>
-                      ) : (
-                        <div className="flex flex-col items-center text-center py-10 space-y-8">
-                          <div className="h-24 w-24 rounded-full bg-green-50 flex items-center justify-center text-green-500 mb-4 animate-bounce">
-                            <ShieldCheck className="h-12 w-12" />
-                          </div>
-                          <div>
-                            <h3 className="text-2xl font-black uppercase tracking-tight text-slate-800">Ready for Verification</h3>
-                            <p className="text-slate-400 font-medium mt-2 max-w-md mx-auto">Please review the passenger details. Once submitted, the record will enter the verification pipeline.</p>
-                          </div>
-                          
-                          <div className="w-full max-w-lg bg-slate-50 rounded-[2.5rem] p-8 text-left space-y-4 border border-slate-100">
-                            <div className="flex justify-between border-b border-slate-200 pb-4">
-                              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Full Name</span>
-                              <span className="font-bold text-slate-800">{watch("firstName")} {watch("lastName")}</span>
-                            </div>
-                            <div className="flex justify-between border-b border-slate-200 pb-4">
-                              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Flight Type</span>
-                              <span className="font-bold text-primary uppercase text-[10px] tracking-widest">{watch("flightType")}</span>
-                            </div>
-                            <div className="flex justify-between border-b border-slate-200 pb-4">
-                              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Identity</span>
-                              <span className="font-bold text-slate-800">{watch("documentType") || "Passport"}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Type</span>
-                              <span className="font-bold text-slate-800">{passengerType}</span>
-                            </div>
-                          </div>
+                    <div className="flex flex-col items-center text-center py-10 space-y-8">
+                      <div className="h-24 w-24 rounded-full bg-green-50 flex items-center justify-center text-green-500 mb-4 animate-bounce">
+                        <ShieldCheck className="h-12 w-12" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black uppercase tracking-tight text-slate-800">Ready for Verification</h3>
+                        <p className="text-slate-400 font-medium mt-2 max-w-md mx-auto">Please review the passenger details. Once submitted, the record will enter the verification pipeline.</p>
+                      </div>
+
+                      <div className="w-full max-w-lg bg-slate-50 rounded-[2.5rem] p-8 text-left space-y-4 border border-slate-100">
+                        <div className="flex justify-between border-b border-slate-200 pb-4">
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Full Name</span>
+                          <span className="font-bold text-slate-800">{watch("firstName")} {watch("lastName")}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-slate-200 pb-4">
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Flight Type</span>
+                          <span className="font-bold text-primary uppercase text-[10px] tracking-widest">{watch("flightType")}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-slate-200 pb-4">
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Identity</span>
+                          <span className="font-bold text-slate-800">{watch("documentType") || "Passport"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Type</span>
+                          <span className="font-bold text-slate-800">{passengerType}</span>
+                        </div>
+                      </div>
+
+                      {Object.keys(form.formState.errors).length > 0 && (
+                        <div className="w-full max-w-lg bg-red-50 border border-red-200 rounded-2xl p-4 text-left">
+                          <p className="text-red-600 font-bold text-sm flex items-center gap-2 mb-2">
+                            <ShieldCheck className="h-4 w-4" /> Please fix the following errors:
+                          </p>
+                          <ul className="list-disc list-inside text-red-500 text-xs font-medium space-y-1">
+                            {Object.entries(form.formState.errors).map(([key, error]) => (
+                              <li key={key}>
+                                <span className="uppercase tracking-wider font-bold">{key}:</span> {error.message}
+                              </li>
+                            ))}
+                          </ul>
+                          <Button 
+                            type="button" 
+                            variant="outline"
+                            onClick={() => setCurrentStep(1)}
+                            className="mt-4 bg-white text-red-600 border-red-200 hover:bg-red-50 text-xs font-bold w-full"
+                          >
+                            Return to Forms
+                          </Button>
                         </div>
                       )}
-                    </AnimatePresence>
+                    </div>
                   )}
                 </CardContent>
 
-                {!isSuccess && (
-                  <div className="bg-slate-50 p-8 flex justify-between items-center px-12 border-t border-slate-100">
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      onClick={currentStep === 0 ? onCancel : () => setCurrentStep(p => p - 1)}
-                      className="rounded-2xl h-14 px-8 font-bold text-slate-500 hover:bg-white"
+                <div className="bg-slate-50 p-8 flex justify-between items-center px-12 border-t border-slate-100">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={currentStep === 0 ? onCancel : () => setCurrentStep(p => p - 1)}
+                    className="rounded-2xl h-14 px-8 font-bold text-slate-500 hover:bg-white"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" /> {currentStep === 0 ? "Cancel" : "Back"}
+                  </Button>
+
+                  {currentStep < steps.length - 1 ? (
+                    <Button
+                      type="button"
+                      onClick={nextStep}
+                      className="bg-primary hover:bg-blue-800 text-white rounded-2xl h-14 px-10 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-primary/20 transition-all hover:scale-105"
                     >
-                      <ArrowLeft className="h-4 w-4 mr-2" /> {currentStep === 0 ? "Cancel" : "Back"}
+                      Continue <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
-                    
-                    {currentStep < steps.length - 1 ? (
-                      <Button 
-                        type="button" 
-                        onClick={nextStep}
-                        className="bg-primary hover:bg-blue-800 text-white rounded-2xl h-14 px-10 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-primary/20 transition-all hover:scale-105"
-                      >
-                        Continue <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    ) : (
-                      <Button 
-                        type="submit"
-                        disabled={form.formState.isSubmitting}
-                        className="bg-green-600 hover:bg-green-700 text-white rounded-2xl h-14 px-10 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-green-200 transition-all hover:scale-105 disabled:opacity-50"
-                      >
-                        {form.formState.isSubmitting ? "Processing..." : "Complete Registration"} <CheckCircle2 className="h-4 w-4 ml-2" />
-                      </Button>
-                    )}
-                  </div>
-                )}
+                  ) : (
+                    <Button
+                      type="submit"
+                      disabled={form.formState.isSubmitting}
+                      className="bg-green-600 hover:bg-green-700 text-white rounded-2xl h-14 px-10 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-green-200 transition-all hover:scale-105 disabled:opacity-50"
+                    >
+                      {form.formState.isSubmitting ? "Processing..." : "Complete Registration"} <CheckCircle2 className="h-4 w-4 ml-2" />
+                    </Button>
+                  )}
+                </div>
               </Card>
             </motion.div>
           </AnimatePresence>

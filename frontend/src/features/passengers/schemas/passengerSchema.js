@@ -16,7 +16,7 @@ export const passengerSchema = z.object({
   finNumber: z.string().optional().refine(val => !val || /^\d{12}$/.test(val), "FIN must be exactly 12 digits"),
   
   // International/Shared Passport Fields
-  passportNumber: z.string().min(5, "Passport number is required").optional(),
+  passportNumber: z.string().optional().refine(val => !val || val.length >= 5, "Passport number must be at least 5 characters"),
   passportExpiry: z.date().optional(),
   nationality: z.string().min(2, "Nationality is required").optional(),
   
@@ -37,20 +37,33 @@ export const passengerSchema = z.object({
   // Internal
   status: z.enum(["Pending", "Verified", "Rejected"]).default("Pending"),
   adminNotes: z.string().optional(),
-}).refine((data) => {
-  if (data.flightType === "Domestic") {
-    if (data.documentType === "Fayda ID") {
-      return !!data.fanNumber || !!data.finNumber;
-    }
-    if (data.documentType === "Passport") {
-      return !!data.passportNumber && !!data.passportExpiry;
-    }
-  } else {
-    // International requires passport
-    return !!data.passportNumber && !!data.passportExpiry && !!data.passportCountry;
+}).superRefine((data, ctx) => {
+  if (data.flightType === "International" && data.documentType === "Fayda ID") {
+    ctx.addIssue({
+      path: ["documentType"],
+      message: "National ID is not valid for International flights. Passport is required.",
+    });
   }
-  return true;
-}, {
-  message: "Required identification fields are missing",
-  path: ["documentType"],
+
+  const isPassport = data.documentType === "Passport" || data.flightType === "International";
+
+  if (data.flightType === "Domestic" && data.documentType === "Fayda ID") {
+    if (!data.fanNumber && !data.finNumber) {
+      ctx.addIssue({
+        path: ["fanNumber"],
+        message: "Either FAN or FIN is required for National ID.",
+      });
+      ctx.addIssue({
+        path: ["finNumber"],
+        message: "Either FAN or FIN is required for National ID.",
+      });
+    }
+  }
+
+  if (isPassport) {
+    if (!data.passportNumber) ctx.addIssue({ path: ["passportNumber"], message: "Passport number is required." });
+    if (!data.passportExpiry) ctx.addIssue({ path: ["passportExpiry"], message: "Passport expiry date is required." });
+    if (!data.nationality) ctx.addIssue({ path: ["nationality"], message: "Nationality is required." });
+    if (!data.passportCountry) ctx.addIssue({ path: ["passportCountry"], message: "Passport issuing country is required." });
+  }
 });
