@@ -178,11 +178,16 @@ const emailTicket = asyncHandler(async (req, res) => {
   generateTicketPDF(ticket, stream);
 
   stream.on('end', async () => {
-    const pdfBuffer = Buffer.concat(chunks);
-    const targetEmail = ticket.passenger_email || req.user.email;
-    
-    await sendTicketEmail(targetEmail, ticket, pdfBuffer);
-    res.status(200).json({ message: 'Ticket emailed successfully' });
+    try {
+      const pdfBuffer = Buffer.concat(chunks);
+      const targetEmail = ticket.passenger_email || req.user.email;
+      
+      await sendTicketEmail(targetEmail, ticket, pdfBuffer);
+      res.status(200).json({ message: 'Ticket emailed successfully' });
+    } catch (error) {
+      console.error('Failed to email ticket:', error);
+      res.status(500).json({ message: 'Failed to send email. Ensure SMTP credentials are correct.' });
+    }
   });
 });
 
