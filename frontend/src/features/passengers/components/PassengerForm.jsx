@@ -222,6 +222,29 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
   });
 
   const { watch, setValue, trigger } = form;
+
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleFinalSubmit = async (data) => {
+    console.log("✅ Validation passed! Data ready for backend:", data);
+    try {
+      console.log("⏳ Sending data to backend via onSubmit...");
+      await onSubmit(data);
+      console.log("🎉 Backend responded successfully!");
+      setIsSuccess(true);
+      setTimeout(() => {
+        onCancel();
+      }, 2000);
+    } catch (error) {
+      console.error("❌ Submission failed at backend step:", error);
+    }
+  };
+
+  const onInvalid = (errors) => {
+    console.log("🚨 FORM VALIDATION FAILED! Check these errors:", errors);
+    console.error("Validation Errors Details:", errors);
+  };
+
   const watchedFlightType = watch("flightType");
   const watchedDob = watch("dateOfBirth");
 
@@ -324,7 +347,7 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(handleFinalSubmit, onInvalid)} className="space-y-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
@@ -738,6 +761,7 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
                     <Button
                       type="submit"
                       disabled={form.formState.isSubmitting}
+                      onClick={() => console.log("🔘 Complete Registration button clicked!")}
                       className="bg-green-600 hover:bg-green-700 text-white rounded-2xl h-14 px-10 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-green-200 transition-all hover:scale-105 disabled:opacity-50"
                     >
                       {form.formState.isSubmitting ? "Processing..." : "Complete Registration"} <CheckCircle2 className="h-4 w-4 ml-2" />

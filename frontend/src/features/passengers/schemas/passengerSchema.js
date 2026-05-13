@@ -17,12 +17,12 @@ export const passengerSchema = z.object({
   
   // International/Shared Passport Fields
   passportNumber: z.string().optional().refine(val => !val || val.length >= 5, "Passport number must be at least 5 characters"),
-  passportExpiry: z.date().optional(),
+  passportExpiry: z.date().nullable().optional(),
   nationality: z.string().min(2, "Nationality is required").optional(),
   
   // International Specific
   passportCountry: z.string().optional(),
-  passportIssueDate: z.date().optional(),
+  passportIssueDate: z.date().nullable().optional(),
   passportType: z.enum(["Regular", "Diplomatic", "Service"]).optional(),
   residenceCountry: z.string().optional(),
   dualCitizenship: z.boolean().default(false),
