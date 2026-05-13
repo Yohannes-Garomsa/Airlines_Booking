@@ -281,7 +281,7 @@ const AdminDashboard = () => {
   const resendTicket = async (ticketId) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/tickets/${ticketId}/resend`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/tickets/${ticketId}/email`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
