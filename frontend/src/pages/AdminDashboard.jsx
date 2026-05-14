@@ -12,6 +12,8 @@ import PassengerManagement from '../features/passengers/index';
 import FleetManagement from '../features/fleet/components/FleetManagement';
 import SeatMatrix from '../features/seats/components/SeatMatrix';
 import RevenueFX from '../features/finance/components/RevenueFX';
+import Analytics from '../features/analytics/components/Analytics';
+import AlertCenter from '../features/alerts/components/AlertCenter';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -514,66 +516,14 @@ const AdminDashboard = () => {
           ) : (
             <div className="space-y-12">
               {activeTab === 'overview' && <AdminOverview stats={stats} />}
-
-              {activeTab === 'analytics' && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
-                    <h3 className="text-xl font-black uppercase tracking-tight mb-8 flex items-center gap-3">
-                      <TrendingUp className="h-6 w-6 text-primary" /> Popular Routes
-                    </h3>
-                    <div className="space-y-6">
-                      {data.analytics?.popularRoutes?.length > 0 ? data.analytics.popularRoutes.map((route, i) => (
-                        <div key={i} className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100 group hover:scale-[1.02] transition-all">
-                          <div className="flex items-center gap-6">
-                            <span className="text-2xl font-black text-slate-300">0{i + 1}</span>
-                            <div>
-                              <p className="font-black text-slate-800 uppercase tracking-tight">{route.departure_city} → {route.arrival_city}</p>
-                              <p className="text-xs font-bold text-slate-400">Total Bookings: {route.booking_count}</p>
-                            </div>
-                          </div>
-                          <div className="h-2 w-24 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-primary" style={{ width: `${(route.booking_count / (data.analytics.popularRoutes[0]?.booking_count || 1)) * 100}%` }}></div>
-                          </div>
-                        </div>
-                      )) : (
-                        <div className="text-center py-20 text-slate-400 font-bold">No trending routes yet.</div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 blur-[100px] rounded-full"></div>
-                    <h3 className="text-xl font-black uppercase tracking-tight mb-8 relative z-10 flex items-center gap-3">
-                      <CreditCard className="h-6 w-6 text-accent" /> Revenue Velocity
-                    </h3>
-                    <div className="space-y-4 relative z-10">
-                      {data.analytics?.revenueTrend?.length > 0 ? (
-                        <div className="flex items-end gap-2 h-16">
-                          {data.analytics.revenueTrend.slice(-12).map((trend, i) => (
-                            <div key={i} className="bg-accent/20 w-full rounded-t-lg transition-all hover:bg-accent" style={{ height: `${(trend.daily_revenue / (Math.max(...data.analytics.revenueTrend.map(t => t.daily_revenue)) || 1)) * 100}%` }}></div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="h-16 flex items-center justify-center text-slate-500 text-[10px] font-black uppercase">Data Buffer Empty</div>
-                      )}
-                      <div className="flex justify-between text-[10px] font-black uppercase text-slate-500 mt-4">
-                        <span>30 Days Ago</span>
-                        <span>Today</span>
-                      </div>
-                    </div>
-                    <div className="mt-12 p-8 bg-white/5 rounded-[2rem] border border-white/10">
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Projected Monthly</p>
-                      <p className="text-4xl font-black text-accent">${(parseFloat(stats.total_revenue || 0) * 1.2).toLocaleString()}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
+              {activeTab === 'analytics' && <Analytics />}
+              {activeTab === 'notifications' && <AlertCenter />}
               {activeTab === 'users' && <PassengerManagement />}
               {activeTab === 'fleet' && <FleetManagement />}
               {activeTab === 'seats' && <SeatMatrix />}
               {activeTab === 'payments' && <RevenueFX />}
 
-              {activeTab !== 'users' && activeTab !== 'fleet' && activeTab !== 'seats' && activeTab !== 'payments' && (
+              {activeTab !== 'users' && activeTab !== 'fleet' && activeTab !== 'seats' && activeTab !== 'payments' && activeTab !== 'analytics' && activeTab !== 'notifications' && (
                 <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden">
                   {activeTab === 'bookings' && (
                   <div className="flex flex-wrap gap-3 p-8 border-b border-slate-100 bg-slate-50/30">

@@ -21,7 +21,8 @@ const {
   getSeatMatrix,
   getAnalytics,
   getPayments,
-  getNotifications
+  getNotifications,
+  markNotificationRead
 } = require('../controllers/adminController');
 const { 
   createFlight, 
@@ -70,5 +71,6 @@ router.get('/seats/:flightId', getSeatMatrix);
 router.get('/analytics', getAnalytics);
 router.get('/payments', getPayments);
 router.get('/notifications', getNotifications);
+router.patch('/notifications/:id/read', markNotificationRead);
 
 module.exports = router;

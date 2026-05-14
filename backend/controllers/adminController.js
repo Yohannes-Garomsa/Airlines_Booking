@@ -182,25 +182,64 @@ const toggleAircraftStatus = asyncHandler(async (req, res) => {
 
 const getAnalytics = asyncHandler(async (req, res) => {
   const popularRoutes = await db.query(`
-    SELECT f.departure_city, f.arrival_city, COUNT(b.id) as booking_count
+const getAnalytics = asyncHandler(async (req, res) => {
+  // 1. Top 5 popular routes by booking count
+  const popularRoutes = await db.query(`
+    SELECT f.departure_city, f.arrival_city, f.departure_iata, f.arrival_iata,
+           COUNT(b.id) as booking_count,
+           SUM(b.total_price) as route_revenue
     FROM bookings b
     JOIN flights f ON b.flight_id = f.id
-    GROUP BY f.departure_city, f.arrival_city
+    GROUP BY f.departure_city, f.arrival_city, f.departure_iata, f.arrival_iata
     ORDER BY booking_count DESC
     LIMIT 5
   `);
-  
+
+  // 2. Revenue trend — daily totals for the last 30 days
   const revenueTrend = await db.query(`
-    SELECT DATE_TRUNC('day', booking_date) as day, SUM(total_price) as daily_revenue
+    SELECT DATE_TRUNC('day', booking_date) as day,
+           SUM(total_price) as daily_revenue,
+           COUNT(id) as daily_bookings
     FROM bookings
-    WHERE status = 'confirmed'
+    WHERE status = 'confirmed' AND booking_date >= NOW() - INTERVAL '30 days'
     GROUP BY day
     ORDER BY day ASC
-    LIMIT 30
   `);
 
-  res.status(200).json({ popularRoutes: popularRoutes.rows, revenueTrend: revenueTrend.rows });
+  // 3. Cabin class split (Economy vs Business)
+  const cabinSplit = await db.query(`
+    SELECT cabin_class, COUNT(id) as count, SUM(total_price) as revenue
+    FROM bookings
+    WHERE status = 'confirmed'
+    GROUP BY cabin_class
+  `);
+
+  // 4. Booking velocity — hourly breakdown for the last 7 days
+  const bookingVelocity = await db.query(`
+    SELECT DATE_TRUNC('day', booking_date) as day, COUNT(id) as count
+    FROM bookings
+    WHERE booking_date >= NOW() - INTERVAL '7 days'
+    GROUP BY day
+    ORDER BY day ASC
+  `);
+
+  // 5. Cancellation rate
+  const cancellationStats = await db.query(`
+    SELECT
+      COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled,
+      COUNT(id) as total
+    FROM bookings
+  `);
+
+  res.status(200).json({
+    popularRoutes: popularRoutes.rows,
+    revenueTrend: revenueTrend.rows,
+    cabinSplit: cabinSplit.rows,
+    bookingVelocity: bookingVelocity.rows,
+    cancellationStats: cancellationStats.rows[0]
+  });
 });
+
 
 const getPayments = asyncHandler(async (req, res) => {
   const result = await db.query(`
@@ -214,9 +253,87 @@ const getPayments = asyncHandler(async (req, res) => {
 });
 
 const getNotifications = asyncHandler(async (req, res) => {
-  const result = await db.query('SELECT * FROM notifications ORDER BY created_at DESC');
-  res.status(200).json(result.rows);
+  // Stored notifications from DB
+  const stored = await db.query('SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50');
+
+  // --- Compute operational alerts from live data ---
+  const computedAlerts = [];
+
+  // Alert: Flights with < 10% seats remaining
+  const lowSeatFlights = await db.query(`
+    SELECT f.id, f.flight_number, f.airline, f.departure_city, f.arrival_city,
+           f.available_seats, f.total_seats,
+           ROUND((f.available_seats::numeric / NULLIF(f.total_seats, 0)) * 100, 1) as fill_pct
+    FROM flights f
+    WHERE f.available_seats > 0 AND f.departure_time > NOW()
+      AND (f.available_seats::numeric / NULLIF(f.total_seats, 0)) < 0.1
+    ORDER BY fill_pct ASC
+    LIMIT 5
+  `);
+  lowSeatFlights.rows.forEach(f => {
+    computedAlerts.push({
+      id: `computed_seat_${f.id}`,
+      type: 'capacity',
+      priority: 'high',
+      title: 'Near-Full Flight',
+      message: `${f.airline} ${f.flight_number} (${f.departure_city} → ${f.arrival_city}) is at ${100 - f.fill_pct}% capacity — only ${f.available_seats} seats remain.`,
+      is_read: false,
+      created_at: new Date().toISOString()
+    });
+  });
+
+  // Alert: Cancellation spike — more than 3 cancellations in the last 24h
+  const recentCancels = await db.query(`
+    SELECT COUNT(id) as count FROM bookings
+    WHERE status = 'cancelled' AND booking_date >= NOW() - INTERVAL '24 hours'
+  `);
+  if (parseInt(recentCancels.rows[0].count) >= 3) {
+    computedAlerts.push({
+      id: 'computed_cancellation_spike',
+      type: 'cancellation',
+      priority: 'high',
+      title: 'Cancellation Spike Detected',
+      message: `${recentCancels.rows[0].count} bookings were cancelled in the last 24 hours. Investigate potential route or pricing issues.`,
+      is_read: false,
+      created_at: new Date().toISOString()
+    });
+  }
+
+  // Alert: Aircraft in maintenance
+  const maintenanceAircraft = await db.query(`
+    SELECT model, tail_number FROM aircraft WHERE status = 'Maintenance'
+  `);
+  maintenanceAircraft.rows.forEach(a => {
+    computedAlerts.push({
+      id: `computed_maintenance_${a.tail_number}`,
+      type: 'maintenance',
+      priority: 'medium',
+      title: 'Aircraft in Maintenance',
+      message: `${a.model} (${a.tail_number}) is currently offline for maintenance and unavailable for scheduling.`,
+      is_read: false,
+      created_at: new Date().toISOString()
+    });
+  });
+
+  res.status(200).json({
+    notifications: stored.rows,
+    alerts: computedAlerts
+  });
 });
+
+const markNotificationRead = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const result = await db.query(
+    'UPDATE notifications SET is_read = true WHERE id = $1 RETURNING *',
+    [id]
+  );
+  if (result.rows.length === 0) {
+    res.status(404);
+    throw new Error('Notification not found');
+  }
+  res.status(200).json(result.rows[0]);
+});
+
 
 const bcrypt = require('bcryptjs');
 
@@ -324,5 +441,6 @@ module.exports = {
   getSeatMatrix,
   getAnalytics,
   getPayments,
-  getNotifications
+  getNotifications,
+  markNotificationRead
 };
