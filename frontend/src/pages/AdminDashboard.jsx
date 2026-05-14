@@ -10,6 +10,8 @@ import { AuthContext } from '../context/AuthContext';
 import AdminOverview from '../components/admin/AdminOverview';
 import PassengerManagement from '../features/passengers/index';
 import FleetManagement from '../features/fleet/components/FleetManagement';
+import SeatMatrix from '../features/seats/components/SeatMatrix';
+import RevenueFX from '../features/finance/components/RevenueFX';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -568,8 +570,10 @@ const AdminDashboard = () => {
 
               {activeTab === 'users' && <PassengerManagement />}
               {activeTab === 'fleet' && <FleetManagement />}
+              {activeTab === 'seats' && <SeatMatrix />}
+              {activeTab === 'payments' && <RevenueFX />}
 
-              {activeTab !== 'users' && activeTab !== 'fleet' && (
+              {activeTab !== 'users' && activeTab !== 'fleet' && activeTab !== 'seats' && activeTab !== 'payments' && (
                 <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden">
                   {activeTab === 'bookings' && (
                   <div className="flex flex-wrap gap-3 p-8 border-b border-slate-100 bg-slate-50/30">
