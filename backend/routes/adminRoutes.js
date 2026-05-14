@@ -14,6 +14,9 @@ const {
   createAirport,
   deleteAirport,
   getFleet,
+  createAircraft,
+  updateAircraft,
+  deleteAircraft,
   toggleAircraftStatus,
   getSeatMatrix,
   getAnalytics,
@@ -58,6 +61,9 @@ router.delete('/airports/:id', deleteAirport);
 
 // Fleet
 router.get('/fleet', getFleet);
+router.post('/fleet', createAircraft);
+router.put('/fleet/:id', updateAircraft);
+router.delete('/fleet/:id', deleteAircraft);
 router.patch('/fleet/:id/maintenance', toggleAircraftStatus);
 
 router.get('/seats/:flightId', getSeatMatrix);

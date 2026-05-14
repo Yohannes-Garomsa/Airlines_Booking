@@ -111,6 +111,48 @@ const getFleet = asyncHandler(async (req, res) => {
   res.status(200).json(result.rows);
 });
 
+const createAircraft = asyncHandler(async (req, res) => {
+  const { model, tail_number, economy_capacity, business_capacity, status, last_maintenance } = req.body;
+  
+  const result = await db.query(
+    "INSERT INTO aircraft (model, tail_number, economy_capacity, business_capacity, status, last_maintenance) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+    [model, tail_number, economy_capacity, business_capacity, status || 'Active', last_maintenance]
+  );
+  res.status(201).json(result.rows[0]);
+});
+
+const updateAircraft = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { model, tail_number, economy_capacity, business_capacity, status, last_maintenance } = req.body;
+  
+  const result = await db.query(
+    "UPDATE aircraft SET model = $1, tail_number = $2, economy_capacity = $3, business_capacity = $4, status = $5, last_maintenance = $6 WHERE id = $7 RETURNING *",
+    [model, tail_number, economy_capacity, business_capacity, status, last_maintenance, id]
+  );
+  
+  if (result.rows.length === 0) {
+    res.status(404);
+    throw new Error('Aircraft not found');
+  }
+  
+  res.status(200).json(result.rows[0]);
+});
+
+const deleteAircraft = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  
+  // Basic check to see if aircraft has active flights could go here
+  
+  const result = await db.query("DELETE FROM aircraft WHERE id = $1 RETURNING *", [id]);
+  
+  if (result.rows.length === 0) {
+    res.status(404);
+    throw new Error('Aircraft not found');
+  }
+  
+  res.status(200).json({ message: 'Aircraft successfully removed from fleet' });
+});
+
 // --- Seat Management ---
 
 const getSeatMatrix = asyncHandler(async (req, res) => {
@@ -275,6 +317,9 @@ module.exports = {
   createAirport,
   deleteAirport,
   getFleet,
+  createAircraft,
+  updateAircraft,
+  deleteAircraft,
   toggleAircraftStatus,
   getSeatMatrix,
   getAnalytics,

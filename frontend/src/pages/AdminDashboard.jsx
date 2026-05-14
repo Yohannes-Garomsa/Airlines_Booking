@@ -9,6 +9,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import AdminOverview from '../components/admin/AdminOverview';
 import PassengerManagement from '../features/passengers/index';
+import FleetManagement from '../features/fleet/components/FleetManagement';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -566,8 +567,9 @@ const AdminDashboard = () => {
               )}
 
               {activeTab === 'users' && <PassengerManagement />}
+              {activeTab === 'fleet' && <FleetManagement />}
 
-              {activeTab !== 'users' && (
+              {activeTab !== 'users' && activeTab !== 'fleet' && (
                 <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden">
                   {activeTab === 'bookings' && (
                   <div className="flex flex-wrap gap-3 p-8 border-b border-slate-100 bg-slate-50/30">
