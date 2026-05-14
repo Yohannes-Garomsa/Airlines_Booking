@@ -181,8 +181,6 @@ const toggleAircraftStatus = asyncHandler(async (req, res) => {
 });
 
 const getAnalytics = asyncHandler(async (req, res) => {
-  const popularRoutes = await db.query(`
-const getAnalytics = asyncHandler(async (req, res) => {
   // 1. Top 5 popular routes by booking count
   const popularRoutes = await db.query(`
     SELECT f.departure_city, f.arrival_city, f.departure_iata, f.arrival_iata,
