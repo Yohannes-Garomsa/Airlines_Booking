@@ -10,7 +10,10 @@ const Flight = {
       departure_time, 
       arrival_time, 
       economy_price, 
-      total_seats 
+      total_seats,
+      status,
+      gate,
+      terminal
     } = flightData;
 
     // Fetch city names from airports table for redundant legacy columns
@@ -120,7 +123,10 @@ const Flight = {
       departure_time, 
       arrival_time, 
       economy_price, 
-      total_seats 
+      total_seats,
+      status,
+      gate,
+      terminal
     } = flightData;
 
     // Fetch city names from airports table for redundant legacy columns
