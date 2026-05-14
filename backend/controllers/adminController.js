@@ -183,15 +183,16 @@ const toggleAircraftStatus = asyncHandler(async (req, res) => {
 const getAnalytics = asyncHandler(async (req, res) => {
   // 1. Top 5 popular routes by booking count
   const popularRoutes = await db.query(`
-    SELECT f.departure_city, f.arrival_city, f.departure_iata, f.arrival_iata,
+    SELECT f.departure_city, f.arrival_city,
            COUNT(b.id) as booking_count,
            SUM(b.total_price) as route_revenue
     FROM bookings b
     JOIN flights f ON b.flight_id = f.id
-    GROUP BY f.departure_city, f.arrival_city, f.departure_iata, f.arrival_iata
+    GROUP BY f.departure_city, f.arrival_city
     ORDER BY booking_count DESC
     LIMIT 5
   `);
+
 
   // 2. Revenue trend — daily totals for the last 30 days
   const revenueTrend = await db.query(`

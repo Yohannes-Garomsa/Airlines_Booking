@@ -192,11 +192,6 @@ const Analytics = () => {
                         <p className="font-black text-slate-800 text-sm">
                           {route.departure_city} <span className="text-primary mx-1">→</span> {route.arrival_city}
                         </p>
-                        {(route.departure_iata || route.arrival_iata) && (
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            {route.departure_iata} → {route.arrival_iata}
-                          </p>
-                        )}
                       </div>
                     </div>
                     <div className="text-right">
