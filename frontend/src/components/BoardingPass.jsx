@@ -136,18 +136,15 @@ const BoardingPass = ({ ticket }) => {
             >
               <Download className="h-4 w-4" /> Save as PDF
             </a>
-            <button className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-4 px-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center gap-2 transition-all">
-              <Wallet className="h-4 w-4 text-orange-500" /> Add to Wallet
-            </button>
           </div>
         </div>
       </div>
 
       {/* Legal / Info Footer */}
       <div className="mt-8 flex flex-col md:flex-row justify-between items-start gap-4 px-4">
-        <div className="flex items-start gap-3 text-slate-400 max-w-md">
+        <div className="flex items-start gap-3 text-slate-600 max-w-md">
           <ShieldCheck className="h-5 w-5 flex-shrink-0 mt-0.5" />
-          <p className="text-xs font-medium leading-relaxed">
+          <p className="text-xs font-bold leading-relaxed">
             Please arrive at the airport 2 hours before departure. Carry valid government-issued ID and travel documents at all times. Gate closes 20 minutes before departure.
           </p>
         </div>
