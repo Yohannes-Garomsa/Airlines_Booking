@@ -48,12 +48,7 @@ const BookingPage = () => {
     setSelectedSeats(prev => prev.slice(0, seatsNeeded));
   }, [passengerCounts]);
 
-  const handlePassengerCountChange = (type, delta) => {
-    setPassengerCounts(prev => ({
-      ...prev,
-      [type]: Math.max(type === 'adults' ? 1 : 0, prev[type] + delta)
-    }));
-  };
+
 
   const getBasePrice = () => {
     if (!flight) return 0;
@@ -161,40 +156,7 @@ const BookingPage = () => {
                 </div>
               </div>
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="bg-slate-100 p-6 rounded-3xl border border-slate-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-gray-500">Passenger Count</h3>
-                    <span className="text-xs text-slate-400">Infants travel free</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {['adults', 'children', 'infants'].map((type) => (
-                      <div key={type} className="bg-white rounded-3xl p-4 border border-slate-200">
-                        <p className="text-sm font-black text-gray-700 capitalize">{type}</p>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">
-                          {type === 'adults' ? 'Full fare' : type === 'children' ? '10% off' : 'Free'}
-                        </p>
-                        <div className="mt-4 flex items-center justify-between gap-3">
-                          <button
-                            type="button"
-                            onClick={() => handlePassengerCountChange(type, -1)}
-                            className="h-9 w-9 rounded-full border border-slate-200 text-slate-600 font-black hover:bg-slate-50"
-                          >
-                            -
-                          </button>
-                          <span className="font-black text-lg text-slate-800">{passengerCounts[type]}</span>
-                          <button
-                            type="button"
-                            onClick={() => handlePassengerCountChange(type, 1)}
-                            className="h-9 w-9 rounded-full border border-slate-200 text-slate-600 font-black hover:bg-slate-50"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-4">Adults pay full fare, children receive a 10% discount, infants travel free. Seats are required for adults and children only.</p>
-                </div>
+
                 <div>
                   <label className="block text-xs font-black uppercase text-gray-400 mb-2 ml-1 tracking-widest">Full Name</label>
                   <div className="relative">
