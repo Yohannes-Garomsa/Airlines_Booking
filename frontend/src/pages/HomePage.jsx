@@ -182,22 +182,77 @@ function HomePage() {
                 ))}
               </div>
 
-              <div className="flex bg-slate-100 p-1 rounded-2xl">
-                {['Economy', 'Business'].map(c => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setCabinClass(c)}
-                    className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
-                      cabinClass === c 
-                        ? 'bg-white text-primary shadow-sm' 
-                        : 'text-slate-500 hover:bg-white/50'
-                    }`}
-                  >
-                    {c === 'Business' && <ShieldCheck className="h-3.5 w-3.5 text-accent" />}
-                    {c === 'Business' ? 'Business (VIP)' : c}
-                  </button>
-                ))}
+              <div className="flex items-center gap-4 flex-wrap justify-end md:justify-start">
+                <div className="flex bg-slate-100 p-1 rounded-2xl items-center relative z-[9999]">
+                  
+                  {/* Passenger Dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassengerDropdown(!showPassengerDropdown)}
+                      className="px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 text-slate-600 hover:bg-white/50"
+                    >
+                      <Users className="h-3.5 w-3.5 text-primary" />
+                      <span>{totalPassengers} Pass.</span>
+                    </button>
+
+                    {showPassengerDropdown && (
+                      <div className="absolute top-full left-0 mt-3 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-[9999] animate-in fade-in zoom-in duration-200">
+                        <div className="space-y-6">
+                          {['adults', 'children', 'infants'].map(type => (
+                            <div key={type} className="flex items-center justify-between">
+                              <div>
+                                <p className="font-bold text-slate-700 capitalize">{type}</p>
+                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                  {type === 'adults' ? '12+ Years' : type === 'children' ? '2-12 Years' : 'Under 2'}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <button
+                                  type="button"
+                                  onClick={() => setPassengers(p => ({ ...p, [type]: Math.max(type === 'adults' ? 1 : 0, p[type] - 1) }))}
+                                  className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center font-bold hover:bg-slate-50"
+                                >-</button>
+                                <span className="font-bold w-4 text-center">{passengers[type]}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setPassengers(p => ({ ...p, [type]: p[type] + 1 }))}
+                                  className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center font-bold hover:bg-slate-50"
+                                >+</button>
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() => setShowPassengerDropdown(false)}
+                            className="w-full bg-primary text-white font-black py-3 rounded-2xl shadow-xl mt-4"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="w-[1px] h-5 bg-slate-300 mx-1 opacity-50"></div>
+
+                  {/* Cabin Classes */}
+                  {['Economy', 'Business'].map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCabinClass(c)}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                        cabinClass === c 
+                          ? 'bg-white text-primary shadow-sm' 
+                          : 'text-slate-500 hover:bg-white/50'
+                      }`}
+                    >
+                      {c === 'Business' && <ShieldCheck className="h-3.5 w-3.5 text-accent" />}
+                      {c === 'Business' ? 'Business (VIP)' : c}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -286,58 +341,7 @@ function HomePage() {
                     </button>
                   )}
 
-                  {/* Passenger & Cabin Dropdown */}
-                  <div className="relative z-[9999]">
-                    <button
-                      type="button"
-                      onClick={() => setShowPassengerDropdown(!showPassengerDropdown)}
-                      className="flex items-center gap-3 px-6 py-4 bg-slate-50 rounded-2xl font-bold text-slate-700 hover:bg-slate-100 transition-all"
-                    >
-                      <Users className="h-5 w-5 text-primary" />
-                      <span>{totalPassengers} Passengers, {cabinClass}</span>
-                    </button>
-
-                    {showPassengerDropdown && (
-                      <div className="absolute top-full left-0 mt-4 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-[9999] animate-in fade-in zoom-in duration-200">
-                        <div className="space-y-6">
-                          {['adults', 'children', 'infants'].map(type => (
-                            <div key={type} className="flex items-center justify-between">
-                              <div>
-                                <p className="font-bold text-slate-700 capitalize">{type}</p>
-                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                                  {type === 'adults' ? '12+ Years' : type === 'children' ? '2-12 Years' : 'Under 2'}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <button
-                                  type="button"
-                                  onClick={() => setPassengers(p => ({ ...p, [type]: Math.max(type === 'adults' ? 1 : 0, p[type] - 1) }))}
-                                  className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center font-bold hover:bg-slate-50"
-                                >-</button>
-                                <span className="font-bold w-4 text-center">{passengers[type]}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => setPassengers(p => ({ ...p, [type]: p[type] + 1 }))}
-                                  className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center font-bold hover:bg-slate-50"
-                                >+</button>
-                              </div>
-                            </div>
-                          ))}
-
-                          {/* Cabin Class removed from here and moved to top for better visibility */}
-
-                          <button
-                            type="button"
-                            onClick={() => setShowPassengerDropdown(false)}
-                            className="w-full bg-primary text-white font-black py-3 rounded-2xl shadow-xl mt-4"
-                          >
-                            Apply
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
+                  {/* Passenger Dropdown was moved to top */}
                   <div className="flex items-center gap-6">
                     {/* Simplified: Removed miles and promo code as requested */}
                   </div>
