@@ -38,8 +38,10 @@ const AdminDashboard = () => {
   const [flightForm, setFlightForm] = useState({
     airline: '', flight_number: '', departure_airport_id: '', arrival_airport_id: '',
     departure_time: '', arrival_time: '', economy_price: '',
-    total_seats: '180', status: 'Scheduled', gate: '', terminal: ''
+    total_seats: '180', status: 'Scheduled', gate: '', terminal: '', aircraft_id: ''
   });
+  const [availableFleet, setAvailableFleet] = useState([]);
+  const [loadingFleet, setLoadingFleet] = useState(false);
   const [formData, setFormData] = useState({
     airline: '', departure_city: '', arrival_city: '',
     departure_time: '', arrival_time: '', economy_price: '',
@@ -139,6 +141,33 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
+    const fetchFleet = async () => {
+      if (!flightForm.departure_time || !flightForm.arrival_time) return;
+      if (new Date(flightForm.arrival_time) <= new Date(flightForm.departure_time)) return;
+      
+      setLoadingFleet(true);
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/fleet/available?departure_time=${flightForm.departure_time}&arrival_time=${flightForm.arrival_time}${selectedItem ? `&exclude_flight_id=${selectedItem.id}` : ''}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const result = await res.json();
+          setAvailableFleet(result);
+        }
+      } catch (err) {
+        console.error('Failed to fetch available fleet:', err);
+      } finally {
+        setLoadingFleet(false);
+      }
+    };
+    
+    if (isModalOpen && flightForm.departure_time && flightForm.arrival_time) {
+      fetchFleet();
+    }
+  }, [flightForm.departure_time, flightForm.arrival_time, isModalOpen, selectedItem]);
+
+  useEffect(() => {
     if (data.flights.length === 0) {
       const fetchFlights = async () => {
         const token = localStorage.getItem('token');
@@ -205,12 +234,16 @@ const AdminDashboard = () => {
         setFlightForm({
           airline: '', flight_number: '', departure_airport_id: '', arrival_airport_id: '',
           departure_time: '', arrival_time: '', economy_price: '',
-          total_seats: '180', status: 'Scheduled', gate: '', terminal: ''
+          total_seats: '180', status: 'Scheduled', gate: '', terminal: '', aircraft_id: ''
         });
         setSelectedItem(null);
+      } else {
+        const errorData = await res.json();
+        alert(`Error: ${errorData.message || 'Failed to save flight'}`);
       }
     } catch (err) {
       console.error(err);
+      alert('Network error occurred while saving flight.');
     }
   };
 
@@ -374,7 +407,8 @@ const AdminDashboard = () => {
         total_seats: flight.total_seats || '180',
         status: flight.status || 'Scheduled',
         gate: flight.gate || '',
-        terminal: flight.terminal || ''
+        terminal: flight.terminal || '',
+        aircraft_id: flight.aircraft_id || ''
       });
       setSelectedItem(flight);
       setCurrentFlight(flight);
@@ -382,7 +416,7 @@ const AdminDashboard = () => {
       setFlightForm({
         airline: '', flight_number: '', departure_airport_id: '', arrival_airport_id: '',
         departure_time: '', arrival_time: '', economy_price: '',
-        total_seats: '180', status: 'Scheduled', gate: '', terminal: ''
+        total_seats: '180', status: 'Scheduled', gate: '', terminal: '', aircraft_id: ''
       });
       setSelectedItem(null);
       setCurrentFlight(null);
@@ -418,6 +452,8 @@ const AdminDashboard = () => {
     if (activeTab === 'tickets') return item.passenger_name?.toLowerCase().includes(searchLower) || item.ticket_number?.includes(searchTerm);
     return true;
   });
+
+  const isTimeInvalid = flightForm.departure_time && flightForm.arrival_time && new Date(flightForm.arrival_time) <= new Date(flightForm.departure_time);
 
   return (
     <>
@@ -769,8 +805,9 @@ const AdminDashboard = () => {
                   <input
                     required
                     type="datetime-local" value={flightForm.arrival_time} onChange={e => setFlightForm({ ...flightForm, arrival_time: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
+                    className={`w-full bg-slate-50 border rounded-2xl p-4 outline-none font-bold ${isTimeInvalid ? 'border-red-400 focus:ring-2 focus:ring-red-400' : 'border-slate-100 focus:ring-2 focus:ring-primary'}`}
                   />
+                  {isTimeInvalid && <p className="text-[10px] text-red-500 font-bold ml-2">Arrival time must be after departure time.</p>}
                 </div>
 
                 <div className="col-span-2 grid grid-cols-2 gap-6 pt-4 border-t border-slate-100 mt-4">
@@ -801,7 +838,38 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-6">
+                <div className="space-y-2 col-span-2">
+                  <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest flex items-center justify-between">
+                    <span>Aircraft Assignment</span>
+                    {loadingFleet && <span className="text-primary animate-pulse">Checking availability...</span>}
+                  </label>
+                  <select
+                    value={flightForm.aircraft_id || ''}
+                    disabled={!flightForm.departure_time || !flightForm.arrival_time || isTimeInvalid}
+                    onChange={e => {
+                      const selectedId = e.target.value;
+                      const ac = availableFleet.find(a => a.id === parseInt(selectedId));
+                      setFlightForm({ 
+                        ...flightForm, 
+                        aircraft_id: selectedId,
+                        total_seats: ac ? (ac.economy_capacity + ac.business_capacity).toString() : flightForm.total_seats
+                      });
+                    }}
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-primary font-bold text-sm appearance-none disabled:opacity-50"
+                  >
+                    <option value="">{(!flightForm.departure_time || !flightForm.arrival_time || isTimeInvalid) ? 'Enter valid flight times first' : 'Select Available Aircraft'}</option>
+                    {availableFleet.map(ac => (
+                      <option key={ac.id} value={ac.id}>
+                        {ac.model} ({ac.tail_number}) - {ac.economy_capacity + ac.business_capacity} seats
+                      </option>
+                    ))}
+                  </select>
+                  {(!flightForm.departure_time || !flightForm.arrival_time) && !isTimeInvalid && (
+                    <p className="text-[10px] text-slate-400 mt-1 ml-4 italic">Please set departure and arrival times to see available aircraft.</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-6 col-span-2">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Terminal</label>
                     <input
@@ -839,7 +907,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="col-span-2 pt-6">
-                  <button type="submit" className="w-full py-5 bg-primary text-white font-black uppercase tracking-[0.2em] rounded-3xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                  <button disabled={isTimeInvalid} type="submit" className="w-full py-5 bg-primary disabled:opacity-50 text-white font-black uppercase tracking-[0.2em] rounded-3xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
                     {selectedItem ? 'Update Flight' : 'Add Flight'}
                   </button>
                 </div>

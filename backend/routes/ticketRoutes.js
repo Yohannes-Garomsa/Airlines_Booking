@@ -9,10 +9,10 @@ const {
   verifyTicket,
   getAllTickets
 } = require('../controllers/ticketController');
-
 const { protectRoute, adminOnly } = require('../middleware/authMiddleware');
 const Ticket = require('../models/ticketModel');
-const asyncHandler = require('../utils/asyncHandler');
+const asyncHgitandler = require('../utils/asyncHandler');
+const asyncHandler = require('express-async-handler');
 
 // Public routes (No auth required for QR scan or browser PDF download)
 router.get('/public/:id', getTicket);

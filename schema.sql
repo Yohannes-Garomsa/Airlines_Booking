@@ -69,6 +69,7 @@ CREATE TABLE seats (
     flight_id INTEGER REFERENCES flights(id) ON DELETE CASCADE,
     seat_number VARCHAR(10) NOT NULL,
     is_occupied BOOLEAN DEFAULT FALSE,
+    seat_class VARCHAR(20) DEFAULT 'Economy',
     booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
     UNIQUE(flight_id, seat_number)
 );

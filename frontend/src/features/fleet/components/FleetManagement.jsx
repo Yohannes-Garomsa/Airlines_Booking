@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Plane, Plus, Trash2, Edit2, AlertCircle, CheckCircle2, ShieldCheck, X } from 'lucide-react';
+import { Wrench, Plane, Plus, Trash2, Edit2, AlertCircle, CheckCircle2, ShieldCheck, X, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FleetManagement = () => {
@@ -221,6 +221,43 @@ const FleetManagement = () => {
                 <div className="bg-slate-50 p-4 rounded-2xl">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Business</p>
                   <p className="text-xl font-black text-slate-800">{aircraft.business_capacity} <span className="text-xs text-slate-400">seats</span></p>
+                </div>
+              </div>
+
+              {/* Utilization Details */}
+              <div className="pt-6 border-t border-slate-100 space-y-4">
+                {/* Current Assignment */}
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-primary" /> Current Assignment
+                  </p>
+                  {aircraft.current_assignment ? (
+                    <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+                      <p className="font-bold text-slate-800 text-xs">{aircraft.current_assignment.flight_number}</p>
+                      <p className="text-[10px] text-slate-500">{aircraft.current_assignment.departure_city} ➔ {aircraft.current_assignment.arrival_city}</p>
+                      <p className="text-[9px] font-black text-primary mt-1">{new Date(aircraft.current_assignment.departure_time).toLocaleString()}</p>
+                    </div>
+                  ) : (
+                    <p className="text-[10px] font-bold text-slate-400 bg-slate-50 p-3 rounded-xl border border-dashed border-slate-200 text-center">No upcoming flights</p>
+                  )}
+                </div>
+
+                {/* History */}
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                    <History className="h-3 w-3" /> Recent History
+                  </p>
+                  <div className="space-y-2">
+                    {aircraft.history && aircraft.history.length > 0 ? aircraft.history.map((h, i) => (
+                      <div key={i} className="flex justify-between items-center text-[10px] bg-slate-50/50 p-2 rounded-lg border border-slate-100">
+                        <span className="font-bold text-slate-600">{h.flight_number}</span>
+                        <span className="text-slate-400 truncate max-w-[80px] text-center">{h.arrival_city.split(' ')[0]}</span>
+                        <span className="font-black text-slate-400">{new Date(h.departure_time).toLocaleDateString()}</span>
+                      </div>
+                    )) : (
+                      <p className="text-[10px] text-slate-400 italic text-center py-2 bg-slate-50 rounded-xl border border-dashed border-slate-200">No flight history</p>
+                    )}
+                  </div>
                 </div>
               </div>
               

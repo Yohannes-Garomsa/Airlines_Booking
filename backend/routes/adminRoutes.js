@@ -14,6 +14,7 @@ const {
   createAirport,
   deleteAirport,
   getFleet,
+  getAvailableFleet,
   createAircraft,
   updateAircraft,
   deleteAircraft,
@@ -62,6 +63,7 @@ router.delete('/airports/:id', deleteAirport);
 
 // Fleet
 router.get('/fleet', getFleet);
+router.get('/fleet/available', getAvailableFleet);
 router.post('/fleet', createAircraft);
 router.put('/fleet/:id', updateAircraft);
 router.delete('/fleet/:id', deleteAircraft);

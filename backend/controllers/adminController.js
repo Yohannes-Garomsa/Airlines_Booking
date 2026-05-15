@@ -107,7 +107,67 @@ const changeUserRole = asyncHandler(async (req, res) => {
 // --- Fleet Management ---
 
 const getFleet = asyncHandler(async (req, res) => {
-  const result = await db.query('SELECT * FROM aircraft ORDER BY model ASC');
+  const result = await db.query(`
+    SELECT a.*, 
+           COALESCE(
+             (SELECT json_agg(h) FROM (
+                SELECT f.id, f.flight_number, f.departure_city, f.arrival_city, f.departure_time, f.status
+                FROM flights f
+                WHERE f.aircraft_id = a.id AND f.departure_time < NOW()
+                ORDER BY f.departure_time DESC
+                LIMIT 5
+             ) h), '[]'
+           ) as history,
+           COALESCE(
+             (SELECT json_build_object(
+                'id', f.id, 
+                'flight_number', f.flight_number, 
+                'departure_city', f.departure_city, 
+                'arrival_city', f.arrival_city, 
+                'departure_time', f.departure_time,
+                'status', f.status
+              )
+              FROM flights f
+              WHERE f.aircraft_id = a.id AND f.departure_time >= NOW()
+              ORDER BY f.departure_time ASC
+              LIMIT 1
+             ), NULL
+           ) as current_assignment
+    FROM aircraft a
+    ORDER BY a.model ASC
+  `);
+  res.status(200).json(result.rows);
+});
+
+const getAvailableFleet = asyncHandler(async (req, res) => {
+  const { departure_time, arrival_time, exclude_flight_id } = req.query;
+
+  if (!departure_time || !arrival_time) {
+    res.status(400);
+    throw new Error('Departure and arrival times are required');
+  }
+
+  let query = `
+    SELECT * FROM aircraft
+    WHERE status = 'Active'
+    AND id NOT IN (
+      SELECT aircraft_id FROM flights
+      WHERE aircraft_id IS NOT NULL
+      AND status != 'Cancelled'
+      AND (
+        (departure_time < $2 AND arrival_time > $1)
+      )
+  `;
+  const params = [departure_time, arrival_time];
+
+  if (exclude_flight_id) {
+    query += ` AND id != $3`;
+    params.push(exclude_flight_id);
+  }
+
+  query += ` ) ORDER BY model ASC`;
+
+  const result = await db.query(query, params);
   res.status(200).json(result.rows);
 });
 
@@ -158,11 +218,12 @@ const deleteAircraft = asyncHandler(async (req, res) => {
 const getSeatMatrix = asyncHandler(async (req, res) => {
   const { flightId } = req.params;
   const result = await db.query(`
-    SELECT s.*, b.pnr, p.name as passenger_name
+    SELECT s.*, b.pnr, STRING_AGG(p.name, ', ') as passenger_name
     FROM seats s
     LEFT JOIN bookings b ON s.booking_id = b.id
     LEFT JOIN passengers p ON b.id = p.booking_id
     WHERE s.flight_id = $1
+    GROUP BY s.id, b.pnr
     ORDER BY s.seat_number ASC
   `, [flightId]);
   res.status(200).json(result.rows);
@@ -433,6 +494,7 @@ module.exports = {
   createAirport,
   deleteAirport,
   getFleet,
+  getAvailableFleet,
   createAircraft,
   updateAircraft,
   deleteAircraft,

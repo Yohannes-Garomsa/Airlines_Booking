@@ -10,7 +10,8 @@ const Flight = {
       departure_time, 
       arrival_time, 
       economy_price, 
-      total_seats,
+      total_seats: provided_total_seats,
+      aircraft_id,
       status,
       gate,
       terminal
@@ -23,18 +24,35 @@ const Flight = {
     const departure_city = departureAirport.rows[0]?.city || 'Unknown';
     const arrival_city = arrivalAirport.rows[0]?.city || 'Unknown';
 
+    // Split total seats
+    let economy_seats, business_seats, total_seats;
+
+    if (aircraft_id) {
+      const aircraft = await db.query('SELECT economy_capacity, business_capacity FROM aircraft WHERE id = $1', [aircraft_id]);
+      if (aircraft.rows.length > 0) {
+        economy_seats = aircraft.rows[0].economy_capacity;
+        business_seats = aircraft.rows[0].business_capacity;
+        total_seats = economy_seats + business_seats;
+      } else {
+        // Fallback to manual split if aircraft not found (shouldn't happen with FK)
+        total_seats = provided_total_seats || 180;
+        economy_seats = Math.floor(total_seats * 0.85);
+        business_seats = total_seats - economy_seats;
+      }
+    } else {
+      total_seats = provided_total_seats || 180;
+      economy_seats = Math.floor(total_seats * 0.85);
+      business_seats = total_seats - economy_seats;
+    }
+
     // Real Business Rule: Business price is 10% greater than economy price
     const business_price = (parseFloat(economy_price) * 1.1).toFixed(2);
-    
-    // Split total seats (Default 180 -> 150 Economy, 30 Business)
-    const economy_seats = Math.floor(total_seats * 0.85);
-    const business_seats = total_seats - economy_seats;
 
     const result = await db.query(
       `INSERT INTO flights 
-       (airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, available_seats, status, gate, terminal) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
-      [airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, total_seats, status || 'Scheduled', gate, terminal]
+       (airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, available_seats, aircraft_id, status, gate, terminal) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING *`,
+      [airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, total_seats, aircraft_id, status || 'Scheduled', gate, terminal]
     );
     return result.rows[0];
   },
@@ -43,10 +61,12 @@ const Flight = {
     const result = await db.query(`
       SELECT f.*, 
              da.name as departure_airport_name, da.city as departure_city, da.iata_code as departure_iata,
-             aa.name as arrival_airport_name, aa.city as arrival_city, aa.iata_code as arrival_iata
+             aa.name as arrival_airport_name, aa.city as arrival_city, aa.iata_code as arrival_iata,
+             air.model as aircraft_model, air.tail_number
       FROM flights f
       JOIN airports da ON f.departure_airport_id = da.id
       JOIN airports aa ON f.arrival_airport_id = aa.id
+      LEFT JOIN aircraft air ON f.aircraft_id = air.id
       ORDER BY f.departure_time ASC
     `);
     return result.rows;
@@ -60,10 +80,12 @@ const Flight = {
       SELECT f.*, 
              da.name as departure_airport_name, da.city as departure_city, da.iata_code as departure_iata,
              aa.name as arrival_airport_name, aa.city as arrival_city, aa.iata_code as arrival_iata,
+             air.model as aircraft_model, air.tail_number,
              EXTRACT(EPOCH FROM (f.arrival_time - f.departure_time))/3600 as duration 
       FROM flights f
       JOIN airports da ON f.departure_airport_id = da.id
       JOIN airports aa ON f.arrival_airport_id = aa.id
+      LEFT JOIN aircraft air ON f.aircraft_id = air.id
       WHERE 1=1
     `;
     const params = [];
@@ -110,7 +132,12 @@ const Flight = {
   },
   
   getById: async (id) => {
-    const result = await db.query('SELECT * FROM flights WHERE id = $1', [id]);
+    const result = await db.query(`
+      SELECT f.*, air.model as aircraft_model, air.tail_number
+      FROM flights f
+      LEFT JOIN aircraft air ON f.aircraft_id = air.id
+      WHERE f.id = $1
+    `, [id]);
     return result.rows[0];
   },
 
@@ -123,7 +150,8 @@ const Flight = {
       departure_time, 
       arrival_time, 
       economy_price, 
-      total_seats,
+      total_seats: provided_total_seats,
+      aircraft_id,
       status,
       gate,
       terminal
@@ -136,12 +164,28 @@ const Flight = {
     const departure_city = departureAirport.rows[0]?.city || 'Unknown';
     const arrival_city = arrivalAirport.rows[0]?.city || 'Unknown';
 
+    // Split total seats
+    let economy_seats, business_seats, total_seats;
+
+    if (aircraft_id) {
+      const aircraft = await db.query('SELECT economy_capacity, business_capacity FROM aircraft WHERE id = $1', [aircraft_id]);
+      if (aircraft.rows.length > 0) {
+        economy_seats = aircraft.rows[0].economy_capacity;
+        business_seats = aircraft.rows[0].business_capacity;
+        total_seats = economy_seats + business_seats;
+      } else {
+        total_seats = provided_total_seats || 180;
+        economy_seats = Math.floor(total_seats * 0.85);
+        business_seats = total_seats - economy_seats;
+      }
+    } else {
+      total_seats = provided_total_seats || 180;
+      economy_seats = Math.floor(total_seats * 0.85);
+      business_seats = total_seats - economy_seats;
+    }
+
     // Real Business Rule: Business price is 10% greater than economy price
     const business_price = (parseFloat(economy_price) * 1.1).toFixed(2);
-
-    // Split total seats
-    const economy_seats = Math.floor(total_seats * 0.85);
-    const business_seats = total_seats - economy_seats;
 
     const result = await db.query(
       `UPDATE flights SET 
@@ -149,9 +193,9 @@ const Flight = {
        departure_airport_id = $5, arrival_airport_id = $6, 
        departure_time = $7, arrival_time = $8, economy_price = $9, business_price = $10, 
        economy_seats = $11, business_seats = $12, total_seats = $13, available_seats = $13,
-       status = $14, gate = $15, terminal = $16
-       WHERE id = $17 RETURNING *`,
-      [airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, status, gate, terminal, id]
+       aircraft_id = $14, status = $15, gate = $16, terminal = $17
+       WHERE id = $18 RETURNING *`,
+      [airline, flight_number, departure_city, arrival_city, departure_airport_id, arrival_airport_id, departure_time, arrival_time, economy_price, business_price, economy_seats, business_seats, total_seats, aircraft_id, status, gate, terminal, id]
     );
     return result.rows[0];
   },

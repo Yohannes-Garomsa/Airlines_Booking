@@ -23,11 +23,12 @@ const Seat = {
     const queries = [];
     
     for (let r = 1; r <= rows; r++) {
-      for (let s = 0; s < seatsPerRow; s++) {
+      const seatClass = r <= 2 ? 'Business' : 'Economy';
+      for (let s = 0; s < (r <= 2 ? 4 : seatsPerRow); s++) { // Business rows often have fewer seats
         const seatNum = `${r}${letters[s]}`;
         queries.push(db.query(
-          'INSERT INTO seats (flight_id, seat_number) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-          [flightId, seatNum]
+          'INSERT INTO seats (flight_id, seat_number, seat_class) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+          [flightId, seatNum, seatClass]
         ));
       }
     }

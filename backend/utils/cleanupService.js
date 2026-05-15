@@ -24,7 +24,10 @@ const cleanupExpiredBookings = async () => {
       // 2. Mark booking as cancelled
       await db.query("UPDATE bookings SET status = 'cancelled' WHERE id = $1", [booking.id]);
 
-      // 3. Optional: Restore seats to flight if your system tracks available seats
+      // 2.5 Release seats in seats table
+      await db.query("UPDATE seats SET is_occupied = FALSE, booking_id = NULL WHERE booking_id = $1", [booking.id]);
+
+      // 3. Restore seats to flight if your system tracks available seats
       // (This assumes your flights table has available_seats columns)
       const seatColumn = booking.cabin_class.toLowerCase() === 'business' ? 'business_seats' : 'economy_seats';
       await db.query(`

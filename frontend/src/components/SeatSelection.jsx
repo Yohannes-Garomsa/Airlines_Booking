@@ -98,7 +98,7 @@ const SeatSelection = ({ flightId, requiredSeats = 1, onSelect }) => {
                     onClick={() => handleSeatClick(seat)}
                     className={`w-10 h-10 rounded-xl transition-all flex items-center justify-center font-bold text-xs ${
                       seat.is_occupied 
-                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                        ? 'bg-slate-300 text-slate-500 cursor-not-allowed' 
                         : selectedSeats.includes(seat.seat_number)
                           ? 'bg-primary text-white shadow-lg shadow-blue-200 scale-110'
                           : 'bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-primary'

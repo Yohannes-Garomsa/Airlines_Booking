@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Grid, Plane, Users, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { io } from 'socket.io-client';
 
 const SeatMatrix = () => {
   const [flights, setFlights] = useState([]);
@@ -51,6 +52,23 @@ const SeatMatrix = () => {
     };
 
     fetchSeats();
+
+    // Real-time sync
+    const socket = io(import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000');
+    
+    socket.on('seatUpdate', (updatedSeat) => {
+      if (updatedSeat.flight_id === parseInt(selectedFlight)) {
+        setSeats(currentSeats => 
+          currentSeats.map(seat => 
+            seat.id === updatedSeat.id ? { ...seat, ...updatedSeat } : seat
+          )
+        );
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [selectedFlight]);
 
   // Generate Cabin Layout (Simplified: rows of 6 for economy, rows of 4 for business)
@@ -62,9 +80,9 @@ const SeatMatrix = () => {
     const isOccupied = seat.is_occupied;
     const isBusiness = seat.seat_class === 'Business';
     
-    // Base styles
-    let seatColor = isOccupied ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'bg-slate-100 text-slate-400 border border-slate-200 hover:bg-slate-200';
-    if (!isOccupied && isBusiness) seatColor = 'bg-accent/20 text-primary border border-accent/30 hover:bg-accent/30';
+    // Base styles - Synched with User Booking View
+    let seatColor = isOccupied ? 'bg-slate-300 text-slate-500 shadow-inner' : 'bg-slate-50 text-slate-400 border border-slate-100 hover:bg-blue-50 hover:text-primary';
+    if (!isOccupied && isBusiness) seatColor = 'bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-accent/20';
 
     return (
       <div key={seat.id} className="relative group cursor-pointer flex justify-center items-center">
@@ -145,11 +163,11 @@ const SeatMatrix = () => {
                   <span className="text-xl font-black text-slate-800">{seats.length}</span>
                 </div>
                 <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-                  <span className="font-bold text-slate-600 flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-600"></div> Occupied</span>
-                  <span className="text-xl font-black text-blue-600">{seats.filter(s => s.is_occupied).length}</span>
+                  <span className="font-bold text-slate-600 flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-slate-300"></div> Occupied</span>
+                  <span className="text-xl font-black text-slate-500">{seats.filter(s => s.is_occupied).length}</span>
                 </div>
                 <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-                  <span className="font-bold text-slate-600 flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-slate-200"></div> Available</span>
+                  <span className="font-bold text-slate-600 flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-slate-50 border border-slate-200"></div> Available</span>
                   <span className="text-xl font-black text-slate-400">{seats.filter(s => !s.is_occupied).length}</span>
                 </div>
                 
@@ -161,7 +179,7 @@ const SeatMatrix = () => {
                   </div>
                   <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-1000"
+                      className="h-full bg-gradient-to-r from-slate-300 to-slate-400 rounded-full transition-all duration-1000"
                       style={{ width: `${(seats.filter(s => s.is_occupied).length / (seats.length || 1)) * 100}%` }}
                     ></div>
                   </div>
