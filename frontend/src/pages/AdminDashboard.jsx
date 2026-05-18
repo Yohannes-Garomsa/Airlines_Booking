@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import AdminOverview from '../components/admin/AdminOverview';
+
 import PassengerManagement from '../features/passengers/index';
 import FleetManagement from '../features/fleet/components/FleetManagement';
 import SeatMatrix from '../features/seats/components/SeatMatrix';
@@ -18,7 +18,7 @@ import AlertCenter from '../features/alerts/components/AlertCenter';
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(window.location.search);
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'analytics');
   const [data, setData] = useState({
     flights: [], bookings: [], users: [], tickets: [],
     fleet: [], seats: [], airports: [],
@@ -426,7 +426,7 @@ const AdminDashboard = () => {
   };
 
   const menuItems = [
-    { id: 'overview', label: 'Control Room', icon: LayoutDashboard },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'flights', label: 'Flight Ops', icon: Plane },
     { id: 'bookings', label: 'Reservations', icon: ShoppingBag },
     { id: 'users', label: 'Passengers', icon: Users },
@@ -434,7 +434,6 @@ const AdminDashboard = () => {
     { id: 'seats', label: 'Seat Matrix', icon: Grid },
     { id: 'payments', label: 'Revenue & FX', icon: CreditCard },
     { id: 'fleet', label: 'Fleet Mgmt', icon: Wrench },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'notifications', label: 'Alert Center', icon: Bell },
     { id: 'staff', label: 'Staff Ops', icon: ShieldCheck },
   ];
@@ -472,7 +471,7 @@ const AdminDashboard = () => {
 
           <nav className="space-y-4 flex-grow">
             {[
-              { id: 'overview', label: 'Control Room', icon: LayoutDashboard },
+              { id: 'analytics', label: 'Analytics', icon: BarChart3 },
               { id: 'flights', label: 'Flight Ops', icon: Plane },
               { id: 'bookings', label: 'Reservations', icon: ShoppingBag },
               { id: 'users', label: 'Passengers', icon: Users },
@@ -480,7 +479,6 @@ const AdminDashboard = () => {
               { id: 'seats', label: 'Seat Matrix', icon: Grid },
               { id: 'payments', label: 'Revenue & FX', icon: CreditCard },
               { id: 'fleet', label: 'Fleet Mgmt', icon: Wrench },
-              { id: 'analytics', label: 'Analytics', icon: BarChart3 },
               { id: 'notifications', label: 'Alert Center', icon: Bell },
               { id: 'staff', label: 'Staff Ops', icon: ShieldCheck },
             ].map(tab => (
@@ -551,7 +549,6 @@ const AdminDashboard = () => {
             </div>
           ) : (
             <div className="space-y-12">
-              {activeTab === 'overview' && <AdminOverview stats={stats} />}
               {activeTab === 'analytics' && <Analytics />}
               {activeTab === 'notifications' && <AlertCenter />}
               {activeTab === 'users' && <PassengerManagement />}
