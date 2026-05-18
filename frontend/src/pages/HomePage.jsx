@@ -1,7 +1,7 @@
 // SkyBound Booking Interface v3.1 - Advanced Features Fixed
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Plane, Calendar, MapPin, Users, Search, AlertCircle, Loader2, LogOut, User, Plus, Trash2, ShieldCheck } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { flightService } from '../services/api';
 import FlightCard from '../components/FlightCard';
 import { AuthContext } from '../context/AuthContext';
@@ -25,6 +25,16 @@ function HomePage() {
   const [error, setError] = useState(null);
   const [searched, setSearched] = useState(false);
   const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  // Professional Security: Prevent admins from accessing the public portal.
+  // If an admin clicks 'back' and ends up here, log them out and force them to the login page.
+  useEffect(() => {
+    if (user && ['admin', 'superadmin'].includes(user.role)) {
+      logout();
+      navigate('/login', { replace: true });
+    }
+  }, [user, logout, navigate]);
 
   const passengerDropdownRef = useRef(null);
 

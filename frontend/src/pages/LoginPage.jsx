@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Plane, Mail, Lock, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
@@ -7,9 +7,17 @@ const LoginPage = () => {
   const [credentials, setCredentials] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useContext(AuthContext);
+  const { login, logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Professional Security: If an admin uses the back button to reach the login page,
+  // we immediately log them out to secure the session from unauthorized access.
+  useEffect(() => {
+    if (user && ['admin', 'superadmin'].includes(user.role)) {
+      logout();
+    }
+  }, [user, logout]);
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
