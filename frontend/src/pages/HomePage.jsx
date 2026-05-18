@@ -96,6 +96,8 @@ function HomePage() {
   }, [page, sortBy]);
 
   const totalPassengers = passengers.adults + passengers.children + passengers.infants;
+  const now = new Date();
+  const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -313,6 +315,7 @@ function HomePage() {
                       <input
                         required
                         type="date"
+                        min={today}
                         value={segment.departure_date}
                         onChange={(e) => handleSegmentChange(index, 'departure_date', e.target.value)}
                         className="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-slate-700 transition-all"
@@ -327,6 +330,7 @@ function HomePage() {
                         <Calendar className="h-5 w-5 text-secondary absolute left-4 top-1/2 -translate-y-1/2" />
                         <input
                           type="date"
+                          min={segment.departure_date || today}
                           value={segment.return_date}
                           onChange={(e) => handleSegmentChange(index, 'return_date', e.target.value)}
                           className="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-slate-700 transition-all"
