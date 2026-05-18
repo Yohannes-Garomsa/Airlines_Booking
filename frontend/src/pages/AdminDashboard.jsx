@@ -453,6 +453,8 @@ const AdminDashboard = () => {
   });
 
   const isTimeInvalid = flightForm.departure_time && flightForm.arrival_time && new Date(flightForm.arrival_time) <= new Date(flightForm.departure_time);
+  
+  const minDateTime = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
   return (
     <>
@@ -792,7 +794,10 @@ const AdminDashboard = () => {
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Departure Time</label>
                   <input
                     required
-                    type="datetime-local" value={flightForm.departure_time} onChange={e => setFlightForm({ ...flightForm, departure_time: e.target.value })}
+                    type="datetime-local" 
+                    min={minDateTime}
+                    value={flightForm.departure_time} 
+                    onChange={e => setFlightForm({ ...flightForm, departure_time: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 focus:ring-2 focus:ring-primary outline-none font-bold"
                   />
                 </div>
@@ -801,7 +806,10 @@ const AdminDashboard = () => {
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Arrival Time</label>
                   <input
                     required
-                    type="datetime-local" value={flightForm.arrival_time} onChange={e => setFlightForm({ ...flightForm, arrival_time: e.target.value })}
+                    type="datetime-local" 
+                    min={flightForm.departure_time || minDateTime}
+                    value={flightForm.arrival_time} 
+                    onChange={e => setFlightForm({ ...flightForm, arrival_time: e.target.value })}
                     className={`w-full bg-slate-50 border rounded-2xl p-4 outline-none font-bold ${isTimeInvalid ? 'border-red-400 focus:ring-2 focus:ring-red-400' : 'border-slate-100 focus:ring-2 focus:ring-primary'}`}
                   />
                   {isTimeInvalid && <p className="text-[10px] text-red-500 font-bold ml-2">Arrival time must be after departure time.</p>}
