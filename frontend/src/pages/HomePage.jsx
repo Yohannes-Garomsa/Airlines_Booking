@@ -1,5 +1,5 @@
 // SkyBound Booking Interface v3.1 - Advanced Features Fixed
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Plane, Calendar, MapPin, Users, Search, AlertCircle, Loader2, LogOut, User, Plus, Trash2, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { flightService } from '../services/api';
@@ -25,6 +25,20 @@ function HomePage() {
   const [error, setError] = useState(null);
   const [searched, setSearched] = useState(false);
   const { user, logout } = useContext(AuthContext);
+
+  const passengerDropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (passengerDropdownRef.current && !passengerDropdownRef.current.contains(event.target)) {
+        setShowPassengerDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleSegmentChange = (index, field, value) => {
     const newSegments = [...segments];
@@ -186,7 +200,7 @@ function HomePage() {
                 <div className="flex bg-slate-100 p-1 rounded-2xl items-center relative z-[9999]">
                   
                   {/* Passenger Dropdown */}
-                  <div className="relative">
+                  <div className="relative" ref={passengerDropdownRef}>
                     <button
                       type="button"
                       onClick={() => setShowPassengerDropdown(!showPassengerDropdown)}
@@ -201,7 +215,11 @@ function HomePage() {
                         <div className="space-y-6">
                           {['adults', 'children', 'infants'].map(type => (
                             <div key={type} className="flex items-center justify-between">
-                              <div>
+                              <div 
+                                className="cursor-pointer hover:opacity-80 transition-opacity" 
+                                onClick={() => setShowPassengerDropdown(false)}
+                                title="Close dropdown"
+                              >
                                 <p className="font-bold text-slate-700 capitalize">{type}</p>
                                 <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
                                   {type === 'adults' ? '12+ Years' : type === 'children' ? '2-12 Years' : 'Under 2'}
