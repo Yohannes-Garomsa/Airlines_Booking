@@ -29,11 +29,19 @@ const LoginPage = () => {
     setLoading(true);
     try {
       const data = await login(credentials);
+      
+      // Strict Check: Ensure admins use the dedicated Admin Portal
+      if (['admin', 'superadmin'].includes(data.user.role)) {
+        logout();
+        setError('Administrators must use the secure Admin Portal to log in.');
+        setLoading(false);
+        return;
+      }
+
       // Professional redirection: 
       // 1. Check if there's a previous location stored in state (from a protected route)
-      // 2. If not, redirect based on role (admin/superadmin -> /admin, user -> /)
-      const from = location.state?.from?.pathname || 
-                   (['admin', 'superadmin'].includes(data.user.role) ? '/admin' : '/');
+      // 2. If not, redirect to home
+      const from = location.state?.from?.pathname || '/';
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');

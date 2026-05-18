@@ -32,7 +32,7 @@ function HomePage() {
   useEffect(() => {
     if (user && ['admin', 'superadmin'].includes(user.role)) {
       logout();
-      navigate('/login', { replace: true });
+      navigate('/admin/login', { replace: true });
     }
   }, [user, logout, navigate]);
 

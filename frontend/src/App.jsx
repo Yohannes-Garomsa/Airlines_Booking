@@ -11,6 +11,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminVerifyTicket from './pages/AdminVerifyTicket';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import LoginPage from './pages/LoginPage';
+import AdminLoginPage from './pages/AdminLoginPage';
 import RegisterPage from './pages/RegisterPage';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           
           {/* New Upgraded Admin Routes */}
