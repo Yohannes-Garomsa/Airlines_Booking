@@ -11,13 +11,15 @@ const AdminLoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
+
   // Security: If an admin uses the back button to reach the login page,
   // we immediately log them out to secure the session from unauthorized access.
   useEffect(() => {
-    if (user && ['admin', 'superadmin'].includes(user.role)) {
+    if (user && ['admin', 'superadmin'].includes(user.role) && !justLoggedIn) {
       logout();
     }
-  }, [user, logout]);
+  }, [user, logout, justLoggedIn]);
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -28,6 +30,7 @@ const AdminLoginPage = () => {
     setError('');
     setLoading(true);
     try {
+      setJustLoggedIn(true);
       const data = await login(credentials);
       
       // Strict Check: Ensure only admins can use this portal
