@@ -2,7 +2,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Plane, User, Mail, CreditCard, ChevronLeft, Loader2, CheckCircle, ShieldCheck, Briefcase, Clock } from 'lucide-react';
 import { flightService } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 
 import SeatSelection from '../components/SeatSelection';
 
@@ -21,6 +21,45 @@ const BookingPage = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
 
   const { user } = useContext(AuthContext);
+
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+  const timeoutRef = useRef(null);
+  const warningRef = useRef(null);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login', { state: { from: location }, replace: true });
+      return;
+    }
+
+    const resetTimer = () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (warningRef.current) clearTimeout(warningRef.current);
+      setShowTimeoutWarning(false);
+
+      warningRef.current = setTimeout(() => {
+        setShowTimeoutWarning(true);
+      }, 4 * 60 * 1000);
+
+      timeoutRef.current = setTimeout(() => {
+        alert("Your booking session has expired due to inactivity.");
+        navigate('/', { replace: true });
+      }, 5 * 60 * 1000);
+    };
+
+    resetTimer();
+
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    const handleActivity = () => resetTimer();
+
+    events.forEach(event => document.addEventListener(event, handleActivity));
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (warningRef.current) clearTimeout(warningRef.current);
+      events.forEach(event => document.removeEventListener(event, handleActivity));
+    };
+  }, [user, navigate, location]);
 
   useEffect(() => {
     const fetchFlight = async () => {
@@ -69,8 +108,7 @@ const BookingPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
-      alert('You must be logged in to confirm a booking.');
-      navigate('/login');
+      navigate('/login', { state: { from: location }, replace: true });
       return;
     }
     if (selectedSeats.length !== seatsNeeded) {
@@ -282,6 +320,27 @@ const BookingPage = () => {
           </div>
         </div>
       </main>
+
+      {/* Session Timeout Warning Modal */}
+      {showTimeoutWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 text-center animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="h-8 w-8 text-red-500" />
+            </div>
+            <h3 className="text-2xl font-black text-gray-800 mb-2">Session Expiring</h3>
+            <p className="text-gray-600 font-medium mb-6">
+              Your session will expire in 1 minute due to inactivity. Please continue booking to keep your session active.
+            </p>
+            <button 
+              onClick={() => setShowTimeoutWarning(false)}
+              className="w-full bg-primary hover:bg-blue-800 text-white font-black py-4 rounded-2xl transition-all shadow-lg"
+            >
+              Continue Booking
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -42,8 +42,10 @@ const LoginPage = () => {
       // Professional redirection: 
       // 1. Check if there's a previous location stored in state (from a protected route)
       // 2. If not, redirect to home
-      const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      const fromPath = location.state?.from?.pathname || '/';
+      const fromSearch = location.state?.from?.search || '';
+      const fromState = location.state?.from?.state || {};
+      navigate(`${fromPath}${fromSearch}`, { replace: true, state: fromState });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
     } finally {
