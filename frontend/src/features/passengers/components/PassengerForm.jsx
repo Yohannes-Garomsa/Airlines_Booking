@@ -200,7 +200,7 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
       gender: initialData?.gender || "Male",
       dateOfBirth: initialData?.dateOfBirth ? new Date(initialData.dateOfBirth) : null,
       flightType: initialData?.flightType || "Domestic",
-      documentType: initialData?.documentType || "Fayda ID",
+      documentType: (initialData?.flightType || "Domestic") === "International" ? "Passport" : (initialData?.documentType || "Fayda ID"),
       fanNumber: initialData?.fanNumber || "",
       finNumber: initialData?.finNumber || "",
       passportNumber: initialData?.passportNumber || "",
@@ -283,7 +283,16 @@ export function PassengerForm({ initialData, onSubmit, onCancel }) {
     <div className="max-w-4xl mx-auto">
       {/* Flight Type Selector */}
       <div className="flex justify-center mb-12">
-        <Tabs value={flightType} onValueChange={(v) => setValue("flightType", v)} className="w-full max-w-2xl">
+        <Tabs 
+          value={flightType} 
+          onValueChange={(v) => {
+            setValue("flightType", v);
+            if (v === "International") {
+              setValue("documentType", "Passport");
+            }
+          }} 
+          className="w-full max-w-2xl"
+        >
           <TabsList className="grid grid-cols-2 p-2 bg-slate-900 rounded-[2.5rem] h-20 shadow-2xl">
             <TabsTrigger
               value="Domestic"

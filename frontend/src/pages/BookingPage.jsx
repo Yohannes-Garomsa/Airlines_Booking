@@ -6,9 +6,9 @@ import SeatSelection from '../components/SeatSelection';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const API = import.meta.env.VITE_API_URL || '/api';
-const blankPassenger = (isPrimary = false) => ({
+const blankPassenger = (isPrimary = false, flightType = 'Domestic') => ({
   firstName: '', lastName: '', gender: 'Male', dateOfBirth: '',
-  documentType: 'Fayda ID', fanNumber: '', finNumber: '', passportNumber: '',
+  documentType: flightType === 'International' ? 'Passport' : 'Fayda ID', fanNumber: '', finNumber: '', passportNumber: '',
   passportExpiry: '', nationality: 'Ethiopia', passportCountry: '',
   email: '', phoneNumber: '',
   emergencyContactName: isPrimary ? '' : null,
@@ -257,12 +257,19 @@ const BookingPage = () => {
   useEffect(() => {
     setPassengers(prev => {
       if (totalPax > prev.length) {
-        const extras = Array.from({ length: totalPax - prev.length }, (_, i) => blankPassenger(prev.length + i === 0));
+        const extras = Array.from({ length: totalPax - prev.length }, (_, i) => blankPassenger(prev.length + i === 0, flightType));
         return [...prev, ...extras];
       }
       return prev.slice(0, totalPax);
     });
-  }, [totalPax]);
+  }, [totalPax, flightType]);
+
+  // Sync documentType to Passport for all passengers when flightType changes to International
+  useEffect(() => {
+    if (flightType === 'International') {
+      setPassengers(prev => prev.map(p => ({ ...p, documentType: 'Passport' })));
+    }
+  }, [flightType]);
 
   useEffect(() => {
     if (!user) { navigate('/login', { state: { from: location }, replace: true }); return; }
@@ -301,7 +308,21 @@ const BookingPage = () => {
     return parseFloat((passengerCounts.adults * base + passengerCounts.children * base * 0.9).toFixed(2));
   };
 
-  const allReady = () => passengers.every(p => p.firstName && p.lastName && p.email && p.phoneNumber);
+  const allReady = () => passengers.every(p => {
+    const personalOk = p.firstName && p.lastName && p.dateOfBirth && p.gender;
+    const contactOk = p.email && p.phoneNumber;
+    let identityOk = false;
+    if (flightType === 'International') {
+      identityOk = p.passportNumber && p.passportExpiry && p.nationality && p.passportCountry;
+    } else {
+      if (p.documentType === 'Fayda ID') {
+        identityOk = p.fanNumber || p.finNumber;
+      } else {
+        identityOk = p.passportNumber && p.passportExpiry;
+      }
+    }
+    return personalOk && contactOk && identityOk;
+  });
 
   const handleSubmit = async () => {
     if (!user) { navigate('/login', { state: { from: location }, replace: true }); return; }
