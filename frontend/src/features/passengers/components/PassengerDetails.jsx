@@ -30,16 +30,16 @@ const statusStyles = {
   Rejected: "bg-red-100 text-red-700 border-red-200",
 };
 
-export function PassengerDetails({ passenger, isOpen, onClose }) {
+export function PassengerDetails({ passenger, isOpen, onClose, onVerify }) {
   if (!passenger) return null;
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent className="max-w-4xl mx-auto rounded-t-[3rem] border-0 h-[90vh]">
+      <DrawerContent className="max-w-4xl mx-auto rounded-t-[3rem] border-slate-200 h-[90vh] bg-gradient-to-br from-slate-100 via-white to-slate-50 shadow-2xl">
         <div className="mx-auto w-full max-w-3xl overflow-y-auto scrollbar-hide p-8">
           <DrawerHeader className="relative pb-10">
             <div className="flex items-center gap-8">
-              <div className="h-24 w-24 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 border-4 border-white shadow-xl">
+              <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary border-4 border-white shadow-xl shadow-primary/10">
                 <User className="h-10 w-10" />
               </div>
               <div className="flex-1">
@@ -47,16 +47,16 @@ export function PassengerDetails({ passenger, isOpen, onClose }) {
                   <DrawerTitle className="text-3xl font-black text-slate-800 uppercase tracking-tight">
                     {passenger.firstName} {passenger.lastName}
                   </DrawerTitle>
-                  <Badge className={`${statusStyles[passenger.status]} rounded-full px-4 py-1 font-black text-[10px] uppercase tracking-widest border-0`}>
-                    {passenger.status}
+                  <Badge className={`${statusStyles[passenger.status ? passenger.status.charAt(0).toUpperCase() + passenger.status.slice(1).toLowerCase() : 'Pending']} rounded-full px-4 py-1 font-black text-[10px] uppercase tracking-widest border-0 shadow-sm`}>
+                    {passenger.status || 'Pending'}
                   </Badge>
                 </div>
-                <DrawerDescription className="text-slate-400 font-bold uppercase tracking-widest text-xs flex items-center gap-2">
-                  <Plane className="h-3 w-3" /> Passenger ID: #{passenger.id}
+                <DrawerDescription className="text-slate-500 font-bold uppercase tracking-widest text-xs flex items-center gap-2">
+                  <Plane className="h-3 w-3 text-primary" /> Passenger ID: #{passenger.id}
                 </DrawerDescription>
               </div>
               <DrawerClose asChild>
-                <Button variant="ghost" size="icon" className="rounded-full h-12 w-12 hover:bg-slate-100 absolute top-0 right-0">
+                <Button variant="ghost" size="icon" className="rounded-full h-12 w-12 bg-white hover:bg-slate-50 border border-slate-100 shadow-sm absolute top-0 right-0">
                   <X className="h-6 w-6 text-slate-400" />
                 </Button>
               </DrawerClose>
@@ -99,21 +99,21 @@ export function PassengerDetails({ passenger, isOpen, onClose }) {
 
               <div className="space-y-6">
                 <h4 className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">System Audit</h4>
-                <div className="bg-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl rounded-full"></div>
+                <div className="bg-gradient-to-br from-slate-50 to-white rounded-[2rem] p-8 text-slate-800 border border-slate-200 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl rounded-full"></div>
                   <div className="relative z-10 space-y-6">
                     <div className="flex items-center gap-4">
                       <History className="h-5 w-5 text-primary" />
                       <div>
-                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Registered on</p>
-                        <p className="font-bold">{new Date(passenger.registrationDate).toLocaleString()}</p>
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Registered on</p>
+                        <p className="font-bold text-slate-700">{new Date(passenger.registrationDate).toLocaleString()}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <ShieldCheck className="h-5 w-5 text-green-400" />
+                      <ShieldCheck className="h-5 w-5 text-green-500" />
                       <div>
-                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Verification</p>
-                        <p className="font-bold">{passenger.status} Status</p>
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Verification</p>
+                        <p className="font-bold text-slate-700">{passenger.status || 'Pending'} Status</p>
                       </div>
                     </div>
                   </div>
@@ -126,9 +126,13 @@ export function PassengerDetails({ passenger, isOpen, onClose }) {
             <Button variant="outline" onClick={onClose} className="rounded-2xl h-14 px-8 font-bold border-slate-200">
               Close Preview
             </Button>
-            <Button className="rounded-2xl h-14 px-8 font-black uppercase text-[10px] tracking-widest bg-primary hover:bg-blue-800 shadow-xl shadow-primary/20">
-              Authorize Action
-            </Button>
+            {!(passenger.status === 'Verified' || passenger.status === 'verified') && (
+              <Button 
+                onClick={() => { if (onVerify) { onVerify(passenger); onClose(); } }}
+                className="rounded-2xl h-14 px-8 font-black uppercase text-[10px] tracking-widest bg-primary hover:bg-blue-800 shadow-xl shadow-primary/20">
+                Verify Passenger
+              </Button>
+            )}
           </DrawerFooter>
         </div>
       </DrawerContent>

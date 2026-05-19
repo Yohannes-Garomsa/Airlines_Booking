@@ -146,7 +146,8 @@ export default function PassengerManagement() {
       <PassengerDetails 
         passenger={viewingPassenger} 
         isOpen={!!viewingPassenger} 
-        onClose={() => setViewingPassenger(null)} 
+        onClose={() => setViewingPassenger(null)}
+        onVerify={handleVerify}
       />
     </div>
   );

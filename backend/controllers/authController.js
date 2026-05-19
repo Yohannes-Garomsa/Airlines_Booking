@@ -49,7 +49,18 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const getMe = asyncHandler(async (req, res) => {
+  if (!req.user || !req.user.id) {
+    res.status(401);
+    throw new Error('User context missing or invalid token format');
+  }
+
   const user = await User.getById(req.user.id);
+  
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found. Your account might have been deleted.');
+  }
+  
   res.status(200).json(user);
 });
 

@@ -112,18 +112,18 @@ export function PassengerTable({ passengers, onView, onEdit, onDelete, onVerify 
                   <TableCell className="py-6 px-8">
                     <div className="flex flex-col gap-1">
                       <span className={`text-[10px] font-black uppercase tracking-tighter ${p.flightType === 'International' ? 'text-primary' : 'text-slate-500'}`}>
-                        {p.flightType}
+                        {p.flightType || 'N/A'}
                       </span>
-                      <span className="text-[10px] font-bold text-slate-400">{p.nationality}</span>
+                      <span className="text-[10px] font-bold text-slate-400">{p.nationality || 'N/A'}</span>
                     </div>
                   </TableCell>
                   <TableCell className="py-6 px-8">
                     <div className="font-bold text-slate-700 text-xs">{p.documentType || 'Passport'}</div>
-                    <div className="text-[10px] text-slate-400 font-bold tracking-widest">{p.fanNumber || p.passportNumber}</div>
+                    <div className="text-[10px] text-slate-400 font-bold tracking-widest">{p.fanNumber || p.passportNumber || 'N/A'}</div>
                   </TableCell>
                   <TableCell className="py-6 px-8">
-                    <Badge variant="outline" className={`${statusStyles[p.status]} rounded-full px-4 py-1 border-0 font-black text-[10px] uppercase tracking-widest`}>
-                      {p.status}
+                    <Badge variant="outline" className={`${statusStyles[p.status ? p.status.charAt(0).toUpperCase() + p.status.slice(1).toLowerCase() : 'Pending']} rounded-full px-4 py-1 border-0 font-black text-[10px] uppercase tracking-widest`}>
+                      {p.status || 'Pending'}
                     </Badge>
                   </TableCell>
                   <TableCell className="py-6 px-8 text-right" onClick={(e) => e.stopPropagation()}>
@@ -140,9 +140,11 @@ export function PassengerTable({ passengers, onView, onEdit, onDelete, onVerify 
                         <DropdownMenuItem onClick={() => onEdit(p)} className="rounded-xl px-4 py-3 font-medium gap-3 cursor-pointer">
                           <Edit2 className="h-4 w-4 text-blue-400" /> Edit Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onVerify(p)} className="rounded-xl px-4 py-3 font-medium gap-3 cursor-pointer">
-                          <ShieldCheck className="h-4 w-4 text-green-400" /> Verify Status
-                        </DropdownMenuItem>
+                        {!(p.status === 'Verified' || p.status === 'verified') && (
+                          <DropdownMenuItem onClick={() => onVerify(p)} className="rounded-xl px-4 py-3 font-medium gap-3 cursor-pointer">
+                            <ShieldCheck className="h-4 w-4 text-green-400" /> Verify Status
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => onDelete(p.id)} className="rounded-xl px-4 py-3 font-medium gap-3 cursor-pointer text-red-500 focus:text-red-500">
                           <Trash2 className="h-4 w-4" /> Delete Record
                         </DropdownMenuItem>

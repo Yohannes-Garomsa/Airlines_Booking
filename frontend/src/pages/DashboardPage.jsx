@@ -11,13 +11,27 @@ const DashboardPage = () => {
   const fetchBookings = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        setBookings([]);
+        setLoading(false);
+        return;
+      }
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/bookings/user`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
+      if (!response.ok) {
+        console.error('Failed to fetch bookings. Status:', response.status);
+        setBookings([]);
+        return;
+      }
+      
       const data = await response.json();
-      setBookings(data);
+      setBookings(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
+      setBookings([]);
     } finally {
       setLoading(false);
     }

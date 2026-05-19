@@ -16,7 +16,20 @@ pool.on('error', (err) => {
 });
 
 module.exports = {
-  query: (text, params) => pool.query(text, params),
+  query: async (text, params, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        return await pool.query(text, params);
+      } catch (error) {
+        if ((error.code === 'EAI_AGAIN' || error.message.includes('EAI_AGAIN')) && i < retries - 1) {
+          console.warn(`DNS resolution error (EAI_AGAIN). Retrying query... (${i + 1}/${retries})`);
+          await new Promise(res => setTimeout(res, 1000 * (i + 1))); // Exponential backoff
+        } else {
+          throw error;
+        }
+      }
+    }
+  },
   getClient: () => pool.connect(), // Useful for transactions
   pool: pool // Expose the pool directly if needed
 };
