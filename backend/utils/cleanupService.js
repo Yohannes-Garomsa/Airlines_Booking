@@ -12,7 +12,7 @@ const cleanupExpiredBookings = async () => {
       FROM bookings b
       LEFT JOIN passengers p ON b.id = p.booking_id
       WHERE b.status = 'pending' 
-      AND (b.expires_at < CURRENT_TIMESTAMP OR (b.booking_date < CURRENT_TIMESTAMP - INTERVAL '3 hours'))
+      AND b.booking_date < CURRENT_TIMESTAMP - INTERVAL '3 hours'
       GROUP BY b.id
     `);
 
