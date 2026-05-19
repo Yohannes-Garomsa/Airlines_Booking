@@ -9,7 +9,7 @@ const pool = new Pool({
 
 const migrate = async () => {
   try {
-    const filename = process.argv[2] || 'schema.sql';
+    const filename = process.argv[2] || '../airline_booking_db.sql';
     console.log(`Running schema migration: ${filename}...`);
     const schemaPath = path.join(__dirname, filename);
     const schema = fs.readFileSync(schemaPath, 'utf8');
