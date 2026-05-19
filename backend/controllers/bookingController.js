@@ -15,6 +15,17 @@ const createBooking = asyncHandler(async (req, res) => {
     throw new Error('Please provide all required fields and passenger counts');
   }
 
+  // Duplicate booking check
+  const existingBooking = await db.query(
+    `SELECT id FROM bookings WHERE user_id = $1 AND flight_id = $2 AND status IN ('pending', 'confirmed', 'reserved')`,
+    [user.id, flightId]
+  );
+
+  if (existingBooking.rows.length > 0) {
+    res.status(400);
+    throw new Error('You have already booked this flight.');
+  }
+
   const booking = await Booking.create(user.id, flightId, totalPrice, cabinClass, passengers, passengerCounts);
   
   // Send Notification

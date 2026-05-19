@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Plane, User, Mail, CreditCard, ChevronLeft, Loader2, CheckCircle, ShieldCheck, Briefcase, Clock } from 'lucide-react';
+import { Plane, User, Mail, CreditCard, ChevronLeft, Loader2, CheckCircle, ShieldCheck, Briefcase, Clock, AlertCircle } from 'lucide-react';
 import { flightService } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import React, { useState, useEffect, useContext, useRef } from 'react';
@@ -23,6 +23,7 @@ const BookingPage = () => {
   const { user } = useContext(AuthContext);
 
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+  const [modalConfig, setModalConfig] = useState(null);
   const timeoutRef = useRef(null);
   const warningRef = useRef(null);
 
@@ -42,8 +43,14 @@ const BookingPage = () => {
       }, 4 * 60 * 1000);
 
       timeoutRef.current = setTimeout(() => {
-        alert("Your booking session has expired due to inactivity.");
-        navigate('/', { replace: true });
+        setModalConfig({
+          title: 'Session Expired',
+          message: 'Your booking session has expired due to inactivity. Please start your search again.',
+          icon: <Clock className="h-8 w-8 text-red-500" />,
+          actionText: 'Return to Home',
+          onAction: () => navigate('/', { replace: true }),
+          isDestructive: true
+        });
       }, 5 * 60 * 1000);
     };
 
@@ -60,6 +67,40 @@ const BookingPage = () => {
       events.forEach(event => document.removeEventListener(event, handleActivity));
     };
   }, [user, navigate, location]);
+
+  useEffect(() => {
+    const checkExistingBooking = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/bookings/user`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const bookings = await response.json();
+          const hasBooked = bookings.some(b => 
+            b.flight_id === parseInt(flightId) && 
+            ['pending', 'confirmed', 'reserved'].includes(b.status)
+          );
+          if (hasBooked) {
+            setModalConfig({
+              title: 'Already Booked',
+              message: 'You already have an active booking for this flight.',
+              icon: <CheckCircle className="h-8 w-8 text-primary" />,
+              actionText: 'Go to Dashboard',
+              onAction: () => navigate('/dashboard', { replace: true })
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error checking existing bookings:', error);
+      }
+    };
+
+    if (user && flightId) {
+      checkExistingBooking();
+    }
+  }, [user, flightId, navigate]);
 
   useEffect(() => {
     const fetchFlight = async () => {
@@ -112,7 +153,13 @@ const BookingPage = () => {
       return;
     }
     if (selectedSeats.length !== seatsNeeded) {
-      alert(`Please select ${seatsNeeded} seat${seatsNeeded === 1 ? '' : 's'} before continuing. Infants do not require a seat.`);
+      setModalConfig({
+        title: 'Select Your Seats',
+        message: `Please select ${seatsNeeded} seat${seatsNeeded === 1 ? '' : 's'} before continuing. Infants do not require a seat.`,
+        icon: <AlertCircle className="h-8 w-8 text-yellow-500" />,
+        actionText: 'Okay',
+        onAction: () => setModalConfig(null)
+      });
       return;
     }
     setSubmitting(true);
@@ -153,8 +200,25 @@ const BookingPage = () => {
         ));
         navigate(`/payment/${data.id}`, { state: { booking: data, flight } });
       } else {
-        alert('Booking failed. Make sure you are logged in.');
-        navigate('/login');
+        const errorData = await response.json().catch(() => null);
+        if (errorData && errorData.message === 'You have already booked this flight.') {
+          setModalConfig({
+            title: 'Already Booked',
+            message: 'You already have a booking for this flight.',
+            icon: <CheckCircle className="h-8 w-8 text-primary" />,
+            actionText: 'Go to Dashboard',
+            onAction: () => navigate('/dashboard', { replace: true })
+          });
+        } else {
+          setModalConfig({
+            title: 'Booking Failed',
+            message: errorData?.message || 'We could not process your booking. Please try again.',
+            icon: <AlertCircle className="h-8 w-8 text-red-500" />,
+            actionText: 'Try Again',
+            onAction: () => setModalConfig(null),
+            isDestructive: true
+          });
+        }
       }
     } catch (error) {
       console.error('Booking error:', error);
@@ -337,6 +401,25 @@ const BookingPage = () => {
               className="w-full bg-primary hover:bg-blue-800 text-white font-black py-4 rounded-2xl transition-all shadow-lg"
             >
               Continue Booking
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Universal Modal */}
+      {modalConfig && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 text-center animate-in fade-in zoom-in duration-200">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${modalConfig.isDestructive ? 'bg-red-100' : 'bg-blue-50'}`}>
+              {modalConfig.icon}
+            </div>
+            <h3 className="text-2xl font-black text-gray-800 mb-2">{modalConfig.title}</h3>
+            <p className="text-gray-600 font-medium mb-6">{modalConfig.message}</p>
+            <button 
+              onClick={modalConfig.onAction}
+              className={`w-full text-white font-black py-4 rounded-2xl transition-all shadow-lg ${modalConfig.isDestructive ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-blue-800'}`}
+            >
+              {modalConfig.actionText}
             </button>
           </div>
         </div>
