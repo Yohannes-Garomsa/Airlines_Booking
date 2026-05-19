@@ -234,7 +234,8 @@ const AdminDashboard = () => {
         setFlightForm({
           airline: '', flight_number: '', departure_airport_id: '', arrival_airport_id: '',
           departure_time: '', arrival_time: '', economy_price: '',
-          total_seats: '180', status: 'Scheduled', gate: '', terminal: '', aircraft_id: ''
+          total_seats: '180', status: 'Scheduled', gate: '', terminal: '', aircraft_id: '',
+          booking_type: 'normal'
         });
         setSelectedItem(null);
       } else {
@@ -408,7 +409,8 @@ const AdminDashboard = () => {
         status: flight.status || 'Scheduled',
         gate: flight.gate || '',
         terminal: flight.terminal || '',
-        aircraft_id: flight.aircraft_id || ''
+        aircraft_id: flight.aircraft_id || '',
+        booking_type: flight.booking_type || 'normal'
       });
       setSelectedItem(flight);
       setCurrentFlight(flight);
@@ -416,7 +418,8 @@ const AdminDashboard = () => {
       setFlightForm({
         airline: '', flight_number: '', departure_airport_id: '', arrival_airport_id: '',
         departure_time: '', arrival_time: '', economy_price: '',
-        total_seats: '180', status: 'Scheduled', gate: '', terminal: '', aircraft_id: ''
+        total_seats: '180', status: 'Scheduled', gate: '', terminal: '', aircraft_id: '',
+        booking_type: 'normal'
       });
       setSelectedItem(null);
       setCurrentFlight(null);
@@ -630,7 +633,18 @@ const AdminDashboard = () => {
                       <tr key={item.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                         {activeTab === 'flights' && (
                           <>
-                            <td className="p-6 font-bold text-slate-700">{item.airline}</td>
+                            <td className="p-6">
+                              <p className="font-bold text-slate-700">{item.airline}</p>
+                              {item.booking_type === 'booking' ? (
+                                <span className="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full uppercase tracking-tighter block w-max mt-1">
+                                  ⭐ Booking Card
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-tighter block w-max mt-1">
+                                  Normal List
+                                </span>
+                              )}
+                            </td>
                             <td className="p-6">
                               <div className="flex items-center gap-2">
                                 <span className="font-bold">{item.departure_city}</span>
@@ -872,6 +886,32 @@ const AdminDashboard = () => {
                   {(!flightForm.departure_time || !flightForm.arrival_time) && !isTimeInvalid && (
                     <p className="text-[10px] text-slate-400 mt-1 ml-4 italic">Please set departure and arrival times to see available aircraft.</p>
                   )}
+                </div>
+
+                <div className="space-y-2 col-span-2">
+                  <label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Flight Assignment / Type</label>
+                  <div className="flex gap-4">
+                    <div 
+                      onClick={() => setFlightForm({...flightForm, booking_type: 'booking'})}
+                      className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl border cursor-pointer transition-all ${
+                        flightForm.booking_type === 'booking' 
+                          ? 'border-primary bg-primary/5 text-primary font-black shadow-md shadow-blue-50/50' 
+                          : 'border-slate-100 bg-slate-50 text-slate-500 font-bold hover:border-slate-200'
+                      }`}
+                    >
+                      <span>⭐ Booking Card (Featured)</span>
+                    </div>
+                    <div 
+                      onClick={() => setFlightForm({...flightForm, booking_type: 'normal'})}
+                      className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl border cursor-pointer transition-all ${
+                        flightForm.booking_type !== 'booking' 
+                          ? 'border-primary bg-primary/5 text-primary font-black shadow-md shadow-blue-50/50' 
+                          : 'border-slate-100 bg-slate-50 text-slate-500 font-bold hover:border-slate-200'
+                      }`}
+                    >
+                      <span>✈️ Normal List (Standard)</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-6 col-span-2">
