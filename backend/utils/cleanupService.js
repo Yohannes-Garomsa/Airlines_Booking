@@ -11,8 +11,8 @@ const cleanupExpiredBookings = async () => {
       SELECT b.id, b.flight_id, b.cabin_class, COUNT(p.id) as passenger_count
       FROM bookings b
       LEFT JOIN passengers p ON b.id = p.booking_id
-      WHERE b.status = 'pending' 
-      AND (b.expires_at < CURRENT_TIMESTAMP OR (b.booking_date < CURRENT_TIMESTAMP - INTERVAL '3 hours'))
+      WHERE b.status = 'pending'
+      AND (b.booking_date + INTERVAL '3 hours' < CURRENT_TIMESTAMP)
       GROUP BY b.id
     `);
 

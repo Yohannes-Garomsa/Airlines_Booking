@@ -122,7 +122,17 @@ function HomePage() {
           </Link>
           <nav>
             <ul className="flex gap-8 font-bold text-sm tracking-wide uppercase items-center">
-              <li className="hover:text-accent transition-colors cursor-pointer">Deals</li>
+              <li 
+                className="hover:text-accent transition-colors cursor-pointer"
+                onClick={() => {
+                  setSearched(false);
+                  setSegments([{ departure_city: '', arrival_city: '', departure_date: '', return_date: '' }]);
+                  setPage(1);
+                  document.getElementById('deals-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                Deals
+              </li>
               {user ? (
                 <>
                   {['admin', 'superadmin'].includes(user.role) ? (
@@ -405,7 +415,7 @@ function HomePage() {
         </div>
 
         {/* Results Section */}
-        <section className="container mx-auto mt-8 pb-20 px-4 relative z-0">
+        <section id="deals-section" className="container mx-auto mt-8 pb-20 px-4 relative z-0">
           {error && (
             <div className="max-w-xl mx-auto mb-8 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl flex items-center gap-3 shadow-lg">
               <AlertCircle className="h-6 w-6 text-red-500" />
@@ -496,23 +506,6 @@ function HomePage() {
               </div>
 
 
-              <div className="flex justify-center items-center gap-4 mt-12">
-                <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1 || loading}
-                  className="px-6 py-2 bg-white text-primary font-bold rounded-xl shadow-md border border-slate-100 disabled:opacity-50 transition-all hover:bg-slate-50"
-                >
-                  Previous
-                </button>
-                <span className="font-black text-slate-400">Page {page}</span>
-                <button
-                  onClick={() => setPage(p => p + 1)}
-                  disabled={flights.length < 10 || loading}
-                  className="px-6 py-2 bg-white text-primary font-bold rounded-xl shadow-md border border-slate-100 disabled:opacity-50 transition-all hover:bg-slate-50"
-                >
-                  Next
-                </button>
-              </div>
             </>
           ) : searched ? (
             <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-dashed border-gray-200">

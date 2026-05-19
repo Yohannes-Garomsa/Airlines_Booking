@@ -1,12 +1,14 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plane, Mail, Lock, User, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Plane, Mail, Lock, User, Loader2, AlertCircle, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
 const RegisterPage = () => {
   const [userData, setUserData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -127,13 +129,20 @@ const RegisterPage = () => {
                 <Lock className="h-5 w-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                 <input
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={userData.password}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-12 pr-4 py-4 border-0 bg-slate-50 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-800 transition-all shadow-inner"
+                  className="appearance-none block w-full pl-12 pr-12 py-4 border-0 bg-slate-50 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-800 transition-all shadow-inner"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
 
@@ -145,13 +154,20 @@ const RegisterPage = () => {
                 <Lock className="h-5 w-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                 <input
                   name="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   required
                   value={userData.confirmPassword}
                   onChange={handleChange}
-                  className="appearance-none block w-full pl-12 pr-4 py-4 border-0 bg-slate-50 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-800 transition-all shadow-inner"
+                  className="appearance-none block w-full pl-12 pr-12 py-4 border-0 bg-slate-50 rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-800 transition-all shadow-inner"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
 

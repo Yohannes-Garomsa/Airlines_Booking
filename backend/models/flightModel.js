@@ -152,7 +152,6 @@ const Flight = {
 
     let query = `
       ${FLIGHT_SELECT}
-      , EXTRACT(EPOCH FROM (f.arrival_time - f.departure_time))/3600 AS duration
       WHERE f.available_seats > 0
         AND f.status NOT IN ('Cancelled','Landed')
     `;
@@ -185,7 +184,7 @@ const Flight = {
     const orderMap = {
       price_low:       'f.economy_price ASC',
       price_high:      'f.economy_price DESC',
-      duration_short:  'duration ASC',
+      duration_short:  'EXTRACT(EPOCH FROM (f.arrival_time - f.departure_time))/3600 ASC',
       time_late:       'f.departure_time DESC',
     };
     query += ` ORDER BY ${orderMap[sort_by] || 'f.departure_time ASC'}`;
