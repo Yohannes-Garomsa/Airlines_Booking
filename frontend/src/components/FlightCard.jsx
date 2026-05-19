@@ -25,12 +25,22 @@ const FlightCard = ({ flight, selectedClass = 'Economy', passengerCounts = { adu
   const bgImage = CITY_IMAGES[cityName] || 'https://images.unsplash.com/photo-1436491865332-7a61a109c055?auto=format&fit=crop&w=800&q=80';
 
   return (
-    <div className="bg-white rounded-[1.75rem] shadow-lg overflow-hidden hover:shadow-xl transition-all duration-500 border border-slate-100 group flex flex-col h-full">
+    <div className={`bg-white rounded-[1.75rem] shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border-2 ${
+      flight.booking_type === 'booking' ? 'border-amber-400 shadow-amber-100/50' : 'border-slate-100'
+    } group flex flex-col h-full relative`}>
       {/* Visual Header */}
       <div className="h-36 relative overflow-hidden">
         <img src={bgImage} alt={cityName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
         <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/20"></div>
         
+        <div className="absolute top-4 right-4 z-10">
+          {flight.booking_type === 'booking' && (
+            <div className="bg-amber-500/90 backdrop-blur-md px-3 py-1 rounded-full shadow-lg flex items-center gap-1 text-white border border-amber-300/30 font-black animate-pulse">
+              <span className="text-[9px] uppercase tracking-widest">⭐ Featured Deal</span>
+            </div>
+          )}
+        </div>
+
         <div className="absolute top-4 left-4 flex gap-2">
           <div className="bg-white/90 backdrop-blur-md px-2 py-1 rounded-full shadow-md flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full ${seats > 10 ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}></div>

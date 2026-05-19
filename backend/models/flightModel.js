@@ -17,7 +17,8 @@ const FLIGHT_SELECT = `
     aa.city          AS arrival_city,
     aa.iata_code     AS arrival_iata,
     air.model        AS aircraft_model,
-    air.tail_number
+    air.tail_number,
+    EXTRACT(EPOCH FROM (f.arrival_time - f.departure_time))/3600 AS duration
   FROM flights f
   JOIN airlines al  ON f.airline_id            = al.id
   JOIN airports da  ON f.departure_airport_id  = da.id
@@ -91,6 +92,7 @@ const Flight = {
       status,
       gate,
       terminal,
+      booking_type,
     } = flightData;
 
     // Resolve airline_id — prefer explicit FK, fall back to name lookup
@@ -109,8 +111,8 @@ const Flight = {
           departure_time, arrival_time,
           economy_price,
           economy_seats, business_seats, available_seats,
-          aircraft_id, status, gate, terminal)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+          aircraft_id, status, gate, terminal, booking_type)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
        RETURNING *`,
       [
         resolvedAirlineId, flight_number,
@@ -119,6 +121,7 @@ const Flight = {
         economy_price,
         economy_seats, business_seats, economy_seats + business_seats,
         aircraft_id || null, status || 'Scheduled', gate || null, terminal || null,
+        booking_type || 'normal',
       ]
     );
     return result.rows[0];
@@ -129,7 +132,7 @@ const Flight = {
    */
   getAll: async () => {
     const result = await db.query(
-      `${FLIGHT_SELECT} ORDER BY f.departure_time ASC`
+      `${FLIGHT_SELECT} ORDER BY (CASE WHEN f.booking_type = 'booking' THEN 0 ELSE 1 END) ASC, f.departure_time ASC`
     );
     return result.rows;
   },
@@ -152,7 +155,6 @@ const Flight = {
 
     let query = `
       ${FLIGHT_SELECT}
-      , EXTRACT(EPOCH FROM (f.arrival_time - f.departure_time))/3600 AS duration
       WHERE f.available_seats > 0
         AND f.status NOT IN ('Cancelled','Landed')
     `;
@@ -228,6 +230,7 @@ const Flight = {
       status,
       gate,
       terminal,
+      booking_type,
     } = flightData;
 
     const resolvedAirlineId = airline_id || (await resolveAirlineId(airline));
@@ -251,8 +254,9 @@ const Flight = {
          aircraft_id          = $11,
          status               = $12,
          gate                 = $13,
-         terminal             = $14
-       WHERE id = $15
+         terminal             = $14,
+         booking_type         = $15
+       WHERE id = $16
        RETURNING *`,
       [
         resolvedAirlineId, flight_number,
@@ -262,6 +266,7 @@ const Flight = {
         economy_seats, business_seats, economy_seats + business_seats,
         aircraft_id || null, status || 'Scheduled',
         gate || null, terminal || null,
+        booking_type || 'normal',
         id,
       ]
     );
