@@ -1,4 +1,4 @@
-﻿const Booking = require('../models/bookingModel');
+const Booking = require('../models/bookingModel');
 const User = require('../models/userModel');
 const db = require('../config/db');
 const asyncHandler = require('../utils/asyncHandler');
@@ -322,17 +322,26 @@ const getPayments = asyncHandler(async (req, res) => {
 
 const getNotifications = asyncHandler(async (req, res) => {
   // Stored notifications from DB
-  const stored = await db.query('SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50');
+  let stored = { rows: [] };
+  try {
+    stored = await db.query('SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50');
+  } catch (err) {
+    // If the notifications table doesn't exist yet, silently continue with empty array
+    console.warn("Notifications table missing or error:", err.message);
+  }
 
   // --- Compute operational alerts from live data ---
   const computedAlerts = [];
 
   // Alert: Flights with < 10% seats remaining
   const lowSeatFlights = await db.query(`
-    SELECT f.id, f.flight_number, f.airline, f.departure_city, f.arrival_city,
+    SELECT f.id, f.flight_number, al.name AS airline, da.city AS departure_city, aa.city AS arrival_city,
            f.available_seats, f.total_seats,
            ROUND((f.available_seats::numeric / NULLIF(f.total_seats, 0)) * 100, 1) as fill_pct
     FROM flights f
+    JOIN airlines al ON f.airline_id = al.id
+    JOIN airports da ON f.departure_airport_id = da.id
+    JOIN airports aa ON f.arrival_airport_id = aa.id
     WHERE f.available_seats > 0 AND f.departure_time > NOW()
       AND (f.available_seats::numeric / NULLIF(f.total_seats, 0)) < 0.1
     ORDER BY fill_pct ASC
@@ -391,15 +400,23 @@ const getNotifications = asyncHandler(async (req, res) => {
 
 const markNotificationRead = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const result = await db.query(
-    'UPDATE notifications SET is_read = true WHERE id = $1 RETURNING *',
-    [id]
-  );
-  if (result.rows.length === 0) {
-    res.status(404);
-    throw new Error('Notification not found');
+  try {
+    const result = await db.query(
+      'UPDATE notifications SET is_read = true WHERE id = $1 RETURNING *',
+      [id]
+    );
+    if (result.rows.length === 0) {
+      res.status(404);
+      throw new Error('Notification not found');
+    }
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '42P01') { // undefined_table
+      res.status(404);
+      throw new Error('Notification not found (table missing)');
+    }
+    throw err;
   }
-  res.status(200).json(result.rows[0]);
 });
 
 
