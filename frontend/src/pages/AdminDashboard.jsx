@@ -3,7 +3,7 @@ import {
   Plane, Users, ShoppingBag, Plus, Edit2, Trash2, X, Check, Loader2,
   ShieldCheck, Search, Ticket, QrCode, Mail, ExternalLink, Filter,
   LayoutDashboard, Grid, CheckCircle2, CreditCard, Wrench, Map,
-  BarChart3, Bell, ChevronRight, LogOut, Settings, Info, TrendingUp, AlertCircle, Clock, MapPin, DollarSign
+  BarChart3, Bell, ChevronRight, LogOut, Settings, Info, TrendingUp, AlertCircle, Clock, MapPin, DollarSign, Globe
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -457,6 +457,12 @@ const AdminDashboard = () => {
 
   const isTimeInvalid = flightForm.departure_time && flightForm.arrival_time && new Date(flightForm.arrival_time) <= new Date(flightForm.departure_time);
   
+  const selectedDepAirport = data.airports.find(a => String(a.id) === String(flightForm.departure_airport_id));
+  const selectedArrAirport = data.airports.find(a => String(a.id) === String(flightForm.arrival_airport_id));
+  const calculatedFlightType = selectedDepAirport && selectedArrAirport
+    ? (selectedDepAirport.country === selectedArrAirport.country ? 'Domestic' : 'International')
+    : null;
+
   const minDateTime = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
   return (
@@ -650,6 +656,15 @@ const AdminDashboard = () => {
                                 <span className="font-bold">{item.departure_city}</span>
                                 <Plane className="h-3 w-3 text-slate-300" />
                                 <span className="font-bold">{item.arrival_city}</span>
+                                {item.departure_country === item.arrival_country ? (
+                                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-tighter inline-flex items-center gap-1">
+                                    🏠 Domestic
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] font-black text-purple-600 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-full uppercase tracking-tighter inline-flex items-center gap-1">
+                                    🌍 International
+                                  </span>
+                                )}
                               </div>
                               <p className="text-[10px] text-slate-400 font-bold uppercase">{new Date(item.departure_time).toLocaleString()}</p>
                             </td>
@@ -803,6 +818,31 @@ const AdminDashboard = () => {
                     ))}
                   </select>
                 </div>
+
+                {calculatedFlightType && (
+                  <div className={`p-5 rounded-[2rem] border-2 flex items-center justify-between transition-all duration-500 shadow-sm ${
+                    calculatedFlightType === 'Domestic' 
+                      ? 'border-emerald-100 bg-emerald-50/40 text-emerald-700' 
+                      : 'border-purple-100 bg-purple-50/40 text-purple-700'
+                  }`}>
+                    <div className="flex items-center gap-4">
+                      <div className={`h-12 w-12 rounded-[1.25rem] flex items-center justify-center shadow-md ${
+                        calculatedFlightType === 'Domestic' ? 'bg-emerald-600 text-white' : 'bg-purple-600 text-white'
+                      }`}>
+                        {calculatedFlightType === 'Domestic' ? <MapPin className="h-5 w-5" /> : <Globe className="h-5 w-5" />}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Route Classification</p>
+                        <p className="font-black text-xs uppercase mt-0.5">{calculatedFlightType} Flight Route</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-white shadow-sm border border-black/[0.04]">
+                        {selectedDepAirport?.country} → {selectedArrAirport?.country}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Departure Time</label>
