@@ -19,7 +19,8 @@ const AdminFlights = () => {
     arrival_time: '',
     economy_price: '',
     total_seats: 180,
-    aircraft_id: null
+    aircraft_id: null,
+    booking_type: 'normal'
   });
   const [fleet, setFleet] = useState([]);
   const [availableFleet, setAvailableFleet] = useState([]);
@@ -94,7 +95,9 @@ const AdminFlights = () => {
       departure_time: '',
       arrival_time: '',
       economy_price: '',
-      total_seats: 180
+      total_seats: 180,
+      aircraft_id: null,
+      booking_type: 'normal'
     });
     setSelectedDeparture(null);
     setSelectedArrival(null);
@@ -138,7 +141,8 @@ const AdminFlights = () => {
       arrival_time: flight.arrival_time?.slice(0, 16) || '',
       economy_price: flight.economy_price,
       total_seats: flight.total_seats,
-      aircraft_id: flight.aircraft_id || null
+      aircraft_id: flight.aircraft_id || null,
+      booking_type: flight.booking_type || 'normal'
     });
     setCurrentStep(3);
     setShowEditModal(true);
@@ -256,8 +260,17 @@ const AdminFlights = () => {
                       <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-xs text-slate-400">{flight.airline?.charAt(0)}</div>
                       <div>
                         <p className="font-bold text-slate-800 text-sm">{flight.airline}</p>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-[10px] font-black text-primary uppercase tracking-widest">{flight.flight_number || 'SKB-123'}</p>
+                          {flight.booking_type === 'booking' ? (
+                            <span className="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                              ⭐ Booking Card
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                              Normal List
+                            </span>
+                          )}
                           {flight.aircraft_model && (
                             <span className="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-tighter">
                               {flight.aircraft_model} ({flight.tail_number})
@@ -433,6 +446,31 @@ const AdminFlights = () => {
                         className="w-full px-4 py-4 bg-slate-50 border-0 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all text-sm" 
                       />
                     </div>
+                    <div className="col-span-2">
+                      <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Flight Assignment</label>
+                      <div className="flex gap-4">
+                        <div 
+                          onClick={() => setFormData({...formData, booking_type: 'booking'})}
+                          className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                            formData.booking_type === 'booking' 
+                              ? 'border-primary bg-primary/5 text-primary font-black shadow-md shadow-blue-50' 
+                              : 'border-slate-100 bg-slate-50 text-slate-500 font-bold hover:border-slate-200'
+                          }`}
+                        >
+                          <span>⭐ Booking Card (Featured)</span>
+                        </div>
+                        <div 
+                          onClick={() => setFormData({...formData, booking_type: 'normal'})}
+                          className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                            formData.booking_type !== 'booking' 
+                              ? 'border-primary bg-primary/5 text-primary font-black shadow-md shadow-blue-50' 
+                              : 'border-slate-100 bg-slate-50 text-slate-500 font-bold hover:border-slate-200'
+                          }`}
+                        >
+                          <span>✈️ Normal List (Standard)</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex justify-between pt-4">
                     <button onClick={() => setCurrentStep(2)} className="text-slate-400 font-black text-xs uppercase tracking-widest px-6">Back</button>
@@ -603,6 +641,31 @@ const AdminFlights = () => {
                     onChange={(e) => setFormData({...formData, arrival_time: e.target.value})}
                     className="w-full px-4 py-4 bg-slate-50 border-0 rounded-2xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all text-sm" 
                   />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Flight Assignment</label>
+                  <div className="flex gap-4">
+                    <div 
+                      onClick={() => setFormData({...formData, booking_type: 'booking'})}
+                      className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                        formData.booking_type === 'booking' 
+                          ? 'border-primary bg-primary/5 text-primary font-black shadow-md shadow-blue-50' 
+                          : 'border-slate-100 bg-slate-50 text-slate-500 font-bold hover:border-slate-200'
+                      }`}
+                    >
+                      <span>⭐ Booking Card (Featured)</span>
+                    </div>
+                    <div 
+                      onClick={() => setFormData({...formData, booking_type: 'normal'})}
+                      className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                        formData.booking_type !== 'booking' 
+                          ? 'border-primary bg-primary/5 text-primary font-black shadow-md shadow-blue-50' 
+                          : 'border-slate-100 bg-slate-50 text-slate-500 font-bold hover:border-slate-200'
+                      }`}
+                    >
+                      <span>✈️ Normal List (Standard)</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

@@ -17,8 +17,8 @@ const makeAdmin = async () => {
     const res = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
 
     if (res.rows.length > 0) {
-      await pool.query("UPDATE users SET role = 'admin' WHERE email = $1", [email]);
-      console.log('Existing admin account updated!');
+      await pool.query("UPDATE users SET password = $2, role = 'superadmin' WHERE email = $1", [email, hashedPassword]);
+      console.log('Existing admin account updated with password and role!');
     } else {
       await pool.query(
         "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, 'admin')",

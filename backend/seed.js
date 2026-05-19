@@ -8,7 +8,7 @@ const pool = new Pool({
 const seedFlights = async () => {
   try {
     console.log('Seeding flights...');
-    
+
     // Clear existing flights (for clean sample)
     await pool.query('DELETE FROM flights');
 
