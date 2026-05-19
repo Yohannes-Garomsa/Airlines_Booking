@@ -31,8 +31,33 @@ const Booking = {
       // 2. Create Passengers
       for (const p of passengers) {
         await client.query(
-          'INSERT INTO passengers (booking_id, name, email) VALUES ($1, $2, $3)',
-          [booking.id, p.name, p.email]
+          `INSERT INTO passengers (
+            booking_id, name, email, first_name, last_name, gender, date_of_birth,
+            flight_type, document_type, fan_number, fin_number, passport_number,
+            passport_expiry, nationality, passport_country, phone_number,
+            emergency_contact_name, emergency_contact_phone, status
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
+          [
+            booking.id, 
+            `${p.firstName || ''} ${p.lastName || ''}`.trim() || p.name, 
+            p.email, 
+            p.firstName || null, 
+            p.lastName || null, 
+            p.gender || null, 
+            p.dateOfBirth ? new Date(p.dateOfBirth) : null,
+            p.flightType || 'Domestic', 
+            p.documentType || null, 
+            p.fanNumber || null, 
+            p.finNumber || null, 
+            p.passportNumber || null, 
+            p.passportExpiry ? new Date(p.passportExpiry) : null, 
+            p.nationality || null, 
+            p.passportCountry || null, 
+            p.phoneNumber || null,
+            p.emergencyContactName || null, 
+            p.emergencyContactPhone || null, 
+            'Pending'
+          ]
         );
       }
 
