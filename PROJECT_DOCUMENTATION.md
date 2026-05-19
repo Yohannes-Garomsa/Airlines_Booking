@@ -56,6 +56,60 @@ The Express application is strictly modular, dividing responsibilities among sep
 ## 5. Database Schema
 The database uses a robust PostgreSQL relational setup to maintain integrity across operations. Key entities include:
 
+```mermaid
+erDiagram
+    users ||--o{ bookings : "makes"
+    flights ||--o{ bookings : "has"
+    bookings ||--o{ passengers : "includes"
+    bookings ||--o{ payments : "paid_via"
+    flights ||--o{ seats : "contains"
+    bookings ||--o| seats : "reserves"
+
+    users {
+        int id PK
+        string name
+        string email UK
+        string password
+        string role
+    }
+    flights {
+        int id PK
+        string airline
+        string departure_city
+        string arrival_city
+        datetime departure_time
+        datetime arrival_time
+        int economy_seats
+        int business_seats
+    }
+    bookings {
+        int id PK
+        int user_id FK
+        int flight_id FK
+        decimal total_price
+        string status
+    }
+    passengers {
+        int id PK
+        int booking_id FK
+        string name
+        string email
+    }
+    payments {
+        int id PK
+        int booking_id FK
+        decimal amount
+        string status
+    }
+    seats {
+        int id PK
+        int flight_id FK
+        int booking_id FK
+        string seat_number
+        boolean is_occupied
+    }
+```
+
 - **`users`**: `id`, `name`, `email` (UNIQUE), `password`, `role` (Admin/User), `created_at`.
 - **`flights`**: `id`, `airline`, `departure_city`, `arrival_city`, `departure_time`, `arrival_time`, pricing columns (economy/business), seat capacities.
 - **`bookings`**: `id`, `user_id` (FK), `flight_id` (FK), `total_price`, `cabin_class`, `status` (pending/confirmed/cancelled).
@@ -67,6 +121,24 @@ The database uses a robust PostgreSQL relational setup to maintain integrity acr
 1. **Concurrency Control**: Implements database locks and transaction strategies (likely via ACID properties) to prevent race conditions during seat booking. Socket.io is used to broadcast real-time seat availability to connected clients.
 2. **Security Infrastructure**: Password hashing via Bcrypt prevents leakages. JWT ensures stateless yet secure session management. Helmet protects against common web vulnerabilities, and Rate Limiting prevents brute-force attacks on the APIs.
 3. **Automated Documentation & E-Tickets**: PDFKit draws out professional flight layouts combined with generated QR Codes indicating verifiable ticket references.
+
+### 6.1 Role-Based Action Flow
+The system enforces strict role-based access control (RBAC), differentiating between standard Users and Administrators:
+
+```mermaid
+flowchart TD
+    User([Standard User]) --> |Search| F[Flights]
+    User --> |Can Create| B[Bookings]
+    User --> |Can View/Manage| OP[Own Profile / Bookings]
+    User --> |Generate| T[Tickets & Boarding Passes]
+
+    Admin([Administrator]) --> |Manage CRUD| F
+    Admin --> |Manage CRUD| A[Airports / Fleet]
+    Admin --> |View & Override| B
+    Admin --> |Scan & Verify| T
+    Admin --> |Manage Status| U[All Users]
+    Admin --> |View Metrics| D[System Dashboard]
+```
 
 ## 7. Deployment & Setup Instructions
 
