@@ -441,7 +441,7 @@ const AdminDashboard = () => {
     { id: 'staff', label: 'Staff Ops', icon: ShieldCheck },
   ];
 
-  const filteredData = (Array.isArray(data[activeTab]) ? data[activeTab] : []).filter(item => {
+  const filteredData = (Array.isArray(activeTab === 'staff' ? data.users : data[activeTab]) ? (activeTab === 'staff' ? data.users : data[activeTab]) : []).filter(item => {
     const searchLower = searchTerm.toLowerCase();
     if (activeTab === 'flights') return item.airline?.toLowerCase().includes(searchLower) || item.departure_city?.toLowerCase().includes(searchLower) || item.flight_number?.toLowerCase().includes(searchLower);
     if (activeTab === 'bookings') {
