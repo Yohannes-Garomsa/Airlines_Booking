@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
           });
           setUser(response.data);
         } catch (error) {
-          console.error("Token verification failed", error);
+          // Token is likely expired or invalid. Clean it up silently.
           localStorage.removeItem('token');
         }
       }
