@@ -59,13 +59,14 @@ ${origin}/ticket/public/${bookingId}`;
 
     await Ticket.create({
       ticket_number,
-      booking_id: bookingId,
-      passenger_name: passenger.name,
-      passenger_email: passenger.email,
-      seat_number: booking.seat_number,
-      gate: booking.gate || 'B24',
-      terminal: booking.terminal || 'T2',
-      boarding_time: boardingTime,
+      booking_id:       bookingId,
+      passenger_id:     passenger.id,       // [FIX-5] normalized FK
+      passenger_name:   passenger.name,
+      passenger_email:  passenger.email,
+      seat_number:      booking.seat_number,
+      gate:             booking.gate || 'B24',
+      terminal:         booking.terminal || 'T2',
+      boarding_time:    boardingTime,
       qr_code_data
     });
   }
@@ -101,13 +102,19 @@ const getTicket = asyncHandler(async (req, res) => {
 
 const getAllTickets = asyncHandler(async (req, res) => {
   const query = `
-    SELECT t.*, b.pnr, b.status as booking_status, f.flight_number, f.airline, f.departure_city, f.arrival_city,
-           da.iata_code as departure_iata, aa.iata_code as arrival_iata
+    SELECT t.*, b.pnr, b.status AS booking_status,
+           f.flight_number,
+           al.name          AS airline,
+           da.city          AS departure_city,
+           da.iata_code     AS departure_iata,
+           aa.city          AS arrival_city,
+           aa.iata_code     AS arrival_iata
     FROM tickets t
-    JOIN bookings b ON t.booking_id = b.id
-    JOIN flights f ON b.flight_id = f.id
-    JOIN airports da ON f.departure_airport_id = da.id
-    JOIN airports aa ON f.arrival_airport_id = aa.id
+    JOIN bookings b  ON t.booking_id            = b.id
+    JOIN flights  f  ON b.flight_id             = f.id
+    JOIN airlines al ON f.airline_id            = al.id
+    JOIN airports da ON f.departure_airport_id  = da.id
+    JOIN airports aa ON f.arrival_airport_id    = aa.id
     WHERE b.status != 'cancelled'
     ORDER BY t.created_at DESC
   `;
@@ -194,7 +201,20 @@ const emailTicket = asyncHandler(async (req, res) => {
 const verifyTicket = asyncHandler(async (req, res) => {
   const { identifier } = req.params; // Can be ID or PNR
   
-  let query = 'SELECT t.*, b.status as booking_status, f.flight_number, f.departure_city, f.arrival_city, f.departure_time FROM tickets t JOIN bookings b ON t.booking_id = b.id JOIN flights f ON b.flight_id = f.id WHERE t.id::text = $1 OR b.pnr = $1';
+  const query = `
+    SELECT t.*, b.status AS booking_status, f.flight_number,
+           al.name      AS airline,
+           da.city      AS departure_city,
+           aa.city      AS arrival_city,
+           f.departure_time
+    FROM tickets t
+    JOIN bookings b  ON t.booking_id            = b.id
+    JOIN flights  f  ON b.flight_id             = f.id
+    JOIN airlines al ON f.airline_id            = al.id
+    JOIN airports da ON f.departure_airport_id  = da.id
+    JOIN airports aa ON f.arrival_airport_id    = aa.id
+    WHERE t.id::text = $1 OR b.pnr = $1
+  `;
   const result = await db.query(query, [identifier]);
   
   if (result.rows.length === 0) {

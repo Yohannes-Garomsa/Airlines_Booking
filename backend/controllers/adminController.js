@@ -1,4 +1,4 @@
-const Booking = require('../models/bookingModel');
+﻿const Booking = require('../models/bookingModel');
 const User = require('../models/userModel');
 const db = require('../config/db');
 const asyncHandler = require('../utils/asyncHandler');
@@ -111,8 +111,12 @@ const getFleet = asyncHandler(async (req, res) => {
     SELECT a.*, 
            COALESCE(
              (SELECT json_agg(h) FROM (
-                SELECT f.id, f.flight_number, f.departure_city, f.arrival_city, f.departure_time, f.status
+                SELECT f.id, f.flight_number,
+                       da.city AS departure_city, aa.city AS arrival_city,
+                       f.departure_time, f.status
                 FROM flights f
+                JOIN airports da ON f.departure_airport_id = da.id
+                JOIN airports aa ON f.arrival_airport_id   = aa.id
                 WHERE f.aircraft_id = a.id AND f.departure_time < NOW()
                 ORDER BY f.departure_time DESC
                 LIMIT 5
@@ -122,13 +126,15 @@ const getFleet = asyncHandler(async (req, res) => {
              (SELECT json_build_object(
                 'id', f.id, 
                 'flight_number', f.flight_number, 
-                'departure_city', f.departure_city, 
-                'arrival_city', f.arrival_city, 
+                'departure_city', da.city,
+                 'arrival_city',   aa.city, 
                 'departure_time', f.departure_time,
                 'status', f.status
               )
               FROM flights f
-              WHERE f.aircraft_id = a.id AND f.departure_time >= NOW()
+               JOIN airports da ON f.departure_airport_id = da.id
+               JOIN airports aa ON f.arrival_airport_id   = aa.id
+               WHERE f.aircraft_id = a.id AND f.departure_time >= NOW()
               ORDER BY f.departure_time ASC
               LIMIT 1
              ), NULL
@@ -244,18 +250,20 @@ const toggleAircraftStatus = asyncHandler(async (req, res) => {
 const getAnalytics = asyncHandler(async (req, res) => {
   // 1. Top 5 popular routes by booking count
   const popularRoutes = await db.query(`
-    SELECT f.departure_city, f.arrival_city,
-           COUNT(b.id) as booking_count,
-           SUM(b.total_price) as route_revenue
+    SELECT da.city AS departure_city, aa.city AS arrival_city,
+           COUNT(b.id) AS booking_count,
+           SUM(b.total_price) AS route_revenue
     FROM bookings b
-    JOIN flights f ON b.flight_id = f.id
-    GROUP BY f.departure_city, f.arrival_city
+    JOIN flights  f  ON b.flight_id            = f.id
+    JOIN airports da ON f.departure_airport_id = da.id
+    JOIN airports aa ON f.arrival_airport_id   = aa.id
+    GROUP BY da.city, aa.city
     ORDER BY booking_count DESC
     LIMIT 5
   `);
 
 
-  // 2. Revenue trend — daily totals for the last 30 days
+  // 2. Revenue trend â€” daily totals for the last 30 days
   const revenueTrend = await db.query(`
     SELECT DATE_TRUNC('day', booking_date) as day,
            SUM(total_price) as daily_revenue,
@@ -274,7 +282,7 @@ const getAnalytics = asyncHandler(async (req, res) => {
     GROUP BY cabin_class
   `);
 
-  // 4. Booking velocity — hourly breakdown for the last 7 days
+  // 4. Booking velocity â€” hourly breakdown for the last 7 days
   const bookingVelocity = await db.query(`
     SELECT DATE_TRUNC('day', booking_date) as day, COUNT(id) as count
     FROM bookings
@@ -336,13 +344,13 @@ const getNotifications = asyncHandler(async (req, res) => {
       type: 'capacity',
       priority: 'high',
       title: 'Near-Full Flight',
-      message: `${f.airline} ${f.flight_number} (${f.departure_city} → ${f.arrival_city}) is at ${100 - f.fill_pct}% capacity — only ${f.available_seats} seats remain.`,
+      message: `${f.airline} ${f.flight_number} (${f.departure_city} â†’ ${f.arrival_city}) is at ${100 - f.fill_pct}% capacity â€” only ${f.available_seats} seats remain.`,
       is_read: false,
       created_at: new Date().toISOString()
     });
   });
 
-  // Alert: Cancellation spike — more than 3 cancellations in the last 24h
+  // Alert: Cancellation spike â€” more than 3 cancellations in the last 24h
   const recentCancels = await db.query(`
     SELECT COUNT(id) as count FROM bookings
     WHERE status = 'cancelled' AND booking_date >= NOW() - INTERVAL '24 hours'
@@ -505,3 +513,6 @@ module.exports = {
   getNotifications,
   markNotificationRead
 };
+
+
+

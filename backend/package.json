@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "db:setup": "node migrate.js ../airline_booking_db.sql",
+    "db:seed": "node seed.js",
+    "db:airports": "node seedAirports.js",
+    "db:admin": "node makeSuperAdmin.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

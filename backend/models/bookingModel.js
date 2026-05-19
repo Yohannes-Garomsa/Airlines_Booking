@@ -48,16 +48,17 @@ const Booking = {
 
   getByUserId: async (userId) => {
     const result = await db.query(
-      `SELECT b.*, f.airline, f.departure_time, s.seat_number,
-              da.city as departure_city, da.iata_code as departure_iata,
-              aa.city as arrival_city, aa.iata_code as arrival_iata,
-              (b.booking_date + INTERVAL '3 hours') as expires_at
-       FROM bookings b 
-       JOIN flights f ON b.flight_id = f.id 
+      `SELECT b.*, al.name AS airline, f.departure_time, s.seat_number,
+              da.city AS departure_city, da.iata_code AS departure_iata,
+              aa.city AS arrival_city, aa.iata_code AS arrival_iata,
+              (b.booking_date + INTERVAL '3 hours') AS expires_at
+       FROM bookings b
+       JOIN flights  f  ON b.flight_id            = f.id
+       JOIN airlines al ON f.airline_id           = al.id
        JOIN airports da ON f.departure_airport_id = da.id
-       JOIN airports aa ON f.arrival_airport_id = aa.id
+       JOIN airports aa ON f.arrival_airport_id   = aa.id
        LEFT JOIN seats s ON s.booking_id = b.id
-       WHERE b.user_id = $1 
+       WHERE b.user_id = $1
        ORDER BY b.booking_date DESC`,
       [userId]
     );
@@ -74,11 +75,16 @@ const Booking = {
   },
 
   getAll: async (status = null) => {
-    const baseQuery = `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name,
-       (b.booking_date + INTERVAL '3 hours') as expires_at
-       FROM bookings b 
-       JOIN flights f ON b.flight_id = f.id 
-       JOIN users u ON b.user_id = u.id`;
+    const baseQuery = `SELECT b.*, al.name AS airline,
+       da.city AS departure_city, aa.city AS arrival_city,
+       f.departure_time, u.name AS user_name,
+       (b.booking_date + INTERVAL '3 hours') AS expires_at
+       FROM bookings b
+       JOIN flights  f  ON b.flight_id            = f.id
+       JOIN airlines al ON f.airline_id           = al.id
+       JOIN airports da ON f.departure_airport_id = da.id
+       JOIN airports aa ON f.arrival_airport_id   = aa.id
+       JOIN users    u  ON b.user_id              = u.id`;
 
     const query = status && status !== 'all'
       ? status === 'pending'
@@ -95,15 +101,17 @@ const Booking = {
 
   getFullBookingDetails: async (bookingId) => {
     const bookingResult = await db.query(
-      `SELECT b.*, f.airline, f.flight_number, f.gate, f.terminal, f.departure_time, f.arrival_time, 
-              da.city as departure_city, da.iata_code as departure_iata,
-              aa.city as arrival_city, aa.iata_code as arrival_iata,
+      `SELECT b.*, al.name AS airline,
+              f.flight_number, f.gate, f.terminal, f.departure_time, f.arrival_time,
+              da.city AS departure_city, da.iata_code AS departure_iata,
+              aa.city AS arrival_city, aa.iata_code AS arrival_iata,
               s.seat_number,
-              (b.booking_date + INTERVAL '3 hours') as expires_at
-       FROM bookings b 
-       JOIN flights f ON b.flight_id = f.id 
+              (b.booking_date + INTERVAL '3 hours') AS expires_at
+       FROM bookings b
+       JOIN flights  f  ON b.flight_id            = f.id
+       JOIN airlines al ON f.airline_id           = al.id
        JOIN airports da ON f.departure_airport_id = da.id
-       JOIN airports aa ON f.arrival_airport_id = aa.id
+       JOIN airports aa ON f.arrival_airport_id   = aa.id
        LEFT JOIN seats s ON s.booking_id = b.id
        WHERE b.id = $1`,
       [bookingId]
@@ -130,21 +138,20 @@ const Booking = {
   },
 
   getByStatus: async (status) => {
+    const base = `SELECT b.*, al.name AS airline,
+         da.city AS departure_city, aa.city AS arrival_city,
+         f.departure_time, u.name AS user_name,
+         (b.booking_date + INTERVAL '3 hours') AS expires_at
+         FROM bookings b
+         JOIN flights  f  ON b.flight_id            = f.id
+         JOIN airlines al ON f.airline_id           = al.id
+         JOIN airports da ON f.departure_airport_id = da.id
+         JOIN airports aa ON f.arrival_airport_id   = aa.id
+         JOIN users    u  ON b.user_id              = u.id`;
+
     const query = status === 'pending'
-      ? `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name,
-                (b.booking_date + INTERVAL '3 hours') as expires_at
-         FROM bookings b 
-         JOIN flights f ON b.flight_id = f.id 
-         JOIN users u ON b.user_id = u.id 
-         WHERE b.status = $1 AND b.booking_date >= NOW() - INTERVAL '3 hours' 
-         ORDER BY b.booking_date DESC`
-      : `SELECT b.*, f.airline, f.departure_city, f.arrival_city, f.departure_time, u.name as user_name,
-                (b.booking_date + INTERVAL '3 hours') as expires_at
-         FROM bookings b 
-         JOIN flights f ON b.flight_id = f.id 
-         JOIN users u ON b.user_id = u.id 
-         WHERE b.status = $1
-         ORDER BY b.booking_date DESC`;
+      ? `${base} WHERE b.status = $1 AND b.booking_date >= NOW() - INTERVAL '3 hours' ORDER BY b.booking_date DESC`
+      : `${base} WHERE b.status = $1 ORDER BY b.booking_date DESC`;
 
     const result = await db.query(query, [status]);
     return result.rows;
